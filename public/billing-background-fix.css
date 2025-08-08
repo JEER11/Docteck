@@ -1,0 +1,20 @@
+body.billing-bg {
+  background: url("/assets/images/billing-background-balance.png") center center / cover no-repeat fixed !important;
+  min-height: 100vh !important;
+  width: 100vw !important;
+  background-color: #181c3a !important;
+  position: relative !important;
+  z-index: 0 !important;
+  overflow-x: hidden !important;
+}
+
+html, #root {
+  min-height: 100vh !important;
+  height: 100% !important;
+}
+
+@media (max-width: 900px) {
+  body.billing-bg {
+    background-attachment: scroll !important;
+  }
+}

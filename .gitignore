@@ -1,0 +1,15 @@
+# Ignore environment files containing secrets
+.env
+# Ignore server-side code and sensitive files
+server/
+uploads/
+*.env
+*.env.*
+node_modules/
+# Ignore build output
+build/
+dist/
+# Ignore OS and editor files
+.DS_Store
+Thumbs.db
+.vscode/
