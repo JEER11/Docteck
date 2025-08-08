@@ -1,391 +1,59 @@
+
 # Docteck
 
-This is the Docteck medical dashboard project based on Vision UI React, with modernized UI, unified UX, and AI-powered assistance features.
+Docteck is a modern web application designed to streamline appointment scheduling, billing, and task management for healthcare professionals and their clients. Built with React for the frontend and Node.js for backend services, Docteck provides a seamless experience for managing calendars, handling payments, and tracking daily tasks—all in one place.
 
-## Table of Contents
+## Features
 
-- [Vision UI Dashboard Free React](https://demos.creative-tim.com/vision-ui-dashboard-react/?ref=readme-vudreact)
-- [Table of Contents](#table-of-contents)
-- [Versions](#versions)
-- [Demo](#demo)
-- [Quick start](#quick-start)
-- [Deploy](#deploy)
-- [Documentation](#documentation)
-- [File Structure](#file-structure)
-- [Browser Support](#browser-support)
-- [Resources](#resources)
-- [Reporting Issues](#reporting-issues)
-- [Licensing](#licensing)
-- [Useful Links](#useful-links)
-- [Social Media](#social-media)
+- **Appointment Calendar:** Schedule, view, and manage appointments with an intuitive calendar interface.
+- **Billing & Payments:** Securely handle billing and payments using Stripe integration.
+- **Task Tracker:** Keep track of daily to-dos and important notifications.
+- **User Authentication:** Secure login and registration for users.
+- **Responsive Design:** Works across desktops, tablets, and mobile devices.
 
-## Versions
+## Getting Started
 
-[<img src="https://github.com/creativetimofficial/public-assets/blob/master/logos/react-logo.jpg?raw=true" width="60" height="60" />](https://www.creative-tim.com/product/vision-ui-dashboard-react?ref=readme-vudreact)[<img src="https://github.com/creativetimofficial/public-assets/blob/master/logos/chakra-logo.jpg?raw=true" width="60" height="60" />](https://www.creative-tim.com/product/vision-ui-dashboard-chakra?ref=readme-vudreact)
+1. **Clone the repository:**
+   ```sh
+   git clone https://github.com/JEER11/Docteck.git
+   cd Docteck
+   ```
+2. **Install dependencies:**
+   ```sh
+   npm install
+   ```
+3. **Set up environment variables:**
+   - Copy `.env.example` to `.env` and fill in your API keys and secrets as needed.
+   - **Note:** The `.env` file is not tracked by git for security reasons.
+4. **Start the development server:**
+   ```sh
+   npm start
+   ```
 
-| React | Chakra |
-| ]------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [![Vision UI Dashboard Free React](https://i.ibb.co/RYKtQ4M/vision-ui-free-react-ct.png)](https://www.creative-tim.com/product/vision-ui-dashboard-react?ref=readme-vudreact) | [![Vision UI Dashboard Free Chakra](https://i.ibb.co/kg5mNxm/vision-ui-free-chakra-ct.png)](https://www.creative-tim.com/product/vision-ui-dashboard-chakra?ref=readme-vudreact) |
+## Folder Structure
 
-## Demo
+- `src/` — Frontend React code
+- `server/` — Backend Node.js code (not included in public repo)
+- `public/` — Static assets and HTML
+- `uploads/` — User-uploaded files (ignored by git)
 
-[View all Pages](https://demos.creative-tim.com/vision-ui-dashboard-react?ref=readme-vudreact).
+## Credits
 
-# Quick start
+- **Project Lead:** JEER11
+- **Special Thanks:** Tim, for significant contributions and support throughout the project.
 
-Quick start options:
+## License
 
-- Buy from [Creative Tim](https://www.creative-tim.com/product/vision-ui-dashboard-react?ref=readme-vudreact).
+This project is licensed under the MIT License. See the [LICENSE.md](LICENSE.md) file for details.
 
-## Deploy
+---
 
-:rocket: You can deploy your own version of the template to Genezio with one click:
+### Additional Credits
 
-[![Deploy to Genezio](https://raw.githubusercontent.com/Genez-io/graphics/main/svg/deploy-button.svg)](https://app.genez.io/start/deploy?repository=https://github.com/creativetimofficial/vision-ui-dashboard-react&utm_source=github&utm_medium=referral&utm_campaign=github-creativetim&utm_term=deploy-project&utm_content=button-head)
+This project was originally bootstrapped with [Vision UI Dashboard React](https://www.creative-tim.com/product/vision-ui-dashboard-react?ref=readme-vudreact) by Creative Tim and Simmmple. Some UI elements and structure are based on their open-source template.
 
-## Preparation
+For more information, see the original [Vision UI Dashboard React documentation](https://www.creative-tim.com/learning-lab/react/overview/vision-ui-dashboard/?ref=readme-vudreact).
 
-1. Download and Install NodeJs 16 from the [official website](https://nodejs.org/en/about/previous-releases) or use [nvm](https://github.com/nvm-sh/nvm) to quickly switch versions.
-2. Navigate to the projects root directory and run `yarn install` or `npm install` to install the projects dependencies.
+---
 
-## Documentation
-
-The documentation for the Vision UI Dashboard Free is hosted at our [website](https://www.creative-tim.com/learning-lab/react/overview/vision-ui-dashboard/?ref=readme-vudreact).
-
-## File Structure
-
-Within the download you'll find the following directories and files:
-
-```
-vision-dashboard-react-free/
-├── public
-│   ├── apple-icon.png
-│   ├── favicon.ico
-│   ├── index.html
-│   ├── manifest.json
-│   └── robots.txt
-└── src
-    ├── assets
-    │   ├── images
-    │   └── theme
-    │       ├── base
-    │       │   ├── borders.js
-    │       │   ├── boxShadows.js
-    │       │   ├── breakpoints.js
-    │       │   ├── colors.js
-    │       │   ├── globals.js
-    │       │   ├── typography.css
-    │       │   └── typography.js
-    │       ├── components
-    │       │   ├── button
-    │       │   ├── card
-    │       │   ├── dialog
-    │       │   ├── form
-    │       │   ├── list
-    │       │   ├── menu
-    │       │   ├── stepper
-    │       │   ├── table
-    │       │   ├── tabs
-    │       │   ├── appBar.js
-    │       │   ├── avatar.js
-    │       │   ├── breadcrumbs.js
-    │       │   ├── buttonBase.js
-    │       │   ├── container.js
-    │       │   ├── divider.js
-    │       │   ├── icon.js
-    │       │   ├── iconButton.js
-    │       │   ├── linearProgress.js
-    │       │   ├── link.js
-    │       │   ├── popover.js
-    │       │   ├── slider.js
-    │       │   ├── svgIcon.js
-    │       │   └── tooltip.js
-    │       ├── functions
-    │       │   ├── boxShadow.js
-    │       │   ├── gradientChartLine.js
-    │       │   ├── hexToRgb.js
-    │       │   ├── linearGradient.js
-    │       │   ├── pxToRem.js
-    │       │   ├── radialGradient.js
-    │       │   ├── rgba.js
-    │       │   └── tripleLinearGradient.js
-    │       ├── index.js
-    │       └── theme-rtl.js
-    ├── components
-    │   ├── VuiAlert
-    │   │   ├── index.js
-    │   │   ├── VuiAlertCloseIcon.js
-    │   │   └── VuiAlertRoot.js
-    │   ├── VuiAvatar
-    │   │   ├── index.js
-    │   │   └── VuiAvatarRoot.js
-    │   ├── VuiBadge
-    │   │   ├── index.js
-    │   │   └── VuiBadgeRoot.js
-    │   ├── VuiBox
-    │   │   ├── index.js
-    │   │   └── VuiBoxRoot.js
-    │   ├── VuiButton
-    │   │   ├── index.js
-    │   │   └── VuiButtonRoot.js
-    │   ├── VuiInput
-    │   │   ├── index.js
-    │   │   ├── VuiInputIconBoxRoot.js
-    │   │   ├── VuiInputIconRoot.js
-    │   │   ├── VuiInputIcon.js
-    │   │   └── VuiInputWithIconRoot.js
-    │   ├── VuiPagination
-    │   │   ├── index.js
-    │   │   └── VuiPaginationItemRoot.js
-    │   ├── VuiProgress
-    │   │   ├── index.js
-    │   │   └── VuiProgressRoot.js
-    │   ├── VuiSwitch
-    │   │   ├── index.js
-    │   │   └── VuiSwitchRoot.js
-    │   └── VuiTypography
-    │       ├── index.js
-    │       └── VuiTypographyRoot.js
-    ├── context
-    │   └── index.js
-    ├── examples
-    │   ├── Breadcrumbs
-    │   │   └── index.js
-    │   ├── Calendar
-    │   │   ├── CalendarRoot.js
-    │   │   └── index.js
-    │   ├── Cards
-    │   │   ├── InfoCards
-    │   │   │   └── index.js
-    │   │   ├── MasterCard
-    │   │   │   └── index.js
-    │   │   ├── ProjectCards
-    │   │   │   └── index.js
-    │   │   └── StatisticsCards
-    │   │      └── index.js
-    │   ├── Charts
-    │   │   ├── BarCharts
-    │   │   │   └── BarChart.js
-    │   │   └── LineCharts
-    │   │       └── LineChart.js
-    │   ├── Configurator
-    │   │   ├── ConfiguratorRoot.js
-    │   │   └── index.js
-    │   ├── Footer
-    │   │   └── index.js
-    │   ├── GradientBorder
-    │   │   ├── GradientBorderRoot.js
-    │   │   └── index.js
-    │   ├── Icons
-    │   ├── Items
-    │   │   ├── index.js
-    │   │   └── styles.js
-    │   ├── LayoutContainers
-    │   │   ├── DashboardLayout
-    │   │   │   └── index.js
-    │   │   └── PageLayout
-    │   │       └── index.js
-    │   ├── Lists
-    │   │   └── index.js
-    │   ├── Navbars
-    │   │   ├── DashboardNavbar
-    │   │   │   ├── index.js
-    │   │   │   └── styles.js
-    │   │   ├── DefaultNavbar
-    │   │   │   ├── DefaultNavbarLink.js
-    │   │   │   ├── DefaultNavbarMobile.js
-    │   │   │   └── index.js
-    │   ├── Scrollbar
-    │   │   └── index.js
-    │   ├── Sidenav
-    │   │   ├── styles
-    │   │   │   ├── sidenav.js
-    │   │   │   ├── sidenavCard.js
-    │   │   │   └── sidenavCollapse.js
-    │   │   ├── index.js
-    │   │   ├── SidenavCard.js
-    │   │   ├── SidenavCollapse.js
-    │   │   └── SidenavRoot.js
-    │   ├── Tables
-    │   │   └── index.js
-    │   └── Timeline
-    │       ├── context
-    │       │   └── index.js
-    │       ├── TimelineItem
-    │       │   ├── index.js
-    │       │   └── styles.js
-    │       └── TimelineList
-    │           └── index.js
-    ├── layouts
-    │   ├── authentication
-    │   │   ├── components
-    │   │   │   ├── BasicLayout
-    │   │   │   │   └── index.js
-    │   │   │   ├── CoverLayout
-    │   │   │   │   └── index.js
-    │   │   │   ├── Footer
-    │   │   │   │   └── index.js
-    │   │   │   ├── IllustrationLayout
-    │   │   │   │   └── index.js
-    │   │   │   ├── Separator
-    │   │   │   │   └── index.js
-    │   │   │   └── Socials
-    │   │   │       └── index.js
-    │   │   ├── sign-in
-    │   │   │   └── index.js
-    │   │   └── sign-up
-    │   │       └── index.js
-    │   ├── billing
-    │   │   ├── components
-    │   │   │   ├── Bill
-    │   │   │   │   └── index.js
-    │   │   │   ├── BillingInformation
-    │   │   │   │   └── index.js
-    │   │   │   ├── CreditBalance
-    │   │   │   │   └── index.js
-    │   │   │   ├── Invoice
-    │   │   │   │   └── index.js
-    │   │   │   ├── PaymentMethod
-    │   │   │   │   └── index.js
-    │   │   │   ├── Transaction
-    │   │   │   │   └── index.js
-    │   │   │   └── Transactions
-    │   │   │       └── index.js
-    │   │   └── index.js
-    │   ├── dashboard
-    │   │   ├── components
-    │   │   │   ├── OrderOverview
-    │   │   │   │   └── index.js
-    │   │   │   ├── Projects
-    │   │   │   │   └── index.js
-    │   │   │   ├── RefferalTracking
-    │   │   │   │   └── index.js
-    │   │   │   ├── SatisfactionRate
-    │   │   │   │   └── index.js
-    │   │   │   └── WelcomeMark
-    │   │   │       └── index.js
-    │   │   ├── data
-    │   │   │   ├── barChartData.js
-    │   │   │   ├── barChartOptions.js
-    │   │   │   ├── lineChartData.js
-    │   │   │   └── lineChartOptions.js
-    │   │   └── index.js
-    │   ├── profile
-    │   │   ├── components
-    │   │   │   ├── CarInformations
-    │   │   │   │   └── index.js
-    │   │   │   ├── Header
-    │   │   │   │   └── index.js
-    │   │   │   ├── PlatformSettings
-    │   │   │   │   └── index.js
-    │   │   │   └── Welcome
-    │   │   │       └── index.js
-    │   │   ├── data
-    │   │   │   ├── lineChartData1.js
-    │   │   │   ├── lineChartData2.js
-    │   │   │   ├── lineChartOptions1.js
-    │   │   │   └── lineChartOptions2.js
-    │   │   └── index.js
-    │   ├── rtl
-    │   │   ├── components
-    │   │   │   ├── OrderOverview
-    │   │   │   │   └── index.js
-    │   │   │   ├── Projects
-    │   │   │   │   └── index.js
-    │   │   │   ├── RefferalTracking
-    │   │   │   │   └── index.js
-    │   │   │   ├── SatisfactionRate
-    │   │   │   │   └── index.js
-    │   │   │   └── WelcomeMark
-    │   │   │       └── index.js
-    │   │   ├── data
-    │   │   │   ├── barChartData.js
-    │   │   │   ├── barChartOptions.js
-    │   │   │   ├── lineChartData.js
-    │   │   │   └── lineChartOptions.js
-    │   │   └── index.js
-    │   ├── tables
-    │   │   ├── data
-    │   │   │   ├── authorsTableData.js
-    │   │   │   └── projectsTableData.js
-    │   │   └── index.js
-    ├── variables
-    │   └── charts.js
-    ├── App.js
-    ├── index.js
-    ├── routes.js
-    ├── .eslintrc.json
-    ├── .gitignore
-    ├── .prettierrc.json
-    ├── CHANGELOG.md
-    ├── ISSUE_TEMPLALTE.md
-    ├── jsconfig.json
-    ├── package-lock.json
-    ├── package.json
-    └── README.md
-```
-
-## Browser Support
-
-At present, we officially aim to support the last two versions of the following browsers:
-
-<img src="https://github.com/creativetimofficial/public-assets/blob/master/logos/chrome-logo.png?raw=true" width="64" height="64"> <img src="https://raw.githubusercontent.com/creativetimofficial/public-assets/master/logos/firefox-logo.png" width="64" height="64"> <img src="https://raw.githubusercontent.com/creativetimofficial/public-assets/master/logos/edge-logo.png" width="64" height="64"> <img src="https://raw.githubusercontent.com/creativetimofficial/public-assets/master/logos/safari-logo.png" width="64" height="64"> <img src="https://raw.githubusercontent.com/creativetimofficial/public-assets/master/logos/opera-logo.png" width="64" height="64">
-
-## Resources
-
-- [Live Preview](https://demos.creative-tim.com/vision-ui-dashboard-react?ref=readme-vudreact)
-- [Buy Page](https://www.creative-tim.com/product/vision-ui-dashboard-react?ref=readme-vudreact)
-- License Agreement: <https://www.creative-tim.com/license?ref=readme-vudreact>
-- Documentation is [here](https://www.creative-tim.com/learning-lab/react/overview/vision-ui-dashboard/?ref=readme-vudreact)
-- [Support](https://www.creative-tim.com/contact-us?ref=readme-vudreact)
-- Issues: [Github Issues Page](https://github.com/creativetimofficial/vision-ui-dashboard-react/issues)
-
-## Reporting Issues
-
-We use GitHub Issues as the official bug tracker for the Vision UI Dashboard. Here are some advices for our users that want to report an issue:
-
-1. Make sure that you are using the latest version of the Vision UI Dashbaord. Check the CHANGELOG from your dashboard on our [CHANGE LOG File](https://github.com/creativetimofficial/vision-ui-dashboard-react/blob/main/CHANGELOG.md?ref=readme-vudreact).
-2. Providing us reproducible steps for the issue will shorten the time it takes for it to be fixed.
-3. Some issues may be browser specific, so specifying in what browser you encountered the issue might help.
-
-## Technical Support or Questions
-
-If you have questions or need help integrating the product please [contact us](https://www.creative-tim.com/contact-us?ref=readme-vudreact) instead of opening an issue.
-
-## Licensing
-
-- Copyright 2021 [Creative Tim](https://www.creative-tim.com?ref=readme-vudreact)
-
-- Creative Tim [License](https://www.creative-tim.com/license?ref=readme-vudreact)
-
-## Useful Links
-
-- [More products](https://www.creative-tim.com/templates?ref=readme-vudreact) from Creative Tim
-
-- [Tutorials](https://www.youtube.com/channel/UCVyTG4sCw-rOvB9oHkzZD1w)
-
-- [Freebies](https://www.creative-tim.com/bootstrap-themes/free?ref=readme-vudreact) from Creative Tim
-
-- [Affiliate Program](https://www.creative-tim.com/affiliates/new?ref=readme-vudreact) (earn money)
-
-- [More products](https://simmmple.com/?ref=readme-vudreact) from Simmmple
-
-### Social Media - Creative Tim
-
-Twitter: <https://twitter.com/CreativeTim>
-
-Facebook: <https://www.facebook.com/CreativeTim>
-
-Dribbble: <https://dribbble.com/creativetim>
-
-Instagram: <https://www.instagram.com/CreativeTimOfficial>
-
-### Social Media - Simmmple
-
-Twitter: <https://twitter.com/simmmple_web>
-
-Facebook: <https://www.facebook.com/simmmple.web>
-
-Dribbble: <https://dribbble.com/simmmple>
-
-Instagram: <https://www.instagram.com/simmmple.web>
+© 2025 JEER11. All rights reserved.
