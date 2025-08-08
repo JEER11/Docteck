@@ -40,7 +40,7 @@ Docteck is a modern web application designed to streamline appointment schedulin
 ## Credits
 
 - **Project Lead:** JEER11
-- **Special Thanks:** Tim, for significant contributions and support throughout the project.
+- **Special Thanks:** Tim, for significant contributions throughout the project design.
 
 ## License
 
