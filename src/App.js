@@ -3,6 +3,8 @@ import { useState, useEffect, useMemo } from "react";
 // react-router components
 import { Route, Switch, Redirect, useLocation } from "react-router-dom";
 import { Suspense } from "react";
+import FullScreenLoader from "components/FullScreenLoader";
+import RouteChangeLoader from "components/RouteChangeLoader";
 
 // @mui material components
 import { ThemeProvider } from "@mui/material/styles";
@@ -24,7 +26,7 @@ import createCache from "@emotion/cache";
 
 import routes from "routes";
 
-import { useVisionUIController, setMiniSidenav, setOpenConfigurator } from "context";
+import { useVisionUIController, setMiniSidenav, setOpenConfigurator, setDirection } from "context";
 import { AppointmentProvider } from "context/AppointmentContext";
 import { ProjectsProvider } from "context/ProjectsContext";
 import { TodoProvider } from "context/TodoContext";
@@ -69,6 +71,7 @@ export default function App() {
   useEffect(() => {
     document.body.setAttribute("dir", direction);
   }, [direction]);
+
 
   // Setting page scroll to 0 when changing the route
   useEffect(() => {
@@ -148,11 +151,12 @@ export default function App() {
                 </>
               )}
               {layout === "vr" && <Configurator />}
-              <Switch>
-                {getRoutes(routes)}
-                <Route path="/calendar/oauth-success.html" />
-                <Redirect from="*" to="/dashboard" />
-              </Switch>
+              <RouteChangeLoader />
+                <Switch>
+                  {getRoutes(routes)}
+                  <Route path="/calendar/oauth-success.html" />
+                  <Redirect from="*" to="/dashboard" />
+                </Switch>
             </TodoProvider>
           </AppointmentProvider>
         </ProjectsProvider>
@@ -179,13 +183,12 @@ export default function App() {
               </>
             )}
             {layout === "vr" && <Configurator />}
-            <Suspense fallback={<div style={{color:'#fff',textAlign:'center',marginTop:'40px'}}>Loading...</div>}>
+            <RouteChangeLoader />
               <Switch>
                 {getRoutes(routes)}
                 <Route path="/calendar/oauth-success.html" />
                 <Redirect from="*" to="/dashboard" />
               </Switch>
-            </Suspense>
           </TodoProvider>
         </AppointmentProvider>
       </ProjectsProvider>

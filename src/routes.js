@@ -17,12 +17,13 @@ import Tables from "layouts/tables";
 // ...existing code...
 import Billing from "layouts/billing";
 import Profile from "layouts/profile";
-// Keep lazy loading for less critical pages if needed
+import Assistance from "layouts/assistance";
+import SignIn from "layouts/authentication/sign-in";
+import SignUp from "layouts/authentication/sign-up";
+import Family from "layouts/profile/Family";
+import Pets from "layouts/profile/Pets";
+// If RTL isn't critical, keep lazy; otherwise import directly as well
 const RTL = React.lazy(() => import("layouts/rtl"));
-const SignIn = React.lazy(() => import("layouts/authentication/sign-in"));
-const SignUp = React.lazy(() => import("layouts/authentication/sign-up"));
-const Family = React.lazy(() => import("layouts/profile/Family"));
-const Pets = React.lazy(() => import("layouts/profile/Pets"));
 
 // Vision UI Dashboard React icons
 import { IoRocketSharp } from "react-icons/io5";
@@ -60,7 +61,7 @@ const routes = [
     key: "assistance",
     route: "/assistance",
     icon: <FaUserNurse size="15px" color="inherit" />,
-    component: React.lazy(() => import("layouts/assistance")),
+  component: Assistance,
     noCollapse: true,
   },
   {

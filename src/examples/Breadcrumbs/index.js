@@ -18,6 +18,7 @@
 
 // react-router-dom components
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 // prop-types is a library for typechecking of props.
 import PropTypes from "prop-types";
@@ -31,6 +32,7 @@ import VuiBox from "components/VuiBox";
 import VuiTypography from "components/VuiTypography";
 
 function Breadcrumbs({ icon, title, route, light }) {
+  const { t } = useTranslation();
   const routes = route.slice(0, -1);
 
   return (
@@ -64,7 +66,7 @@ function Breadcrumbs({ icon, title, route, light }) {
               opacity={light ? 0.8 : 0.5}
               sx={{ lineHeight: 0 }}
             >
-              {el}
+              {t(`routes.${el}`, { defaultValue: el })}
             </VuiTypography>
           </Link>
         ))}
@@ -75,7 +77,7 @@ function Breadcrumbs({ icon, title, route, light }) {
           color={light ? "white" : "dark"}
           sx={{ lineHeight: 0 }}
         >
-          {title.replace("-", " ")}
+          {t(`routes.${title}`, { defaultValue: title }).replace("-", " ")}
         </VuiTypography>
       </MuiBreadcrumbs>
       <VuiTypography
@@ -85,7 +87,7 @@ function Breadcrumbs({ icon, title, route, light }) {
         color={light ? "white" : "dark"}
         noWrap
       >
-        {title.replace("-", " ")}
+  {t(`routes.${title}`, { defaultValue: title }).replace("-", " ")}
       </VuiTypography>
     </VuiBox>
   );

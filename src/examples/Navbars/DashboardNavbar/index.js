@@ -17,9 +17,11 @@
 */
 
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 
 // react-router components
 import { useLocation, Link } from "react-router-dom";
+import { routeLoadingBus } from "components/routeLoadingBus";
 
 // prop-types is a library for typechecking of props.
 import PropTypes from "prop-types";
@@ -63,6 +65,7 @@ import team2 from "assets/images/team-2.jpg";
 import logoSpotify from "assets/images/small-logos/logo-spotify.svg";
 
 function DashboardNavbar({ absolute, light, isMini }) {
+  const { t } = useTranslation();
   const [navbarType, setNavbarType] = useState();
   const [controller, dispatch] = useVisionUIController();
   const { miniSidenav, transparentNavbar, fixedNavbar, openConfigurator } = controller;
@@ -124,7 +127,7 @@ function DashboardNavbar({ absolute, light, isMini }) {
           <VuiBox sx={(theme) => navbarRow(theme, { isMini })}>
             <VuiBox pr={1}>
               <VuiInput
-                placeholder="Type here..."
+                placeholder={t('navbar.searchPlaceholder', { defaultValue: 'Type here...' })}
                 icon={{ component: "search", direction: "left" }}
                 sx={({ breakpoints }) => ({
                   [breakpoints.down("sm")]: {
@@ -139,7 +142,13 @@ function DashboardNavbar({ absolute, light, isMini }) {
             </VuiBox>
             <VuiBox color={light ? "white" : "inherit"}>
               <IconButton sx={navbarIconButton} size="small">
-                <Link to="/authentication/sign-in" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', color: 'inherit', width: '100%', height: '100%' }}>
+                <Link
+                  to="/authentication/sign-in"
+                  onMouseDown={() => routeLoadingBus.start()}
+                  onClick={() => routeLoadingBus.start()}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') routeLoadingBus.start(); }}
+                  style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', color: 'inherit', width: '100%', height: '100%' }}
+                >
                   <Icon
                     sx={({ palette: { dark, white } }) => ({
                       color: light ? white.main : dark.main,
@@ -152,7 +161,7 @@ function DashboardNavbar({ absolute, light, isMini }) {
                     fontWeight="medium"
                     color={light ? "white" : "dark"}
                   >
-                    Sign in
+                    {t('navbar.signIn', { defaultValue: 'Sign in' })}
                   </VuiTypography>
                 </Link>
               </IconButton>

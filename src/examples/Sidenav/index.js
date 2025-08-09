@@ -1,6 +1,7 @@
 // prop-types is a library for typechecking of props.
 // react-router-dom components
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 
 // react-router-dom components
 import { useLocation, NavLink } from "react-router-dom";
@@ -22,6 +23,7 @@ import VuiButton from "components/VuiButton";
 // Vision UI Dashboard React example components
 import SidenavCollapse from "examples/Sidenav/SidenavCollapse";
 import SidenavCard from "examples/Sidenav/SidenavCard";
+import { routeLoadingBus } from "components/routeLoadingBus";
 
 // Custom styles for the Sidenav
 import SidenavRoot from "examples/Sidenav/SidenavRoot";
@@ -35,6 +37,7 @@ import sunsetLogo from "assets/images/sunset.png";
 
 // function Sidenav({ color, brand, brandName, routes, ...rest }) {
 function Sidenav({ color, brandName, routes, ...rest }) {
+  const { t } = useTranslation();
   const [controller, dispatch] = useVisionUIController();
   const { miniSidenav, transparentSidenav } = controller;
   const location = useLocation();
@@ -83,17 +86,27 @@ function Sidenav({ color, brandName, routes, ...rest }) {
           <SidenavCollapse
             color={color}
             name={name}
+            tKey={key}
             icon={icon}
             active={key === collapseName}
             noCollapse={noCollapse}
           />
         </Link>
       ) : (
-        <NavLink to={route} key={key}>
+        <NavLink
+          to={route}
+          key={key}
+          onMouseDown={() => routeLoadingBus.start()}
+          onClick={() => routeLoadingBus.start()}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') routeLoadingBus.start();
+          }}
+        >
           <SidenavCollapse
             color={color}
             key={key}
             name={name}
+            tKey={key}
             icon={icon}
             active={key === collapseName}
             noCollapse={noCollapse}
@@ -114,7 +127,7 @@ function Sidenav({ color, brandName, routes, ...rest }) {
           mb={1}
           ml={1}
         >
-          {title}
+          {t(`routes.${key}`, { defaultValue: title })}
         </VuiTypography>
       );
     } else if (type === "divider") {
