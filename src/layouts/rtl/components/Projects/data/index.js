@@ -63,7 +63,7 @@ export default function data() {
           <VuiBox display="flex" alignItems="center">
             <AdobeXD size="20px" />
             <VuiTypography pl="16px" color="white" variant="button" fontWeight="medium">
-              Vision UI XD Release
+              Docteck XD Release
             </VuiTypography>
           </VuiBox>
         ),
