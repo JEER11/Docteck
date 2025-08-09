@@ -1,25 +1,9 @@
-/*!
-
-=========================================================
-* Vision UI Free React - v1.0.0
-=========================================================
-
-* Product Page: https://www.creative-tim.com/product/vision-ui-free-react
-* Copyright 2021 Creative Tim (https://www.creative-tim.com/)
-* Licensed under MIT (https://github.com/creativetimofficial/vision-ui-free-react/blob/master LICENSE.md)
-
-* Design and Coded by Simmmple & Creative Tim
-
-=========================================================
-
-* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-*/
+// MIT: Portions © 2021 Creative Tim & Simmmple (Vision UI Free React). See LICENSE.md.
 
 // prop-types is a library for typechecking of props
 import PropTypes from "prop-types";
 
-function Settings({ size }) {
+function Spotify({ size }) {
   return (
     <svg
       width={size}
@@ -43,15 +27,17 @@ function Settings({ size }) {
   );
 }
 
-// Setting default values for the props of Settings
-Settings.defaultProps = {
+// Setting default values for the props of Spotify
+Spotify.defaultProps = {
   color: "dark",
   size: "16px",
 };
 
-// Typechecking props for the Settings
-Settings.propTypes = {
+// Typechecking props for the Spotify
+Spotify.propTypes = {
   size: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
 };
 
-export default Settings;
+export default Spotify;
+
+// MIT: Portions © 2021 Creative Tim & Simmmple (Vision UI Free React). See LICENSE.md.
