@@ -21,7 +21,7 @@
     "sign-up": "Registrarse"
   },
   "configurator": {
-    "title": "Configurador de Vision UI",
+  "title": "Configurador de Docteck",
     "subtitle": "Explora las opciones del panel.",
     "sidenavColors": "Colores del menú lateral",
     "sidenavType": "Tipo de menú lateral",

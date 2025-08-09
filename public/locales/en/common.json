@@ -21,7 +21,7 @@
     "sign-up": "Sign Up"
   },
   "configurator": {
-    "title": "Vision UI Configurator",
+  "title": "Docteck Configurator",
     "subtitle": "See our dashboard options.",
     "sidenavColors": "Sidenav Colors",
     "sidenavType": "Sidenav Type",
