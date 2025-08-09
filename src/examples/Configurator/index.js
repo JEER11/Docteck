@@ -331,5 +331,4 @@ function Configurator() {
 }
 
 export default Configurator;
-
 // MIT: Portions © 2021 Creative Tim & Simmmple (Vision UI Free React). See LICENSE.md.

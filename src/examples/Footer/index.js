@@ -80,5 +80,4 @@ function Footer() {
 }
 
 export default Footer;
-
 // MIT: Portions © 2021 Creative Tim & Simmmple (Vision UI Free React). See LICENSE.md.

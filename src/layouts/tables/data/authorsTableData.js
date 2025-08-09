@@ -1,7 +1,3 @@
-//
-// MIT: Portions © 2021 Creative Tim & Simmmple (Vision UI Free React). See LICENSE.md.
-//
-
 /* eslint-disable react/prop-types */
 // Vision UI Dashboard React components
 import VuiBox from "components/VuiBox";

@@ -125,5 +125,4 @@ function collapseText(theme, ownerState) {
 }
 
 export { collapseItem, collapseIconBox, collapseIcon, collapseText };
-
 // MIT: Portions © 2021 Creative Tim & Simmmple (Vision UI Free React). See LICENSE.md.
