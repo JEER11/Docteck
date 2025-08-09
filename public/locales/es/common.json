@@ -1,0 +1,47 @@
+{
+  "app": {
+    "brand": "DOCTECK"
+  },
+  "navbar": {
+    "searchPlaceholder": "Escribe aquí...",
+    "signIn": "Iniciar sesión",
+    "notifications": "Notificaciones"
+  },
+  "routes": {
+    "dashboard": "Panel",
+    "tables": "Centro de Atención",
+    "assistance": "Asistencia",
+    "billing": "Facturación",
+    "account-pages": "Páginas de cuenta",
+    "profile": "Perfil",
+    "family": "Familia",
+    "pets": "Mascotas",
+    "authentication": "Autenticación",
+    "sign-in": "Iniciar sesión",
+    "sign-up": "Registrarse"
+  },
+  "configurator": {
+    "title": "Configurador de Vision UI",
+    "subtitle": "Explora las opciones del panel.",
+    "sidenavColors": "Colores del menú lateral",
+    "sidenavType": "Tipo de menú lateral",
+    "sidenavTypeHelp": "Elige entre 2 tipos diferentes de menú lateral.",
+    "transparent": "Transparente",
+    "opaque": "Opaco",
+    "navbarFixed": "Barra superior fija",
+    "freeDownload": "DESCARGA GRATIS",
+    "viewDocs": "VER DOCUMENTACIÓN",
+    "thankYou": "¡Gracias por compartir!",
+    "tweet": "Tweet",
+    "share": "Compartir",
+    "language": "Idioma",
+    "selectLanguage": "Selecciona idioma"
+  },
+  "breadcrumbs": {
+    "home": "Inicio"
+  },
+  "actions": {
+    "save": "Guardar",
+    "cancel": "Cancelar"
+  }
+}

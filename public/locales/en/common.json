@@ -1,0 +1,47 @@
+{
+  "app": {
+    "brand": "DOCTECK"
+  },
+  "navbar": {
+    "searchPlaceholder": "Type here...",
+    "signIn": "Sign in",
+    "notifications": "Notifications"
+  },
+  "routes": {
+    "dashboard": "Dashboard",
+    "tables": "Caring Hub",
+    "assistance": "Assistance",
+    "billing": "Billing",
+    "account-pages": "Account Pages",
+    "profile": "Profile",
+    "family": "Family",
+    "pets": "Pets",
+    "authentication": "Authentication",
+    "sign-in": "Sign In",
+    "sign-up": "Sign Up"
+  },
+  "configurator": {
+    "title": "Vision UI Configurator",
+    "subtitle": "See our dashboard options.",
+    "sidenavColors": "Sidenav Colors",
+    "sidenavType": "Sidenav Type",
+    "sidenavTypeHelp": "Choose between 2 different sidenav types.",
+    "transparent": "Transparent",
+    "opaque": "Opaque",
+    "navbarFixed": "Navbar Fixed",
+    "freeDownload": "FREE DOWNLOAD",
+    "viewDocs": "VIEW DOCUMENTATION",
+    "thankYou": "Thank you for sharing!",
+    "tweet": "Tweet",
+    "share": "Share",
+    "language": "Language",
+    "selectLanguage": "Select language"
+  },
+  "breadcrumbs": {
+    "home": "Home"
+  },
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel"
+  }
+}

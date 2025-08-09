@@ -17,6 +17,7 @@
 */
 
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 
 // react-github-btn
 import GitHubButton from "react-github-btn";
@@ -26,6 +27,8 @@ import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
 import Link from "@mui/material/Link";
 import Icon from "@mui/material/Icon";
+import Autocomplete from "@mui/material/Autocomplete";
+import TextField from "@mui/material/TextField";
 
 // @mui icons
 import TwitterIcon from "@mui/icons-material/Twitter";
@@ -50,10 +53,16 @@ import {
 } from "context";
 
 function Configurator() {
+  const { i18n } = useTranslation();
   const [controller, dispatch] = useVisionUIController();
   const { openConfigurator, transparentSidenav, fixedNavbar, sidenavColor } = controller;
   const [disabled, setDisabled] = useState(false);
   const sidenavColors = ["primary", "info", "success", "warning", "error"];
+  const [lang, setLang] = useState(i18n.language || "en");
+  const languageOptions = [
+    { code: "en", label: "English" },
+    { code: "es", label: "Español" },
+  ];
 
   // Use the useEffect hook to change the button state for the sidenav type based on window size.
   useEffect(() => {
@@ -76,6 +85,12 @@ function Configurator() {
   const handleTransparentSidenav = () => setTransparentSidenav(dispatch, true);
   const handleWhiteSidenav = () => setTransparentSidenav(dispatch, false);
   const handleFixedNavbar = () => setFixedNavbar(dispatch, !fixedNavbar);
+  const handleChangeLang = (_, option) => {
+    if (!option) return;
+    const newLng = option.code;
+    setLang(newLng);
+    i18n.changeLanguage(newLng);
+  };
 
   // sidenav type buttons styles
   const sidenavTypeButtonsStyles = ({
@@ -103,7 +118,7 @@ function Configurator() {
       >
         <VuiBox>
           <VuiTypography color="white" variant="h5" fontWeight="bold">
-            Vision UI Configurator
+            Settings
           </VuiTypography>
           <VuiTypography variant="body2" color="white" fontWeight="bold">
             See our dashboard options.
@@ -216,11 +231,50 @@ function Configurator() {
 
         <Divider light />
 
+        {/* Language selector */}
+        <VuiBox mt={3} mb={2}>
+          <VuiBox display="flex" alignItems="center" mb={1}>
+            <Icon sx={{ color: 'white', mr: 1 }}>language</Icon>
+            <VuiTypography variant="h6" color="white">
+              Language
+            </VuiTypography>
+          </VuiBox>
+          <Autocomplete
+            disablePortal
+            disableClearable
+            autoHighlight
+            options={languageOptions}
+            getOptionLabel={(o) => o.label}
+            value={languageOptions.find((o) => o.code === lang) || languageOptions[0]}
+            onChange={handleChangeLang}
+            sx={{
+              '& .MuiSvgIcon-root': { color: 'white' },
+              '& .MuiAutocomplete-popupIndicator': { color: 'white' },
+              '& .MuiAutocomplete-clearIndicator': { color: 'white' },
+              '& .MuiInputBase-root': { color: 'white' },
+            }}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                variant="filled"
+                label="Select language"
+                InputLabelProps={{ sx: { color: 'white' } }}
+                sx={{
+                  '& .MuiFilledInput-root': { backgroundColor: 'rgba(255,255,255,0.08)' },
+                  '& .MuiFilledInput-input': { color: 'white' },
+                }}
+              />
+            )}
+          />
+        </VuiBox>
+
+        <Divider light />
+
         <VuiBox mt={3} mb={2}>
           <VuiBox mb={2}>
             <VuiButton
               component={Link}
-              href="https://www.creative-tim.com/product/vision-ui-dashboard-react"
+              href="https://github.com/JEER11/Docteck"
               target="_blank"
               rel="noreferrer"
               color="info"
@@ -232,7 +286,7 @@ function Configurator() {
           </VuiBox>
           <VuiButton
             component={Link}
-            href="https://www.creative-tim.com/learning-lab/react/quick-start/vision-ui-dashboard/"
+            href="https://github.com/JEER11/Docteck#readme"
             target="_blank"
             rel="noreferrer"
             color="info"
@@ -244,11 +298,11 @@ function Configurator() {
         </VuiBox>
         <VuiBox display="flex" justifyContent="center">
           <GitHubButton
-            href="https://github.com/creativetimofficial/vision-ui-dashboard-react"
+            href="https://github.com/JEER11/Docteck"
             data-icon="octicon-star"
             data-size="large"
             data-show-count="true"
-            aria-label="Star creativetimofficial/vision-ui-dashboard-react on GitHub"
+            aria-label="Star JEER11/Docteck on GitHub"
           >
             Star
           </GitHubButton>
@@ -264,7 +318,7 @@ function Configurator() {
             <VuiBox mr={1.5}>
               <VuiButton
                 component={Link}
-                href="https://twitter.com/intent/tweet?url=https://www.creative-tim.com/product/vision-ui-dashboard-react&text=Check%20Vision%20UI%20Dashboard%20made%20by%20@simmmple_web%20and%20@CreativeTim%20#webdesign%20#dashboard%20#react"
+                href="https://twitter.com/intent/tweet?url=https://github.com/JEER11/Docteck&text=Check%20out%20Docteck%20on%20GitHub"
                 target="_blank"
                 rel="noreferrer"
                 color="dark"
@@ -275,7 +329,7 @@ function Configurator() {
             </VuiBox>
             <VuiButton
               component={Link}
-              href="https://www.facebook.com/sharer/sharer.php?u=https://www.creative-tim.com/product/vision-ui-dashboard-react"
+              href="https://www.facebook.com/sharer/sharer.php?u=https://github.com/JEER11/Docteck"
               target="_blank"
               rel="noreferrer"
               color="dark"

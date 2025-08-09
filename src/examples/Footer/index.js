@@ -41,7 +41,7 @@ function Footer() {
           <VuiTypography
             component="a"
             variant="button"
-            href="https://simmmple.com/"
+            href="https://github.com/JEER11/Docteck"
             sx={{ textAlign: "center", fontWeight: "500 !important" }}
             color="white"
             mr="2px"
@@ -52,7 +52,7 @@ function Footer() {
           <VuiTypography
             ml="2px"
             mr="2px"
-            component="a"
+            component="span"
             variant="button"
             sx={{ textAlign: "center", fontWeight: "500 !important" }}
             color="white"
@@ -83,11 +83,7 @@ function Footer() {
             </VuiTypography>
           </VuiBox>
           <VuiBox>
-            <VuiTypography
-              component="a"
-              variant="body2"
-              color="white"
-            >
+            <VuiTypography component="span" variant="body2" color="white">
               License
             </VuiTypography>
           </VuiBox>

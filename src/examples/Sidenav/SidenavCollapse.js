@@ -18,6 +18,7 @@
 
 // prop-types is a library for typechecking of props.
 import PropTypes from "prop-types";
+import { useTranslation } from "react-i18next";
 
 // @mui material components
 import Collapse from "@mui/material/Collapse";
@@ -40,7 +41,8 @@ import {
 // Vision UI Dashboard React context
 import { useVisionUIController } from "context";
 
-function SidenavCollapse({ color, icon, name, children, active, noCollapse, open, ...rest }) {
+function SidenavCollapse({ color, icon, name, tKey, children, active, noCollapse, open, ...rest }) {
+  const { t } = useTranslation();
   const [controller] = useVisionUIController();
   const { miniSidenav, transparentSidenav } = controller;
 
@@ -59,7 +61,7 @@ function SidenavCollapse({ color, icon, name, children, active, noCollapse, open
           </ListItemIcon>
 
           <ListItemText
-            primary={name}
+            primary={t(`routes.${tKey || (name || '').toString().toLowerCase().replace(/\s+/g, '-')}`, { defaultValue: name })}
             sx={(theme) => collapseText(theme, { miniSidenav, transparentSidenav, active })}
           />
         </VuiBox>
@@ -87,6 +89,7 @@ SidenavCollapse.propTypes = {
   color: PropTypes.oneOf(["info", "success", "warning", "error", "dark"]),
   icon: PropTypes.node.isRequired,
   name: PropTypes.string.isRequired,
+  tKey: PropTypes.string,
   children: PropTypes.node,
   active: PropTypes.bool,
   noCollapse: PropTypes.bool,
