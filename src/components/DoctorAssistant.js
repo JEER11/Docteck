@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { IconButton, InputBase, Paper, Box } from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
+import getApiBase from "../lib/apiBase";
 
 
-// Prefer explicit API base from env, otherwise use same-origin (CRA proxy will route /api to backend in dev)
-const API_URL = process.env.REACT_APP_API_URL || '';
+// Compute API base using helper to work across dev/prod and different host ports
+const API_URL = getApiBase();
 
 function DoctorAssistant({ messages: controlledMessages, setMessages: setControlledMessages }) {
   const isControlled = controlledMessages !== undefined && setControlledMessages !== undefined;
