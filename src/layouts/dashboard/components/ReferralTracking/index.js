@@ -112,7 +112,7 @@ function ReferralTracking() {
 								<VuiTypography variant='button' color='white' fontWeight='bold'>
 									{todo.type.charAt(0).toUpperCase() + todo.type.slice(1)}
 								</VuiTypography>
-								<VuiTypography variant='caption' color='text.secondary' sx={{ fontSize: 12, display: 'block', mt: 0.5 }}>
+								<VuiTypography variant='caption' color='text' sx={{ fontSize: 12, display: 'block', mt: 0.5 }}>
 									{todo.date ? new Date(todo.date).toLocaleDateString() : ''}
 								</VuiTypography>
 								<VuiTypography variant='body2' color='white'>

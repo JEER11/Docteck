@@ -224,7 +224,7 @@ function Header() {
             <VuiAvatar src={editProfile.avatar} alt="avatar" size="xl" variant="rounded" shadow="sm" sx={{ mb: 2 }} />
             <Button variant="contained" component="label" sx={{ mb: 2, background: 'linear-gradient(90deg,#6a6afc,#8b8bfc)', color: '#fff', borderRadius: 2, fontWeight: 600, textTransform: 'none', px: 3, py: 1, boxShadow: '0 2px 8px #6a6afc33' }}>
               Change Picture
-              <input type="file" accept="image/*" hidden onChange={handleAvatarChange} />
+              <input id="avatarFile" name="avatarFile" type="file" accept="image/*" hidden onChange={handleAvatarChange} />
             </Button>
           </VuiBox>
           <TextField label="Name" name="name" value={editProfile.name} onChange={handleProfileChange} fullWidth sx={{ mb: 2, input: { color: '#fff' }, label: { color: '#bdbdfc' }, '& .MuiOutlinedInput-root': { background: 'rgba(40,42,70,0.5)', borderRadius: 2 } }} />

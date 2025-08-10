@@ -425,8 +425,8 @@ function PlatformSettings() {
           <DialogTitle>Edit Notification Settings</DialogTitle>
           <DialogContent>
             <VuiTypography variant="button" fontWeight="bold" mb={1} color="text">Contact Information</VuiTypography>
-            <input type="email" placeholder="Email" value={notifEmail} onChange={e => setNotifEmail(e.target.value)} style={{ width: '100%', padding: 12, borderRadius: 6, border: '1px solid #ccc', marginBottom: 8, fontSize: 18 }} />
-            <input type="tel" placeholder="Phone Number" value={notifPhone} onChange={e => setNotifPhone(e.target.value)} style={{ width: '100%', padding: 12, borderRadius: 6, border: '1px solid #ccc', fontSize: 18 }} />
+            <input id="notifEmail" name="notifEmail" autoComplete="email" type="email" placeholder="Email" value={notifEmail} onChange={e => setNotifEmail(e.target.value)} style={{ width: '100%', padding: 12, borderRadius: 6, border: '1px solid #ccc', marginBottom: 8, fontSize: 18 }} />
+            <input id="notifPhone" name="notifPhone" autoComplete="tel" type="tel" placeholder="Phone Number" value={notifPhone} onChange={e => setNotifPhone(e.target.value)} style={{ width: '100%', padding: 12, borderRadius: 6, border: '1px solid #ccc', fontSize: 18 }} />
             <VuiTypography variant="button" fontWeight="bold" mt={2} mb={1} color="text">Settings</VuiTypography>
             <VuiBox display="flex" alignItems="center" mb={1}>
               <VuiSwitch color="info" checked={notifEmailEnabled} onChange={() => setNotifEmailEnabled(!notifEmailEnabled)} />
@@ -526,7 +526,7 @@ function PlatformSettings() {
               </Button>
               {showICalInput && (
                 <VuiBox mt={2}>
-                  <input type="text" placeholder="Paste iCal URL here" value={icalUrl} onChange={e => setICalUrl(e.target.value)} style={{ width: '100%', padding: 10, borderRadius: 6, border: '1px solid #ccc', fontSize: 16 }} />
+                  <input id="icalUrl" name="icalUrl" autoComplete="off" type="text" placeholder="Paste iCal URL here" value={icalUrl} onChange={e => setICalUrl(e.target.value)} style={{ width: '100%', padding: 10, borderRadius: 6, border: '1px solid #ccc', fontSize: 16 }} />
                   <Button onClick={handleICalSave} color="primary" sx={{ mt: 1, ml: 1 }}>Save</Button>
                 </VuiBox>
               )}
