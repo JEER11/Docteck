@@ -113,6 +113,7 @@ import AccessTimeOutlinedIcon from "@mui/icons-material/AccessTimeOutlined";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import countries from "./countries.json"; // You will need to add a countries.json file with all country names
 import { useState, useRef, useEffect } from "react";
+import getApiBase from "../../lib/apiBase";
 import VuiButton from "components/VuiButton";
 import MiniDayCalendar from "components/MiniDayCalendar";
 import { AppointmentProvider } from "context/AppointmentContext";
@@ -259,7 +260,8 @@ function Overview() {
   // helpers
   const isValidEmail = (v) => !v || /[^@\s]+@[^@\s]+\.[^@\s]+/.test(v);
   const isValidPhone = (v) => !v || /[0-9]{7,}/.test((v || '').replace(/\D/g, ''));
-  const apiBase = typeof window !== 'undefined' && window.location && window.location.port === '3000' ? 'http://localhost:3001' : '';
+  // Prefer explicit env override; otherwise, when running on localhost (any port != 3001), use backend on 3001; else same-origin
+  const apiBase = getApiBase();
 
   // autofill from profile
   useEffect(() => {
