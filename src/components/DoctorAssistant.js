@@ -3,7 +3,8 @@ import { IconButton, InputBase, Paper, Box } from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
 
 
-const API_URL = process.env.REACT_APP_API_URL;
+// Prefer explicit API base from env, otherwise use same-origin (CRA proxy will route /api to backend in dev)
+const API_URL = process.env.REACT_APP_API_URL || '';
 
 function DoctorAssistant({ messages: controlledMessages, setMessages: setControlledMessages }) {
   const isControlled = controlledMessages !== undefined && setControlledMessages !== undefined;
@@ -23,7 +24,7 @@ function DoctorAssistant({ messages: controlledMessages, setMessages: setControl
     setInput("");
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/api/groq-assistant`, {
+  const response = await fetch(`${API_URL}/api/groq-assistant`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: input }),

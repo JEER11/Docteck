@@ -228,7 +228,8 @@ function Dashboard() {
             }
           });
         }
-      });
+      })
+      .catch(() => {/* ignore network errors on dashboard */});
     // Fetch iCal events
     fetch('/api/calendar/ical')
       .then(res => res.json())
@@ -248,7 +249,8 @@ function Dashboard() {
             }
           });
         }
-      });
+      })
+      .catch(() => {/* ignore network errors on dashboard */});
   }, []); // Only run once on mount
 
   return (
