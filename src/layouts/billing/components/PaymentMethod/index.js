@@ -27,22 +27,23 @@ function PaymentMethod() {
   const { grey } = colors;
 
   const [open, setOpen] = useState(false);
-  const [newInsurance, setNewInsurance] = useState({ name: "", accountId: "", type: "Mastercard", monthlyBill: "" });
+  const [newCard, setNewCard] = useState({ cardId: "", name: "", validThru: "", cvv: "", type: "Mastercard" });
   const [editIndex, setEditIndex] = useState(null);
 
   const handleOpen = () => {
     setEditIndex(null);
-    setNewInsurance({ name: "", accountId: "", type: "Mastercard", monthlyBill: "" });
+  setNewCard({ cardId: "", name: "", validThru: "", cvv: "", type: "Mastercard" });
     setOpen(true);
   };
   const handleEdit = (idx) => {
-    const ins = cards[idx];
+    const c = cards[idx];
     setEditIndex(idx);
-    setNewInsurance({
-      name: ins.name,
-      accountId: ins.accountId,
-      type: ins.type,
-      monthlyBill: ins.monthlyBill.toString(),
+    setNewCard({
+      cardId: c.cardId || "",
+      name: c.name || "",
+      validThru: c.validThru || "",
+      cvv: c.cvv || "",
+      type: c.type || "Mastercard",
     });
     setOpen(true);
   };
@@ -52,25 +53,13 @@ function PaymentMethod() {
   };
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setNewInsurance({ ...newInsurance, [name]: name === "monthlyBill" ? value.replace(/[^\d.]/g, "") : value });
+  setNewCard({ ...newCard, [name]: value });
   };
   const handleAddOrEdit = () => {
-    if (editIndex !== null) {
-      // Edit mode
-      const updated = [...cards];
-      updated[editIndex] = {
-        ...newInsurance,
-        monthlyBill: parseFloat(newInsurance.monthlyBill) || 0,
-      };
-      setInsurances(updated);
-    } else {
-      // Add mode
-      setInsurances([
-        ...cards,
-        { ...newInsurance, monthlyBill: parseFloat(newInsurance.monthlyBill) || 0 },
-      ]);
-    }
-    setNewInsurance({ name: "", accountId: "", type: "Mastercard", monthlyBill: "" });
+    if (!newCard.cardId || !newCard.name || !newCard.validThru || !newCard.cvv) return;
+    // For demo, append a new card; no edit support for now
+    addCard({ ...newCard });
+    setNewCard({ cardId: "", name: "", validThru: "", cvv: "", type: "Mastercard" });
     handleClose();
   };
 
@@ -84,11 +73,11 @@ function PaymentMethod() {
     <div style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh", background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 99999 }}>
       <div style={{ background: "rgba(34,34,34,0.85)", color: "#fff", padding: 32, borderRadius: 16, minWidth: 340, boxShadow: "0 8px 32px 0 rgba(0,0,0,0.5)", border: "2px solid #fff", position: "relative", backdropFilter: "blur(4px)" }}>
         <button onClick={handleClose} style={{ position: "absolute", top: 12, right: 12, background: "transparent", border: "none", color: "#fff", fontSize: 22, cursor: "pointer" }} aria-label="Close">×</button>
-        <VuiTypography variant="h6" color="white" mb={2} style={{ textAlign: "center" }}>{editIndex !== null ? "Edit Insurance" : "Add Insurance"}</VuiTypography>
+        <VuiTypography variant="h6" color="white" mb={2} style={{ textAlign: "center" }}>{editIndex !== null ? "Edit Card" : "Add Card"}</VuiTypography>
         <input
           name="name"
-          placeholder="Medicine Name"
-          value={newInsurance.name}
+          placeholder="Card Name"
+          value={newCard.name}
           onChange={handleChange}
           list="medicine-names"
           style={{ width: "100%", marginBottom: 12, padding: 10, borderRadius: 8, border: "1px solid #fff", background: "rgba(51,51,51,0.8)", color: "#fff" }}
@@ -98,15 +87,16 @@ function PaymentMethod() {
             <option value={name} key={i} />
           ))}
         </datalist>
-        <input name="accountId" placeholder="Account ID" value={newInsurance.accountId} onChange={handleChange} style={{ width: "100%", marginBottom: 12, padding: 10, borderRadius: 8, border: "1px solid #fff", background: "rgba(51,51,51,0.8)", color: "#fff" }} />
-        <input name="monthlyBill" type="number" min="0" step="0.01" placeholder="Monthly Bill ($)" value={newInsurance.monthlyBill} onChange={handleChange} style={{ width: "100%", marginBottom: 12, padding: 10, borderRadius: 8, border: "1px solid #fff", background: "rgba(51,51,51,0.8)", color: "#fff" }} />
-        <select name="type" value={newInsurance.type} onChange={handleChange} style={{ width: "100%", marginBottom: 16, padding: 10, borderRadius: 8, border: "1px solid #fff", background: "rgba(51,51,51,0.8)", color: "#fff" }}>
+        <input name="cardId" placeholder="Card Number" value={newCard.cardId} onChange={handleChange} style={{ width: "100%", marginBottom: 12, padding: 10, borderRadius: 8, border: "1px solid #fff", background: "rgba(51,51,51,0.8)", color: "#fff" }} />
+        <input name="validThru" placeholder="Valid Thru (MM/YY)" value={newCard.validThru} onChange={handleChange} style={{ width: "100%", marginBottom: 12, padding: 10, borderRadius: 8, border: "1px solid #fff", background: "rgba(51,51,51,0.8)", color: "#fff" }} />
+        <input name="cvv" placeholder="CVV" value={newCard.cvv} onChange={handleChange} style={{ width: "100%", marginBottom: 12, padding: 10, borderRadius: 8, border: "1px solid #fff", background: "rgba(51,51,51,0.8)", color: "#fff" }} />
+        <select name="type" value={newCard.type} onChange={handleChange} style={{ width: "100%", marginBottom: 16, padding: 10, borderRadius: 8, border: "1px solid #fff", background: "rgba(51,51,51,0.8)", color: "#fff" }}>
           <option value="Mastercard">Mastercard</option>
           <option value="Visa">Visa</option>
         </select>
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
           <VuiButton variant="outlined" color="secondary" onClick={handleClose}>Cancel</VuiButton>
-          <VuiButton variant="contained" color="info" onClick={handleAddOrEdit} disabled={!newInsurance.name || !newInsurance.accountId}>
+          <VuiButton variant="contained" color="info" onClick={handleAddOrEdit} disabled={!newCard.cardId || !newCard.name || !newCard.validThru || !newCard.cvv}>
             {editIndex !== null ? "Save" : "Add"}
           </VuiButton>
         </div>
@@ -162,17 +152,17 @@ function PaymentMethod() {
               <div style={{ background: "rgba(34,34,34,0.85)", color: "#fff", padding: 32, borderRadius: 16, minWidth: 340, boxShadow: "0 8px 32px 0 rgba(0,0,0,0.5)", border: "2px solid #fff", position: "relative", backdropFilter: "blur(4px)" }}>
                 <button onClick={handleClose} style={{ position: "absolute", top: 12, right: 12, background: "transparent", border: "none", color: "#fff", fontSize: 22, cursor: "pointer" }} aria-label="Close">×</button>
                 <VuiTypography variant="h6" color="white" mb={2} style={{ textAlign: "center" }}>Add Card</VuiTypography>
-                <input name="cardId" placeholder="Card Number" value={newInsurance.accountId} onChange={handleChange} style={{ width: "100%", marginBottom: 12, padding: 10, borderRadius: 8, border: "1px solid #fff", background: "rgba(51,51,51,0.8)", color: "#fff" }} />
-                <input name="name" placeholder="Card Name" value={newInsurance.name} onChange={handleChange} style={{ width: "100%", marginBottom: 12, padding: 10, borderRadius: 8, border: "1px solid #fff", background: "rgba(51,51,51,0.8)", color: "#fff" }} />
-                <input name="validThru" placeholder="Valid Thru (MM/YY)" value={newInsurance.validThru || ''} onChange={handleChange} style={{ width: "100%", marginBottom: 12, padding: 10, borderRadius: 8, border: "1px solid #fff", background: "rgba(51,51,51,0.8)", color: "#fff" }} />
-                <input name="cvv" placeholder="CVV" value={newInsurance.cvv || ''} onChange={handleChange} style={{ width: "100%", marginBottom: 12, padding: 10, borderRadius: 8, border: "1px solid #fff", background: "rgba(51,51,51,0.8)", color: "#fff" }} />
-                <select name="type" value={newInsurance.type} onChange={handleChange} style={{ width: "100%", marginBottom: 16, padding: 10, borderRadius: 8, border: "1px solid #fff", background: "rgba(51,51,51,0.8)", color: "#fff" }}>
+                <input name="cardId" placeholder="Card Number" value={newCard.cardId} onChange={handleChange} style={{ width: "100%", marginBottom: 12, padding: 10, borderRadius: 8, border: "1px solid #fff", background: "rgba(51,51,51,0.8)", color: "#fff" }} />
+                <input name="name" placeholder="Card Name" value={newCard.name} onChange={handleChange} style={{ width: "100%", marginBottom: 12, padding: 10, borderRadius: 8, border: "1px solid #fff", background: "rgba(51,51,51,0.8)", color: "#fff" }} />
+                <input name="validThru" placeholder="Valid Thru (MM/YY)" value={newCard.validThru || ''} onChange={handleChange} style={{ width: "100%", marginBottom: 12, padding: 10, borderRadius: 8, border: "1px solid #fff", background: "rgba(51,51,51,0.8)", color: "#fff" }} />
+                <input name="cvv" placeholder="CVV" value={newCard.cvv || ''} onChange={handleChange} style={{ width: "100%", marginBottom: 12, padding: 10, borderRadius: 8, border: "1px solid #fff", background: "rgba(51,51,51,0.8)", color: "#fff" }} />
+                <select name="type" value={newCard.type} onChange={handleChange} style={{ width: "100%", marginBottom: 16, padding: 10, borderRadius: 8, border: "1px solid #fff", background: "rgba(51,51,51,0.8)", color: "#fff" }}>
                   <option value="Mastercard">Mastercard</option>
                   <option value="Visa">Visa</option>
                 </select>
                 <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
                   <VuiButton variant="outlined" color="secondary" onClick={handleClose}>Cancel</VuiButton>
-                  <VuiButton variant="contained" color="info" onClick={() => { addCard({ ...newInsurance }); handleClose(); }} disabled={!newInsurance.cardId || !newInsurance.name || !newInsurance.validThru || !newInsurance.cvv}>
+                  <VuiButton variant="contained" color="info" onClick={() => { addCard({ ...newCard }); handleClose(); }} disabled={!newCard.cardId || !newCard.name || !newCard.validThru || !newCard.cvv}>
                     Add
                   </VuiButton>
                 </div>

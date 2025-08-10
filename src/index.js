@@ -4,6 +4,7 @@ import "./i18n";
 import { createRoot} from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import App from "App";
+import StripeProvider from "components/StripeProvider";
 
 // Docteck Dashboard React Context Provider
 import { VisionUIControllerProvider } from "context";
@@ -27,8 +28,6 @@ import colors from "assets/theme/base/colors";
 const rootElement = document.getElementById('root');
 const root = createRoot(rootElement);
 
-
-import StripeProvider from "components/StripeProvider";
 
 root.render(
   <BrowserRouter>

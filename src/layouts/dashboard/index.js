@@ -69,8 +69,8 @@ import {
   Tooltip,
   Filler,
 } from 'chart.js';
-ChartJS.register(LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Filler);
 import getApiBase from '../../lib/apiBase';
+ChartJS.register(LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Filler);
 
 function Dashboard() {
   const apiBase = getApiBase();
@@ -378,24 +378,24 @@ function Dashboard() {
                     </Box>
                   </VuiBox>
                   {/* Goal text */}
-                  <VuiTypography variant="body2" color="#bfc6e0" fontWeight={400} textAlign="center" mb={2}>
+                  <VuiTypography variant="body2" color="text" fontWeight="regular" textAlign="center" mb={2} sx={{ color: '#bfc6e0' }}>
                  
                   </VuiTypography>
                   {/* Level and Score */}
                   <VuiBox display="flex" justifyContent="space-between" alignItems="center" px={3} mb={1}>
                     <Box>
-                      <VuiTypography variant="caption" color="#bfc6e0" fontWeight={600} letterSpacing={1} textTransform="uppercase">
+                      <VuiTypography variant="caption" color="text" fontWeight="medium" letterSpacing={1} textTransform="uppercase" sx={{ color: '#bfc6e0' }}>
                         {wellBeingTab === 'mentally' ? 'Mental Level' : 'Physical Level'}
                       </VuiTypography>
-                      <VuiTypography variant="h6" color="info" fontWeight={700} mt={0.5}>
+                      <VuiTypography variant="h6" color="info" fontWeight="bold" mt={0.5}>
                         {level}
                       </VuiTypography>
                     </Box>
                     <Box textAlign="right">
-                      <VuiTypography variant="caption" color="#bfc6e0" fontWeight={600} letterSpacing={1} textTransform="uppercase">
+                      <VuiTypography variant="caption" color="text" fontWeight="medium" letterSpacing={1} textTransform="uppercase" sx={{ color: '#bfc6e0' }}>
                         Score
                       </VuiTypography>
-                      <VuiTypography variant="h4" color="white" fontWeight={700}>
+                      <VuiTypography variant="h4" color="white" fontWeight="bold">
                         {average ? average.toFixed(1) : 0} <span style={{ fontSize: 18, color: '#bfc6e0', fontWeight: 500 }}>/10</span>
                       </VuiTypography>
                     </Box>
@@ -425,8 +425,8 @@ function Dashboard() {
                       alignItems: 'center',
                       pointerEvents: 'none'
                     }}>
-                      <VuiTypography variant="caption" color="#bfc6e0" fontWeight={500}>Severe</VuiTypography>
-                      <VuiTypography variant="caption" color="#bfc6e0" fontWeight={500}>Minimal</VuiTypography>
+                      <VuiTypography variant="caption" color="text" fontWeight="medium" sx={{ color: '#bfc6e0' }}>Severe</VuiTypography>
+                      <VuiTypography variant="caption" color="text" fontWeight="medium" sx={{ color: '#bfc6e0' }}>Minimal</VuiTypography>
                     </Box>
                   </VuiBox>
                   <VuiBox display="flex" alignItems="center" justifyContent="space-between" mt={2} px={2}>

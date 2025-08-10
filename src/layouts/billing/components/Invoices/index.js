@@ -1,17 +1,3 @@
-  // Save changes in the Edit modal
-  const handleEditSave = () => {
-    if (editIdx == null) return;
-    setPrescriptions(prev => prev.map((rx, idx) => idx === editIdx ? { ...editPrescription } : rx));
-    handleEditClose();
-  };
-  // Handle changes in the Edit modal
-  const handleEditChange = (e) => {
-    const { name, value, files } = e.target;
-    setEditPrescription(prev => ({
-      ...prev,
-      [name]: name === "info" ? files[0] : value
-    }));
-  };
 // @mui material components
 import Card from "@mui/material/Card";
 import Menu from "@mui/material/Menu";
@@ -30,6 +16,20 @@ import AddIcon from "@mui/icons-material/Add";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 
 function Invoices() {
+  // Save changes in the Edit modal
+  const handleEditSave = () => {
+    if (editIdx == null) return;
+    setPrescriptions(prev => prev.map((rx, idx) => idx === editIdx ? { ...editPrescription } : rx));
+    handleEditClose();
+  };
+  // Handle changes in the Edit modal
+  const handleEditChange = (e) => {
+    const { name, value, files } = e.target;
+    setEditPrescription(prev => ({
+      ...prev,
+      [name]: name === "info" ? files[0] : value
+    }));
+  };
   // Example prescription data (restored with multiple entries)
   const [prescriptions, setPrescriptions] = useState([
     { date: "July, 01, 2025", medicine: "Amlodipine 5mg", price: "$80", info: null },

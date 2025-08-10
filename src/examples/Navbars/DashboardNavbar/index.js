@@ -127,12 +127,13 @@ function DashboardNavbar({ absolute, light, isMini }) {
               />
             </VuiBox>
             <VuiBox color={light ? "white" : "inherit"}>
-              <IconButton sx={navbarIconButton} size="small">
+              <IconButton sx={navbarIconButton} size="small"
+                onMouseDown={() => routeLoadingBus.start()}
+                onClick={() => routeLoadingBus.start()}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') routeLoadingBus.start(); }}
+              >
                 <Link
                   to="/authentication/sign-in"
-                  onMouseDown={() => routeLoadingBus.start()}
-                  onClick={() => routeLoadingBus.start()}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') routeLoadingBus.start(); }}
                   style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', color: 'inherit', width: '100%', height: '100%' }}
                 >
                   <Icon
