@@ -70,8 +70,10 @@ import {
   Filler,
 } from 'chart.js';
 ChartJS.register(LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Filler);
+import getApiBase from '../../lib/apiBase';
 
 function Dashboard() {
+  const apiBase = getApiBase();
   const { gradients } = colors;
   const { cardContent } = gradients;
 
@@ -210,7 +212,7 @@ function Dashboard() {
   const { appointments, addAppointment } = useAppointments();
   useEffect(() => {
     // Fetch Google Calendar events
-    fetch('/api/calendar/google')
+  fetch(`${apiBase}/api/calendar/google`)
       .then(res => res.json())
       .then(events => {
         if (Array.isArray(events)) {
@@ -231,7 +233,7 @@ function Dashboard() {
       })
       .catch(() => {/* ignore network errors on dashboard */});
     // Fetch iCal events
-    fetch('/api/calendar/ical')
+  fetch(`${apiBase}/api/calendar/ical`)
       .then(res => res.json())
       .then(events => {
         if (Array.isArray(events)) {
