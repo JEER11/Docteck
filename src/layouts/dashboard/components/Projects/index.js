@@ -98,11 +98,10 @@ function Projects() {
   return (
     <Card
       sx={{
-        height: "100% !important",
-        maxWidth: 900,
-        minWidth: 400,
-        width: "100%",
-        ml:0,
+  height: "100%",
+  width: "100%",
+  minWidth: 0,
+  ml: 0,
       }}
     >
       <VuiBox display="flex" justifyContent="space-between" alignItems="center" mb="32px">

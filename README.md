@@ -25,6 +25,24 @@ Docteck is a modern web application designed to streamline appointment schedulin
 3. **Set up environment variables:**
    - Copy `.env.example` to `.env` and fill in your API keys and secrets as needed.
    - **Note:** The `.env` file is not tracked by git for security reasons.
+
+### Google Calendar connection (OAuth)
+
+Set these environment variables in `server/.env` (create if missing):
+
+```
+GOOGLE_CLIENT_ID=your_oauth_client_id
+GOOGLE_CLIENT_SECRET=your_oauth_client_secret
+GOOGLE_REDIRECT_URI=http://localhost:3001/api/auth/google/callback
+```
+
+Then start both server and client:
+
+```
+npm run dev
+```
+
+Open Profile > Account settings > Connect Calendar, choose "Connect Google Calendar". A popup will ask you to sign in and authorize read-only access. On success, the app stores tokens locally (for demo) and shows "Calendar Connected".
 4. **Start the development server:**
    ```sh
    npm start

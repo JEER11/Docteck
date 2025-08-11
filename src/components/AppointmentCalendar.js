@@ -66,22 +66,22 @@ function AppointmentCalendar() {
     <>
       <Card
         sx={{
-          minHeight: 600,
+          height: '100%',
+          minHeight: { xs: 420, md: 520, lg: 600 },
           width: "100%",
-          minWidth: 320,
-          maxWidth: { xs: "100%", xl: 1100, xxl: 1700 },
-          ml: { xs: 3, xl: 4, xxl: 2 },
+          minWidth: 0,
           background: "rgba(20,20,40,0.7)",
           backdropFilter: "blur(10px)",
           border: "1px solid rgba(255,255,255,0.08)",
           borderRadius: 4,
           p: 2.5,
           boxSizing: "border-box",
-          overflowX: "auto",
-          transition: "margin-left 0.3s, max-width 0.3s",
+          overflow: "hidden",
+          display: 'flex',
+          flexDirection: 'column',
         }}
       >
-        <Box sx={{ height: "100%", minHeight: 520, width: "100%" }}>
+        <Box sx={{ flex: 1, minHeight: { xs: 320, md: 420 }, width: "100%", minWidth: 0, display: 'flex', flexDirection: 'column' }}>
           <Box
             sx={{
               display: "flex",
@@ -142,7 +142,7 @@ function AppointmentCalendar() {
             events={appointments}
             startAccessor="start"
             endAccessor="end"
-            style={{ height: 480, width: "100%", minWidth: 0, fontSize: 13 }}
+            style={{ height: '100%', minHeight: 320, width: "100%", minWidth: 0, fontSize: 13 }}
             view={view}
             onView={setView}
             components={{

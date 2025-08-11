@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 // @mui material components
 import Card from "@mui/material/Card";
@@ -27,8 +27,18 @@ import VuiBox from "components/VuiBox";
 import VuiTypography from "components/VuiTypography";
 import VuiSwitch from "components/VuiSwitch";
 import { useAuth } from "hooks/useAuth";
-import { auth } from "lib/firebase";
+import { auth, db } from "lib/firebase";
 import { updatePassword, reauthenticateWithCredential, EmailAuthProvider, sendPasswordResetEmail } from "firebase/auth";
+import {
+  multiFactor,
+  PhoneAuthProvider,
+  RecaptchaVerifier,
+  PhoneMultiFactorGenerator,
+} from "firebase/auth";
+import { TotpMultiFactorGenerator } from "firebase/auth";
+import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+import QRCode from "qrcode";
+import getApiBase from "lib/apiBase";
 
 function PlatformSettings() {
   const [followsMe, setFollowsMe] = useState(true);
@@ -43,6 +53,19 @@ function PlatformSettings() {
   const [twoStepSMS, setTwoStepSMS] = useState(false);
   const [twoStepEmail, setTwoStepEmail] = useState(false);
   const [twoStepApp, setTwoStepApp] = useState(false);
+  const [email2faWorking, setEmail2faWorking] = useState(false);
+  const [email2faCode, setEmail2faCode] = useState("");
+  const [email2faMessage, setEmail2faMessage] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [smsCode, setSmsCode] = useState("");
+  const [smsStatus, setSmsStatus] = useState("");
+  const [totpUri, setTotpUri] = useState("");
+  const [totpQr, setTotpQr] = useState("");
+  const [totpCode, setTotpCode] = useState("");
+  const [totpStatus, setTotpStatus] = useState("");
+  const recaptchaDivId = useMemo(() => `recaptcha-container-${Math.random().toString(36).slice(2)}`, []);
+  const recaptchaRef = useRef(null);
+  const phoneVerificationIdRef = useRef(null);
   const [textNotif, setTextNotif] = useState(false);
   const [emailNotif, setEmailNotif] = useState(false);
   const [deactivateAccount, setDeactivateAccount] = useState(false);
@@ -72,6 +95,7 @@ function PlatformSettings() {
   const [capsNew, setCapsNew] = useState(false);
   const [capsConfirm, setCapsConfirm] = useState(false);
   const [showRules, setShowRules] = useState(false);
+  const oauthHandledRef = useRef(false);
 
   const pwStrength = (val) => {
     let score = 0;
@@ -143,6 +167,155 @@ function PlatformSettings() {
     } catch (e) { setPwError("Failed to send reset email."); }
   };
 
+  // Initialize 2FA states based on current user factors + Firestore profile
+  useEffect(() => {
+    const init = async () => {
+      try {
+        if (!auth || !auth.currentUser) return;
+        const enrolled = multiFactor(auth.currentUser).enrolledFactors || [];
+        setTwoStepSMS(enrolled.some((f) => f.factorId === 'phone')); 
+        setTwoStepApp(enrolled.some((f) => f.factorId === 'totp'));
+        if (db) {
+          const snap = await getDoc(doc(db, 'users', auth.currentUser.uid));
+          const data = snap.exists() ? snap.data() : {};
+          const enabled = Boolean(data?.security?.email2faEnabled);
+          setTwoStepEmail(enabled);
+          if (typeof data?.security?.phoneNumber === 'string') setPhoneNumber(data.security.phoneNumber);
+        }
+      } catch (_) {}
+    };
+    init();
+  }, [user]);
+
+  // Recaptcha setup for SMS
+  const ensureRecaptcha = () => {
+    if (!auth) throw new Error('Auth not configured');
+    if (!recaptchaRef.current) {
+      recaptchaRef.current = new RecaptchaVerifier(auth, recaptchaDivId, { size: 'invisible' });
+    }
+    return recaptchaRef.current;
+  };
+
+  const sendSmsVerification = async () => {
+    setSmsStatus('');
+    try {
+      if (!auth?.currentUser) throw new Error('Not signed in');
+      if (!phoneNumber) throw new Error('Enter phone number');
+      const session = await multiFactor(auth.currentUser).getSession();
+      const phoneInfoOptions = { phoneNumber, session };
+      const verifier = ensureRecaptcha();
+      const provider = new PhoneAuthProvider(auth);
+      const verificationId = await provider.verifyPhoneNumber(phoneInfoOptions, verifier);
+      phoneVerificationIdRef.current = verificationId;
+      setSmsStatus('code-sent');
+    } catch (e) {
+      setSmsStatus(e?.message || 'Failed to send code');
+    }
+  };
+
+  const enrollSmsSecondFactor = async () => {
+    setSmsStatus('');
+    try {
+      if (!auth?.currentUser) throw new Error('Not signed in');
+      if (!phoneVerificationIdRef.current) throw new Error('Send code first');
+      if (!smsCode) throw new Error('Enter code');
+      const cred = PhoneAuthProvider.credential(phoneVerificationIdRef.current, smsCode);
+      const assertion = PhoneMultiFactorGenerator.assertion(cred);
+      await multiFactor(auth.currentUser).enroll(assertion, 'SMS');
+      setSmsStatus('enrolled');
+      setTwoStepSMS(true);
+      if (db) {
+        const ref = doc(db, 'users', auth.currentUser.uid);
+  await setDoc(ref, { security: { phoneNumber, mfaSms: true } }, { merge: true });
+      }
+    } catch (e) {
+      setSmsStatus(e?.message || 'Failed to enroll');
+    }
+  };
+
+  const startTotpEnrollment = async () => {
+    setTotpStatus('');
+    setTotpCode('');
+    try {
+      if (!auth?.currentUser) throw new Error('Not signed in');
+      const session = await multiFactor(auth.currentUser).getSession();
+      const secret = await TotpMultiFactorGenerator.generateSecret(session);
+      // Build otpauth URI for QR
+      const accountName = auth.currentUser.email || 'docteck-user';
+      const issuer = 'Docteck';
+      const uri = secret.generateQrCodeUrl(accountName, issuer);
+      setTotpUri(uri);
+      const dataUrl = await QRCode.toDataURL(uri);
+      setTotpQr(dataUrl);
+      // Store secret for finalization
+      totpSecretRef.current = secret;
+    } catch (e) {
+      setTotpStatus(e?.message || 'Failed to start authenticator setup');
+    }
+  };
+
+  const totpSecretRef = useRef(null);
+  const finalizeTotpEnrollment = async () => {
+    setTotpStatus('');
+    try {
+      if (!auth?.currentUser) throw new Error('Not signed in');
+      if (!totpSecretRef.current) throw new Error('Start setup first');
+      if (!totpCode) throw new Error('Enter code');
+      const assertion = TotpMultiFactorGenerator.assertionForEnrollment(totpSecretRef.current, totpCode);
+      await multiFactor(auth.currentUser).enroll(assertion, 'Authenticator App');
+      setTwoStepApp(true);
+      setTotpStatus('enrolled');
+      if (db) {
+        const ref = doc(db, 'users', auth.currentUser.uid);
+        await setDoc(ref, { security: { mfaTotp: true } }, { merge: true });
+      }
+    } catch (e) {
+      setTotpStatus(e?.message || 'Failed to verify code');
+    }
+  };
+
+  const saveEmail2FASetting = async (enabled) => {
+    try {
+      if (!auth?.currentUser || !db) return;
+      const ref = doc(db, 'users', auth.currentUser.uid);
+      await setDoc(ref, { security: { email2faEnabled: enabled } }, { merge: true });
+      setTwoStepEmail(enabled);
+    } catch (_) {}
+  };
+
+  const sendEmailCode = async () => {
+    try {
+      setEmail2faMessage('');
+      setEmail2faWorking(true);
+      const email = auth?.currentUser?.email;
+      const res = await fetch('/api/2fa/email/send', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) });
+      const json = await res.json();
+      if (!json.ok) throw new Error(json.error || 'Failed');
+      setEmail2faMessage('Code sent');
+    } catch (e) {
+      setEmail2faMessage(e?.message || 'Failed to send');
+    } finally {
+      setEmail2faWorking(false);
+    }
+  };
+
+  const verifyEmailCode = async () => {
+    try {
+      setEmail2faMessage('');
+      setEmail2faWorking(true);
+      const email = auth?.currentUser?.email;
+      const res = await fetch('/api/2fa/email/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, code: email2faCode }) });
+      const json = await res.json();
+      if (!json.ok) throw new Error(json.error || 'Invalid code');
+      setEmail2faMessage('Verified');
+      await saveEmail2FASetting(true);
+    } catch (e) {
+      setEmail2faMessage(e?.message || 'Failed to verify');
+    } finally {
+      setEmail2faWorking(false);
+    }
+  };
+
   // Reusable compact input styles to match the app theme
   const fieldSx = {
   width: '100%',
@@ -158,17 +331,66 @@ function PlatformSettings() {
     '& .MuiFormLabel-root': { color: '#aeb3d5', fontSize: 12 }
   };
 
-  const handleICalSave = () => {
-    // TODO: Save iCal URL to backend or local storage
-    setShowICalInput(false);
-    setShowCalendarDialog(false);
+  const handleICalSave = async () => {
+    try {
+      const uid = auth?.currentUser?.uid || 'demo-user';
+      await fetch(`/api/connect/ical?uid=${encodeURIComponent(uid)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: icalUrl })
+      });
+      setShowICalInput(false);
+      setShowCalendarDialog(false);
+    } catch (_) {
+      // swallow
+    }
   };
 
   // Fetch calendar connection status (demo: replace with real API call)
   const refreshCalendarStatus = async () => {
-    // TODO: Replace with real API call to check if calendar is connected
-    setCalendarConnected(true);
+    try {
+      const uid = auth?.currentUser?.uid || 'demo-user';
+      const res = await fetch(`/api/calendar/google/status?uid=${encodeURIComponent(uid)}`);
+      const json = await res.json();
+      setCalendarConnected(Boolean(json?.connected));
+    } catch (_) {
+      setCalendarConnected(false);
+    }
   };
+
+  useEffect(() => {
+    refreshCalendarStatus();
+    // Listen for OAuth popup message globally (in case opened elsewhere)
+    const handleMessage = (event) => {
+      if (event.data && event.data.type === 'google-oauth' && !oauthHandledRef.current) {
+        oauthHandledRef.current = true;
+        if (event.data.code || event.data.accessToken) {
+          const uid = auth?.currentUser?.uid || 'demo-user';
+          fetch('/api/auth/google/callback', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code: event.data.code, accessToken: event.data.accessToken, uid })
+          })
+          .then(() => {
+            setCalendarSnackbar(true);
+            refreshCalendarStatus();
+            setShowCalendarDialog(false);
+            setTimeout(() => { oauthHandledRef.current = false; }, 1000);
+          })
+          .catch(() => { oauthHandledRef.current = false; });
+        } else if (event.data.success) {
+          setCalendarSnackbar(true);
+          refreshCalendarStatus();
+          setShowCalendarDialog(false);
+          setTimeout(() => { oauthHandledRef.current = false; }, 1000);
+        } else {
+          oauthHandledRef.current = false;
+        }
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
 
   return (
     <Card sx={{ minHeight: "360px", height: "auto" }}>
@@ -239,7 +461,7 @@ function PlatformSettings() {
             </VuiTypography>
           </VuiBox>
           <VuiBox ml={2}>
-            <IconButton size="small" color="info" onClick={() => setShowCalendarDialog(true)}>
+            <IconButton size="small" color="info" onClick={() => { setShowCalendarDialog(true); refreshCalendarStatus(); }}>
               <EditIcon />
             </IconButton>
           </VuiBox>
@@ -442,7 +664,7 @@ function PlatformSettings() {
             <Button color="primary">Save</Button>
           </DialogActions>
         </Dialog>
-        {/* Two Step Verification Edit Dialog (transparent and bigger) */}
+        {/* Two Step Verification Edit Dialog (functional) */}
         <Dialog open={showTwoStepEdit} onClose={() => setShowTwoStepEdit(false)}
           PaperProps={{
             sx: {
@@ -458,23 +680,63 @@ function PlatformSettings() {
         >
           <DialogTitle>Two Step Verification</DialogTitle>
           <DialogContent>
-            <VuiTypography variant="button" fontWeight="bold" mb={1} color="text">Choose Verification Methods</VuiTypography>
-            <VuiBox display="flex" alignItems="center" mb={2}>
-              <VuiSwitch color="info" checked={twoStepSMS} onChange={() => setTwoStepSMS(!twoStepSMS)} />
-              <VuiTypography variant="button" fontWeight="regular" color="text" ml={1}>SMS</VuiTypography>
+            <VuiTypography variant="button" fontWeight="bold" mb={1} color="text">SMS (Phone)</VuiTypography>
+            <VuiBox display="flex" alignItems="center" gap={1} mb={1}>
+              <VuiSwitch color="info" checked={twoStepSMS} onChange={(e) => setTwoStepSMS(e.target.checked)} />
+              <VuiTypography variant="button" fontWeight="regular" color="text">Enable SMS</VuiTypography>
             </VuiBox>
-            <VuiBox display="flex" alignItems="center" mb={2}>
-              <VuiSwitch color="info" checked={twoStepEmail} onChange={() => setTwoStepEmail(!twoStepEmail)} />
-              <VuiTypography variant="button" fontWeight="regular" color="text" ml={1}>Email</VuiTypography>
+            {twoStepSMS && (
+              <VuiBox display="flex" flexDirection="column" gap={1} mb={2}>
+                <input id="phoneNumber" name="phoneNumber" autoComplete="tel" type="tel" placeholder="+1 555 555 1234" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} style={{ width: '100%', padding: 10, borderRadius: 6, border: '1px solid #ccc', fontSize: 16 }} />
+                <div id={recaptchaDivId} />
+                <VuiBox display="flex" gap={1}>
+                  <Button size="small" variant="contained" onClick={sendSmsVerification}>Send code</Button>
+                  <TextField size="small" placeholder="123456" value={smsCode} onChange={(e) => setSmsCode(e.target.value)} sx={{ width: 140, input: { color: '#fff' } }} />
+                  <Button size="small" variant="contained" onClick={enrollSmsSecondFactor}>Verify & enroll</Button>
+                </VuiBox>
+                {smsStatus && <VuiTypography variant="caption" color="text">{smsStatus}</VuiTypography>}
+              </VuiBox>
+            )}
+
+            <Divider sx={{ borderColor: 'rgba(255,255,255,0.08)', my: 1 }} />
+            <VuiTypography variant="button" fontWeight="bold" mb={1} color="text">Email code</VuiTypography>
+            <VuiBox display="flex" alignItems="center" gap={1} mb={1}>
+              <VuiSwitch color="info" checked={twoStepEmail} onChange={async (e) => {
+                const checked = e.target.checked; if (!checked) { await saveEmail2FASetting(false); setTwoStepEmail(false); } else { setTwoStepEmail(true); }
+              }} />
+              <VuiTypography variant="button" fontWeight="regular" color="text">Enable Email 2FA</VuiTypography>
             </VuiBox>
-            <VuiBox display="flex" alignItems="center">
-              <VuiSwitch color="info" checked={twoStepApp} onChange={() => setTwoStepApp(!twoStepApp)} />
-              <VuiTypography variant="button" fontWeight="regular" color="text" ml={1}>Authenticator App</VuiTypography>
+            {twoStepEmail && (
+              <VuiBox display="flex" alignItems="center" gap={1} mb={2}>
+                <Button size="small" variant="contained" disabled={email2faWorking} onClick={sendEmailCode}>Send code</Button>
+                <TextField size="small" placeholder="123456" value={email2faCode} onChange={(e) => setEmail2faCode(e.target.value)} sx={{ width: 140, input: { color: '#fff' } }} />
+                <Button size="small" variant="contained" disabled={email2faWorking} onClick={verifyEmailCode}>Verify</Button>
+              </VuiBox>
+            )}
+            {email2faMessage && <VuiTypography variant="caption" color="text">{email2faMessage}</VuiTypography>}
+
+            <Divider sx={{ borderColor: 'rgba(255,255,255,0.08)', my: 1 }} />
+            <VuiTypography variant="button" fontWeight="bold" mb={1} color="text">Authenticator App (TOTP)</VuiTypography>
+            <VuiBox display="flex" alignItems="center" gap={1} mb={1}>
+              <VuiSwitch color="info" checked={twoStepApp} onChange={(e) => {
+                const checked = e.target.checked; setTwoStepApp(checked); if (checked) startTotpEnrollment();
+              }} />
+              <VuiTypography variant="button" fontWeight="regular" color="text">Enable Authenticator</VuiTypography>
             </VuiBox>
+            {twoStepApp && (
+              <VuiBox display="flex" flexDirection="column" alignItems="flex-start" gap={1}>
+                {totpQr ? <img src={totpQr} alt="TOTP QR" style={{ width: 160, height: 160 }} /> : (
+                  <Button size="small" variant="contained" onClick={startTotpEnrollment}>Generate QR</Button>
+                )}
+                {totpUri && <VuiTypography variant="caption" color="text">If you can't scan, use this URI in your app.</VuiTypography>}
+                <TextField size="small" placeholder="123456" value={totpCode} onChange={(e) => setTotpCode(e.target.value)} sx={{ width: 160, input: { color: '#fff' } }} />
+                <Button size="small" variant="contained" onClick={finalizeTotpEnrollment}>Verify & enroll</Button>
+                {totpStatus && <VuiTypography variant="caption" color="text">{totpStatus}</VuiTypography>}
+              </VuiBox>
+            )}
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setShowTwoStepEdit(false)} color="primary">Close</Button>
-            <Button color="primary">Save</Button>
           </DialogActions>
         </Dialog>
         {/* Connect Calendar Dialog */}
@@ -496,28 +758,9 @@ function PlatformSettings() {
             <VuiTypography variant="button" fontWeight="bold" mb={2} color="text">Choose a calendar to connect:</VuiTypography>
             <VuiBox display="flex" flexDirection="column" gap={2}>
               <Button variant="contained" color="primary" onClick={() => {
-                const popup = window.open('/api/auth/google', 'google-oauth', 'width=500,height=700');
-                const handleMessage = (event) => {
-                  if (event.data && event.data.type === 'google-oauth') {
-                    if (event.data.code || event.data.accessToken) {
-                      // Send code or token to backend for exchange and sync
-                      fetch('/api/auth/google/callback', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ code: event.data.code, accessToken: event.data.accessToken })
-                      })
-                      .then(res => res.json())
-                      .then(data => {
-                        setShowCalendarDialog(false);
-                        setCalendarSnackbar(true);
-                        refreshCalendarStatus();
-                      });
-                    }
-                    if (popup) popup.close();
-                    window.removeEventListener('message', handleMessage);
-                  }
-                };
-                window.addEventListener('message', handleMessage);
+                const uid = auth?.currentUser?.uid || 'demo-user';
+                const apiBase = getApiBase();
+                window.open(`${apiBase}/api/auth/google?uid=${encodeURIComponent(uid)}`, 'google-oauth', 'width=500,height=700');
               }} sx={{ mb: 2 }}>
                 Connect Google Calendar
               </Button>
@@ -530,8 +773,19 @@ function PlatformSettings() {
                   <Button onClick={handleICalSave} color="primary" sx={{ mt: 1, ml: 1 }}>Save</Button>
                 </VuiBox>
               )}
-              {calendarConnected && (
-                <VuiTypography variant="button" color="success.main" mt={2}>Calendar Connected</VuiTypography>
+              {calendarConnected ? (
+                <VuiBox display="flex" alignItems="center" gap={1} mt={2}>
+                  <VuiTypography variant="button" color="success.main">Calendar Connected</VuiTypography>
+                  <Button size="small" variant="outlined" color="warning" onClick={async () => {
+                    try {
+                      const uid = auth?.currentUser?.uid || 'demo-user';
+                      await fetch(`/api/calendar/google?uid=${encodeURIComponent(uid)}`, { method: 'DELETE' });
+                      await refreshCalendarStatus();
+                    } catch (_) {}
+                  }}>Disconnect</Button>
+                </VuiBox>
+              ) : (
+                <VuiTypography variant="caption" color="text" mt={2}>Not connected</VuiTypography>
               )}
             </VuiBox>
           </DialogContent>

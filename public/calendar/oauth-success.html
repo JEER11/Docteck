@@ -17,16 +17,24 @@
       const url = new URL(window.location.href);
       return url.searchParams.get(name);
     }
-    const code = getQueryParam('code');
+  const code = getQueryParam('code');
+  const state = getQueryParam('state');
+  const connected = getQueryParam('connected');
+    let uid = 'demo-user';
+    if (state) {
+      try { uid = JSON.parse(decodeURIComponent(state)).uid || uid; } catch (e) {}
+    }
     const hash = window.location.hash.substring(1);
     const params = new URLSearchParams(hash);
     const accessToken = params.get('access_token');
     if (window.opener) {
+      const success = !!(code || accessToken || connected === '1');
       window.opener.postMessage({
         type: 'google-oauth',
         code,
         accessToken,
-        success: !!(code || accessToken)
+        uid,
+        success
       }, '*');
       setTimeout(() => window.close(), 500);
     } else {

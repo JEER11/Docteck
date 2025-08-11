@@ -105,7 +105,21 @@ export default function WeatherBox({ city: propCity = 'New York' }) {
   }
 
   return (
-    <Card sx={{ height: '340px', minWidth: 220, maxWidth: 260, background: 'rgba(34,35,75,0.92)', borderRadius: 3, p: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 24px 0 rgba(34,35,75,0.12)' }}>
+    <Card sx={{
+      // Fill the grid cell gracefully and keep a good minimum height
+      height: { xs: 300, sm: 320, md: 340 },
+      minWidth: 220,
+      width: '100%',
+      background: 'rgba(34,35,75,0.92)',
+      borderRadius: 3,
+      p: { xs: 2.25, md: 3 },
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      // Even vertical spacing between content blocks regardless of height
+      justifyContent: 'space-between',
+      boxShadow: '0 4px 24px 0 rgba(34,35,75,0.12)'
+    }}>
       {loading ? (
         <CircularProgress color="info" />
       ) : error ? (
@@ -117,19 +131,19 @@ export default function WeatherBox({ city: propCity = 'New York' }) {
           <VuiTypography variant="lg" color="white" fontWeight="bold" mb="4px" sx={{ letterSpacing: 0.5 }}>
             Weather
           </VuiTypography>
-          <VuiTypography variant="button" color="text" fontWeight="regular" mb="8px" sx={{ fontSize: 18, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 180 }}>
+          <VuiTypography variant="button" color="text" fontWeight="regular" mb="8px" sx={{ fontSize: 18, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: { xs: '80%', md: 180 }, textAlign: 'center' }}>
             {cityName || '-'}
           </VuiTypography>
-          <VuiBox sx={{ alignSelf: 'center', mb: 1 }}>
+          <VuiBox sx={{ alignSelf: 'center', my: 0.5 }}>
             {icon}
           </VuiBox>
-          <VuiTypography color="white" variant="h1" fontWeight="bold" mb={0} sx={{ fontSize: 56, lineHeight: 1, letterSpacing: -2 }}>
+          <VuiTypography color="white" variant="h1" fontWeight="bold" mb={0} sx={{ fontSize: { xs: 44, md: 56 }, lineHeight: 1, letterSpacing: -2 }}>
             {temp !== '' && !isNaN(temp) ? temp : '--'}
           </VuiTypography>
           <VuiTypography color="text" variant="button" fontWeight="regular" mb={1} sx={{ fontSize: 18, textTransform: 'capitalize' }}>
             {main || '-'}  
           </VuiTypography>
-          <VuiBox display="flex" flexDirection="row" justifyContent="center" alignItems="flex-start" gap={2} mt={1}>
+          <VuiBox display="flex" flexDirection="row" justifyContent="space-between" alignItems="flex-start" gap={{ xs: 1.5, md: 2 }} mt={1} sx={{ width: '100%' }}>
             <VuiTypography color="text" variant="caption" fontWeight="regular" sx={{ fontSize: 13, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
               Feels like: <span style={{ color: '#fff', fontWeight: 600 }}>{feelsLike !== '' && !isNaN(feelsLike) ? `${feelsLike}°C` : '--'}</span>
             </VuiTypography>

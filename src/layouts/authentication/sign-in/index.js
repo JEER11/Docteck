@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 // react-router-dom components
 import { Link } from "react-router-dom";
@@ -22,6 +22,22 @@ import CoverLayout from "layouts/authentication/components/CoverLayout";
 // Images
 import bgSignIn from "assets/images/Jellybackg.jpg";
 import { useAuth } from "hooks/useAuth";
+import { auth, db } from "lib/firebase";
+import {
+  getMultiFactorResolver,
+  PhoneAuthProvider,
+  RecaptchaVerifier,
+  PhoneMultiFactorGenerator,
+} from "firebase/auth";
+import { TotpMultiFactorGenerator } from "firebase/auth";
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import TextField from '@mui/material/TextField';
+import Button from '@mui/material/Button';
+import Divider from '@mui/material/Divider';
+import { doc, getDoc } from "firebase/firestore";
 import { FaMicrosoft, FaFacebook, FaGoogle, FaYahoo } from "react-icons/fa";
 import Icon from "@mui/material/Icon";
 import IconButton from "@mui/material/IconButton";
@@ -33,6 +49,20 @@ function SignIn() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  // MFA state
+  const [mfaOpen, setMfaOpen] = useState(false);
+  const [mfaResolver, setMfaResolver] = useState(null);
+  const [mfaSelectedHint, setMfaSelectedHint] = useState(null);
+  const [smsCode, setSmsCode] = useState("");
+  const [totpCode, setTotpCode] = useState("");
+  const [phoneVerificationId, setPhoneVerificationId] = useState(null);
+  const recaptchaDivId = useMemo(() => `signin-recaptcha-${Math.random().toString(36).slice(2)}`, []);
+  const recaptchaRef = useRef(null);
+
+  // Email 2FA state
+  const [email2faOpen, setEmail2faOpen] = useState(false);
+  const [email2faCode, setEmail2faCode] = useState("");
+  const [email2faMsg, setEmail2faMsg] = useState("");
 
   const handleSetRememberMe = () => setRememberMe(!rememberMe);
 
@@ -42,8 +72,34 @@ function SignIn() {
     setError("");
     try {
       await signin(email, password);
-      // Redirect or show success
+      // Optional email 2FA gate
+      if (auth?.currentUser && db) {
+        try {
+          const snap = await getDoc(doc(db, 'users', auth.currentUser.uid));
+          const enabled = Boolean(snap.exists() && snap.data()?.security?.email2faEnabled);
+          if (enabled) {
+            setEmail2faOpen(true);
+          }
+        } catch (_) {}
+      }
     } catch (err) {
+      if (err?.code === 'auth/multi-factor-auth-required') {
+        try {
+          const resolver = getMultiFactorResolver(auth, err);
+          setMfaResolver(resolver);
+          // For simplicity pick the first factor; real UI could list options
+          setMfaSelectedHint(resolver.hints[0] || null);
+          setMfaOpen(true);
+          // Prepare invisible recaptcha for SMS if needed
+          if ((resolver.hints[0]?.factorId) === 'phone' && !recaptchaRef.current) {
+            recaptchaRef.current = new RecaptchaVerifier(auth, recaptchaDivId, { size: 'invisible' });
+          }
+          return;
+        } catch (e) {
+          setError(e.message || 'MFA required.');
+          return;
+        }
+      }
       if (err.code === 'auth/popup-closed-by-user') {
         setError('Sign-in popup was closed before completing.');
       } else {
@@ -64,6 +120,61 @@ function SignIn() {
         setError(err.message);
       }
     }
+  };
+
+  const startSmsSecondFactor = async () => {
+    if (!mfaResolver || !mfaSelectedHint) return;
+    try {
+      const phoneInfoOptions = { multiFactorHint: mfaSelectedHint, session: mfaResolver.session };
+      const provider = new PhoneAuthProvider(auth);
+      const verificationId = await provider.verifyPhoneNumber(phoneInfoOptions, recaptchaRef.current);
+      setPhoneVerificationId(verificationId);
+    } catch (e) {
+      setError(e.message || 'Failed to send SMS');
+    }
+  };
+
+  const completeSmsSecondFactor = async () => {
+    if (!mfaResolver || !phoneVerificationId) return;
+    try {
+      const cred = PhoneAuthProvider.credential(phoneVerificationId, smsCode);
+      const assertion = PhoneMultiFactorGenerator.assertion(cred);
+      await mfaResolver.resolveSignIn(assertion);
+      setMfaOpen(false);
+    } catch (e) {
+      setError(e.message || 'Invalid SMS code');
+    }
+  };
+
+  const completeTotpSecondFactor = async () => {
+    if (!mfaResolver) return;
+    try {
+      const assertion = TotpMultiFactorGenerator.assertionForSignIn(totpCode);
+      await mfaResolver.resolveSignIn(assertion);
+      setMfaOpen(false);
+    } catch (e) {
+      setError(e.message || 'Invalid code');
+    }
+  };
+
+  const sendEmail2fa = async () => {
+    try {
+      setEmail2faMsg('');
+      const res = await fetch('/api/2fa/email/send', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) });
+      const json = await res.json();
+      if (!json.ok) throw new Error(json.error || 'Failed');
+      setEmail2faMsg('Code sent');
+    } catch (e) { setEmail2faMsg(e.message || 'Failed to send'); }
+  };
+
+  const verifyEmail2fa = async () => {
+    try {
+      setEmail2faMsg('');
+      const res = await fetch('/api/2fa/email/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, code: email2faCode }) });
+      const json = await res.json();
+      if (!json.ok) throw new Error('Invalid code');
+      setEmail2faOpen(false);
+    } catch (e) { setEmail2faMsg(e.message || 'Invalid code'); }
   };
 
   return (
@@ -184,6 +295,49 @@ function SignIn() {
           </VuiTypography>
         </VuiBox>
       </VuiBox>
+      {/* MFA Dialog */}
+      <Dialog open={mfaOpen} onClose={() => setMfaOpen(false)} maxWidth="xs" fullWidth>
+        <DialogTitle>Two-step verification</DialogTitle>
+        <DialogContent>
+          {mfaSelectedHint?.factorId === 'phone' ? (
+            <>
+              <div id={recaptchaDivId} />
+              <VuiTypography color="text" mb={1}>We sent a code to your phone ending in {mfaSelectedHint?.phoneNumber || ''}</VuiTypography>
+              {!phoneVerificationId ? (
+                <Button variant="contained" onClick={startSmsSecondFactor}>Send code</Button>
+              ) : (
+                <>
+                  <TextField autoFocus margin="dense" label="Code" fullWidth value={smsCode} onChange={(e) => setSmsCode(e.target.value)} />
+                  <Button sx={{ mt: 1 }} variant="contained" onClick={completeSmsSecondFactor}>Verify</Button>
+                </>
+              )}
+            </>
+          ) : (
+            <>
+              <VuiTypography color="text" mb={1}>Enter the 6-digit code from your authenticator app.</VuiTypography>
+              <TextField autoFocus margin="dense" label="Code" fullWidth value={totpCode} onChange={(e) => setTotpCode(e.target.value)} />
+              <Button sx={{ mt: 1 }} variant="contained" onClick={completeTotpSecondFactor}>Verify</Button>
+            </>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setMfaOpen(false)}>Cancel</Button>
+        </DialogActions>
+      </Dialog>
+      {/* Email 2FA Dialog */}
+      <Dialog open={email2faOpen} onClose={() => setEmail2faOpen(false)} maxWidth="xs" fullWidth>
+        <DialogTitle>Email verification</DialogTitle>
+        <DialogContent>
+          <VuiTypography color="text" mb={1}>We will send a 6-digit code to your email.</VuiTypography>
+          <Button variant="contained" onClick={sendEmail2fa}>Send code</Button>
+          <TextField autoFocus margin="dense" label="Code" fullWidth value={email2faCode} onChange={(e) => setEmail2faCode(e.target.value)} />
+          {email2faMsg && <VuiTypography color="text" mt={1}>{email2faMsg}</VuiTypography>}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEmail2faOpen(false)}>Cancel</Button>
+          <Button onClick={verifyEmail2fa}>Verify</Button>
+        </DialogActions>
+      </Dialog>
       {/* Removed unwanted overlay/line VuiBox at the bottom of the sign-in page */}
     </CoverLayout>
   );
