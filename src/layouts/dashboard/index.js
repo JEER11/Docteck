@@ -455,12 +455,16 @@ function Dashboard() {
             </Grid>
           </Grid>
         </VuiBox>
-        <Grid container spacing={3} direction="row" justifyContent="center" alignItems="stretch">
-          <Grid item xs={12} md={6} lg={4} xl={4}>
-            <Projects />
+        <Grid container spacing={3} alignItems="stretch">
+          <Grid item xs={12} md={6} lg={4} xl={4} sx={{ display: 'flex' }}>
+            <Box sx={{ width: '100%' }}>
+              <Projects />
+            </Box>
           </Grid>
-          <Grid item xs={12} md={6} lg={8} xl={8}>
-            <AppointmentCalendar />
+          <Grid item xs={12} md={6} lg={8} xl={8} sx={{ display: 'flex' }}>
+            <Box sx={{ width: '100%', display: 'flex' }}>
+              <AppointmentCalendar />
+            </Box>
           </Grid>
         </Grid>
       </VuiBox>
