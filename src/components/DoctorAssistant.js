@@ -49,20 +49,18 @@ function DoctorAssistant({ messages: controlledMessages, setMessages: setControl
     <Box sx={{
       display: "flex",
       flexDirection: "column",
-  height: { xs: 420, md: 640 }, // increased height for chat area
       width: "100%",
       flex: 1,
-  maxHeight: { xs: 420, md: 640 },
-  minHeight: { xs: 420, md: 640 },
+      minHeight: 0,
       p: { xs: 1.5, md: 3 }
     }}>
       <Box sx={{
         flex: 1,
         overflowY: "auto",
         minHeight: 0,
-  maxHeight: { xs: 300, md: 440 }, // increased scrollable area for messages
         display: 'flex',
         flexDirection: 'column',
+        justifyContent: 'flex-start',
         gap: { xs: 1.5, md: 2 },
         pb: { xs: 3, md: 4 },
         '::-webkit-scrollbar': {
@@ -107,7 +105,6 @@ function DoctorAssistant({ messages: controlledMessages, setMessages: setControl
           </Box>
         )}
       </Box>
-      <Box sx={{ flexGrow: 1 }} />
       <Paper
         component="form"
         sx={{
