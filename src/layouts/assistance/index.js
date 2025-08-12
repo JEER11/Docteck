@@ -80,6 +80,13 @@ function Assistance() {
     setMessages(conversation);
   };
 
+  // Delete chat from history
+  const handleDeleteChat = (idx) => {
+    const newHistory = history.filter((_, i) => i !== idx);
+    setHistory(newHistory);
+    localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(newHistory));
+  };
+
   const handleFiles = (files) => {
     const fileArr = Array.from(files);
     setUploadedFiles((prev) => [...prev, ...fileArr]);
@@ -129,7 +136,7 @@ function Assistance() {
             </Grid>
             <Grid item xs={12} lg={4} xl={4} sx={{ display: 'flex' }}>
               <Box sx={{ width: '100%' }}>
-                <ChatHistoryBox history={history} onRestoreChat={handleRestoreChat} />
+                <ChatHistoryBox history={history} onRestoreChat={handleRestoreChat} onDeleteChat={handleDeleteChat} />
               </Box>
             </Grid>
           </Grid>
