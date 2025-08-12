@@ -115,15 +115,21 @@ function Assistance() {
           {/* Removed 4 MiniStatisticsCard boxes as requested */}
         </VuiBox>
         <VuiBox mb={3}>
-          <Grid container spacing="18px">
-            <Grid item xs={12} xl={5}>
-              <WelcomeMark />
+          <Grid container spacing="18px" alignItems="stretch">
+            <Grid item xs={12} xl={5} sx={{ display: 'flex' }}>
+              <Box sx={{ width: '100%' }}>
+                <WelcomeMark height={460} />
+              </Box>
             </Grid>
-            <Grid item xs={12} lg={6} xl={3}>
-              <MiniDayCalendar />
+            <Grid item xs={12} lg={6} xl={3} sx={{ display: 'flex' }}>
+              <Box sx={{ width: '100%' }}>
+                <MiniDayCalendar />
+              </Box>
             </Grid>
-            <Grid item xs={12} lg={6} xl={4}>
-              <ChatHistoryBox history={history} onRestoreChat={handleRestoreChat} />
+            <Grid item xs={12} lg={6} xl={4} sx={{ display: 'flex' }}>
+              <Box sx={{ width: '100%' }}>
+                <ChatHistoryBox history={history} onRestoreChat={handleRestoreChat} />
+              </Box>
             </Grid>
           </Grid>
         </VuiBox>

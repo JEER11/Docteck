@@ -5,11 +5,11 @@ import VuiBox from "components/VuiBox";
 import VuiTypography from "components/VuiTypography";
 import Jelly2 from "assets/images/Jelly2.jpg";
 
-const WelcomeMark = () => {
+const WelcomeMark = ({ height = 420 }) => {
   return (
     <Card
       sx={{
-        height: "340px",
+  height: typeof height === 'number' ? `${height}px` : height,
         backgroundImage: `url(${Jelly2})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
