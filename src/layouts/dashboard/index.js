@@ -319,7 +319,13 @@ function Dashboard() {
           <Grid container spacing={3}>
             {/* Left: Dashboard chat (no card wrapper, as requested) */}
             <Grid item xs={12} lg={6} xl={7} sx={{ display: 'flex' }}>
-              <Box sx={{ width: '100%' }}>
+              <Box sx={{
+                width: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                minHeight: { xs: 420, md: 640 },
+                maxHeight: { xs: 420, md: 640 }
+              }}>
                 <DoctorAssistant />
               </Box>
             </Grid>
