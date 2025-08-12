@@ -317,14 +317,11 @@ function Dashboard() {
         </VuiBox>
         <VuiBox mb={3}>
           <Grid container spacing={3}>
-            {/* Left: Dashboard chat only (match height with well-being card) */}
+            {/* Left: Dashboard chat (no card wrapper, as requested) */}
             <Grid item xs={12} lg={6} xl={7} sx={{ display: 'flex' }}>
-              <Card sx={{ width: '100%', minHeight: { xs: 420, md: 640 }, maxHeight: { xs: 420, md: 640 }, display: 'flex', flexDirection: 'column' }}>
-                <Box sx={{ flex: 1, minHeight: 0, display: 'flex' }}>
-                  {/* Keep DoctorAssistant unmodified; this wrapper ensures equal column height on dashboard only */}
-                  <DoctorAssistant />
-                </Box>
-              </Card>
+              <Box sx={{ width: '100%' }}>
+                <DoctorAssistant />
+              </Box>
             </Grid>
             {/* Right: Well-being card */}
             <Grid item xs={12} lg={6} xl={5} sx={{ display: 'flex' }}>
