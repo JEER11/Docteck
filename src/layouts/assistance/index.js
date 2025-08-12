@@ -116,17 +116,17 @@ function Assistance() {
         </VuiBox>
         <VuiBox mb={3}>
           <Grid container spacing="18px" alignItems="stretch">
-      <Grid item xs={12} xl={5} sx={{ display: 'flex' }}>
+            <Grid item xs={12} lg={4} xl={4} sx={{ display: 'flex' }}>
               <Box sx={{ width: '100%' }}>
         <WelcomeMark height={420} />
               </Box>
             </Grid>
-            <Grid item xs={12} lg={6} xl={3} sx={{ display: 'flex' }}>
+            <Grid item xs={12} lg={4} xl={4} sx={{ display: 'flex' }}>
               <Box sx={{ width: '100%' }}>
                 <MiniDayCalendar />
               </Box>
             </Grid>
-            <Grid item xs={12} lg={6} xl={4} sx={{ display: 'flex' }}>
+            <Grid item xs={12} lg={4} xl={4} sx={{ display: 'flex' }}>
               <Box sx={{ width: '100%' }}>
                 <ChatHistoryBox history={history} onRestoreChat={handleRestoreChat} />
               </Box>
