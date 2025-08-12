@@ -44,8 +44,8 @@ function ChatHistoryBox({ history, onRestoreChat, onDeleteChat }) {
           </VuiTypography>
         </VuiBox>
         <Box sx={{
-          maxHeight: 320,
-          minHeight: 180,
+          maxHeight: 420,
+          minHeight: 420,
           overflowY: 'auto',
           px: 2,
           // Ultra-minimal scrollbar: only thumb, no background/track
