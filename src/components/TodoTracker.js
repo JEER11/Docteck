@@ -29,20 +29,7 @@ export default function TodoTracker() {
   };
 
   return (
-    <Card
-      sx={{
-        background: 'linear-gradient(135deg, #181C3A 0%, #23295A 100%)',
-        boxShadow: 8,
-        borderRadius: 4,
-        p: { xs: 2, md: 3 },
-        color: 'white',
-        minHeight: 0,
-        height: 420,
-        maxHeight: 420,
-        display: 'flex',
-        flexDirection: 'column',
-      }}
-    >
+  <Card sx={{ height: 420, display: 'flex', flexDirection: 'column', p: { xs: 2, md: 3 }, color: 'white' }}>
       <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
         <VuiTypography variant="button" color="white" fontWeight="bold">
           To do's Track

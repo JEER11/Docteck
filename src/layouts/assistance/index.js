@@ -159,23 +159,16 @@ function Assistance() {
         </VuiBox>
         <Grid container spacing={3}>
           <Grid item xs={12} md={6} lg={8}>
-            {/* File Upload Box replaces Projects */}
+            {/* File Upload Box uses same card shell as Daily Calendar/Chat History */}
             <Card
               sx={{
                 minHeight: 350,
                 display: 'flex',
                 flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                background: 'rgba(34, 40, 74, 0.85)',
-                boxShadow: 8,
-                borderRadius: 4,
-                p: { xs: 2, md: 4 },
-                border: '2px dashed #6C63FF',
-                cursor: 'pointer',
-                transition: 'border-color 0.2s',
+                p: { xs: 2, md: 3 },
+                height: '100%',
                 color: 'white',
-                textAlign: 'center',
+                cursor: 'pointer',
               }}
               onDrop={handleDrop}
               onDragOver={handleDragOver}
@@ -189,12 +182,28 @@ function Assistance() {
                 onChange={handleFileInputChange}
                 accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx,.txt,.csv,.zip,.rar,.7z,.ppt,.pptx,.mp4,.mp3,.wav,.json,.xml,.html,.js,.jsx,.ts,.tsx,.py,.java,.c,.cpp,.h,.hpp,.md,.svg,.gif,.bmp,.webp,.ico,.heic,.mov,.avi,.mkv,.webm,.rtf,.odt,.ods,.odp,.pages,.numbers,.key"
               />
-              <VuiTypography variant="lg" color="white" fontWeight="bold" mb={1}>
-                Upload Files or Images
-              </VuiTypography>
-              <VuiTypography variant="caption" color="text" mb={2}>
-                Drag and drop files here, or click to select files
-              </VuiTypography>
+              <Box sx={{ mb: 2 }}>
+                <VuiTypography variant="lg" color="white" fontWeight="bold">
+                  Upload Files or Images
+                </VuiTypography>
+                <VuiTypography variant="caption" color="text">
+                  Drag and drop files here, or click to select files
+                </VuiTypography>
+              </Box>
+              <Box sx={{
+                flex: 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                textAlign: 'center',
+                border: '2px dashed rgba(255,255,255,0.18)',
+                borderRadius: 3,
+                minHeight: 180,
+                px: 2,
+              }}>
+                <VuiTypography variant="button" color="text">Drop files here or click anywhere in this box</VuiTypography>
+              </Box>
+
               {uploadedFiles.length > 0 && (
                 <Box mt={2} width="100%">
                   <VuiTypography variant="caption" color="white" fontWeight="bold" mb={1}>
