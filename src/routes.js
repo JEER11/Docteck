@@ -10,11 +10,10 @@
 // 10. The `title` key is only for the item with the type of `title` and its used for the title text on the Sidenav.
 // 11. The `component` key is used to store the component of its route.
 
-// Vision UI Dashboard React layouts
+// Vision UI Dashboard React layouts & components
 import React from "react";
 import Dashboard from "layouts/dashboard";
 import Tables from "layouts/tables";
-// ...existing code...
 import Billing from "layouts/billing";
 import Profile from "layouts/profile";
 import Assistance from "layouts/assistance";
@@ -22,19 +21,18 @@ import SignIn from "layouts/authentication/sign-in";
 import SignUp from "layouts/authentication/sign-up";
 import Family from "layouts/profile/Family";
 import Pets from "layouts/profile/Pets";
-// If RTL isn't critical, keep lazy; otherwise import directly as well
-const RTL = React.lazy(() => import("layouts/rtl"));
 
-// Vision UI Dashboard React icons
+// Vision UI Dashboard React icons (keep grouped together)
 import { IoRocketSharp } from "react-icons/io5";
 import { IoIosDocument } from "react-icons/io";
 import { BsFillPersonFill } from "react-icons/bs";
-import { IoBuild } from "react-icons/io5";
+import { IoBuild } from "react-icons/io5"; // (unused?)
 import { BsCreditCardFill } from "react-icons/bs";
-import { IoStatsChart } from "react-icons/io5";
 import { IoHome } from "react-icons/io5";
-import { IoDocument } from "react-icons/io5";
 import { FaDog, FaUsers, FaHandsHelping, FaUserNurse } from "react-icons/fa";
+
+// Lazy-loaded layouts
+const RTL = React.lazy(() => import("layouts/rtl"));
 
 const routes = [
   {

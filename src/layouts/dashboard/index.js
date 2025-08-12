@@ -317,12 +317,14 @@ function Dashboard() {
         </VuiBox>
         <VuiBox mb={3}>
           <Grid container spacing={3}>
-            <Grid item xs={12} lg={6} xl={7}>
-              <DoctorAssistant />
+            <Grid item xs={12} lg={6} xl={7} sx={{ display: 'flex' }}>
+              <Box sx={{ width: '100%' }}>
+                <DoctorAssistant />
+              </Box>
             </Grid>
-            <Grid item xs={12} lg={6} xl={5}>
-              <Card>
-                <VuiBox>
+            <Grid item xs={12} lg={6} xl={5} sx={{ display: 'flex' }}>
+              <Card sx={{ width: '100%', minHeight: { xs: 420, md: 640 }, maxHeight: { xs: 420, md: 640 }, display: 'flex', flexDirection: 'column', justifyContent: 'stretch' }}>
+                <VuiBox sx={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%' }}>
                   {/* Tabs for Mentally/Physically */}
                   <VuiBox display="flex" justifyContent="center" alignItems="center" mt={2} mb={2}>
                     <Box
@@ -401,7 +403,7 @@ function Dashboard() {
                     </Box>
                   </VuiBox>
                   {/* Graph and Target Zone */}
-                  <VuiBox mb="24px" height="220px" sx={{
+                  <VuiBox mb="24px" height={{ xs: 300, md: 420 }} sx={{
                     background: linearGradient(cardContent.main, cardContent.state, cardContent.deg),
                     borderRadius: "20px",
                     position: "relative",
@@ -412,22 +414,76 @@ function Dashboard() {
                     px: 2,
                     pt: 2
                   }}>
-                    <Line data={chartDataObj} options={chartOptionsObj} style={{ maxHeight: 180 }} />
-                    {/* Add Severe/Minimal scale at the bottom */}
-                    <Box sx={{
-                      position: 'absolute',
-                      left: 0,
-                      right: 0,
-                      bottom: 8,
-                      px: 3,
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      pointerEvents: 'none'
-                    }}>
-                      <VuiTypography variant="caption" color="text" fontWeight="medium" sx={{ color: '#bfc6e0' }}>Severe</VuiTypography>
-                      <VuiTypography variant="caption" color="text" fontWeight="medium" sx={{ color: '#bfc6e0' }}>Minimal</VuiTypography>
+                    <Box sx={{ width: '100%', height: '100%', position: 'relative', p: 0 }}>
+                      <Line 
+                        data={{
+                          ...chartDataObj,
+                          datasets: chartDataObj.datasets.map(ds => ({
+                            ...ds,
+                            borderWidth: 4,
+                            pointRadius: 6,
+                            pointHoverRadius: 8
+                          }))
+                        }}
+                        options={{
+                          ...chartOptionsObj,
+                          maintainAspectRatio: false,
+                          layout: { padding: { left: 0, right: -32, top: 16, bottom: 16 } },
+                          plugins: {
+                            ...((chartOptionsObj && chartOptionsObj.plugins) || {}),
+                            legend: { display: false }
+                          },
+                          elements: {
+                            line: { borderWidth: 4 },
+                            point: { radius: 6, hoverRadius: 8 }
+                          }
+                        }}
+                        style={{ width: '100%', height: '100%' }}
+                      />
                     </Box>
+                    {/* Add Severe/Minimal scale at the y-axis */}
+                    {/* Place labels outside the chart, vertically aligned with y-axis ticks */}
+                    {/* Place labels just inside the chart, left of y-axis numbers, always visible */}
+                    <VuiTypography 
+                      variant="caption" 
+                      color="white" 
+                      fontWeight="bold" 
+                      sx={{
+                        position: 'absolute',
+                        right: 18,
+                        top: 12,
+                        fontSize: 13,
+                        textShadow: '0 1px 4px #222',
+                        zIndex: 3,
+                        pointerEvents: 'none',
+                        background: 'rgba(34,40,70,0.7)',
+                        px: 0.5,
+                        borderRadius: 1,
+                        whiteSpace: 'nowrap'
+                      }}
+                    >
+                      Severe
+                    </VuiTypography>
+                    <VuiTypography 
+                      variant="caption" 
+                      color="white" 
+                      fontWeight="bold" 
+                      sx={{
+                        position: 'absolute',
+                        right: 18,
+                        bottom: 12,
+                        fontSize: 13,
+                        textShadow: '0 1px 4px #222',
+                        zIndex: 3,
+                        pointerEvents: 'none',
+                        background: 'rgba(34,40,70,0.7)',
+                        px: 0.5,
+                        borderRadius: 1,
+                        whiteSpace: 'nowrap'
+                      }}
+                    >
+                      Minimal
+                    </VuiTypography>
                   </VuiBox>
                   <VuiBox display="flex" alignItems="center" justifyContent="space-between" mt={2} px={2}>
                     <VuiTypography variant="h6" color="white" fontWeight="bold">
