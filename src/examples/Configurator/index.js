@@ -3,6 +3,11 @@
 //
 
 import { useState, useEffect } from "react";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogActions from "@mui/material/DialogActions";
+import Button from "@mui/material/Button";
 import { useTranslation } from "react-i18next";
 
 // react-github-btn
@@ -39,6 +44,10 @@ import {
 } from "context";
 
 function Configurator() {
+  // Dialog state for popups
+  const [openContact, setOpenContact] = useState(false);
+  const [openPrivacy, setOpenPrivacy] = useState(false);
+  const [openFeedback, setOpenFeedback] = useState(false);
   const { i18n } = useTranslation();
   const [controller, dispatch] = useVisionUIController();
   const { openConfigurator, transparentSidenav, fixedNavbar, sidenavColor } = controller;
@@ -256,76 +265,69 @@ function Configurator() {
 
         <Divider light />
 
+        {/* Useful Links Section */}
         <VuiBox mt={3} mb={2}>
-          <VuiBox mb={2}>
+          <VuiTypography variant="h6" color="white" mb={1}>
+            Useful Links
+          </VuiTypography>
+          <VuiBox display="flex" flexDirection="column" gap={1}>
             <VuiButton
-              component={Link}
-              href="https://github.com/JEER11/Docteck"
-              target="_blank"
-              rel="noreferrer"
               color="info"
               variant="contained"
               fullWidth
+              onClick={() => setOpenContact(true)}
             >
-              FREE DOWNLOAD
+              Contact Us
             </VuiButton>
-          </VuiBox>
-          <VuiButton
-            component={Link}
-            href="https://github.com/JEER11/Docteck#readme"
-            target="_blank"
-            rel="noreferrer"
-            color="info"
-            variant="outlined"
-            fullWidth
-          >
-            VIEW DOCUMENTATION
-          </VuiButton>
-        </VuiBox>
-        <VuiBox display="flex" justifyContent="center">
-          <GitHubButton
-            href="https://github.com/JEER11/Docteck"
-            data-icon="octicon-star"
-            data-size="large"
-            data-show-count="true"
-            aria-label="Star JEER11/Docteck on GitHub"
-          >
-            Star
-          </GitHubButton>
-        </VuiBox>
-        <VuiBox mt={3} textAlign="center">
-          <VuiBox mb={0.5}>
-            <VuiTypography variant="h6" color="white">
-              Thank you for sharing!
-            </VuiTypography>
-          </VuiBox>
-
-          <VuiBox display="flex" justifyContent="center">
-            <VuiBox mr={1.5}>
-              <VuiButton
-                component={Link}
-                href="https://twitter.com/intent/tweet?url=https://github.com/JEER11/Docteck&text=Check%20out%20Docteck%20on%20GitHub"
-                target="_blank"
-                rel="noreferrer"
-                color="dark"
-              >
-                <TwitterIcon />
-                &nbsp; Tweet
-              </VuiButton>
-            </VuiBox>
             <VuiButton
-              component={Link}
-              href="https://www.facebook.com/sharer/sharer.php?u=https://github.com/JEER11/Docteck"
-              target="_blank"
-              rel="noreferrer"
-              color="dark"
+              color="info"
+              variant="outlined"
+              fullWidth
+              onClick={() => setOpenPrivacy(true)}
             >
-              <FacebookIcon />
-              &nbsp; Share
+              Privacy Policy
+            </VuiButton>
+            <VuiButton
+              color="info"
+              variant="outlined"
+              fullWidth
+              onClick={() => setOpenFeedback(true)}
+            >
+              Feedback
             </VuiButton>
           </VuiBox>
         </VuiBox>
       </VuiBox>
+      {/* Contact Us Dialog */}
+      <Dialog open={openContact} onClose={() => setOpenContact(false)}>
+        <DialogTitle>Contact Us</DialogTitle>
+        <DialogContent>
+          <VuiTypography variant="body2">You can reach us at <a href="mailto:support@example.com">support@example.com</a> or fill out the contact form on our website.</VuiTypography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenContact(false)} color="primary">Close</Button>
+        </DialogActions>
+      </Dialog>
+      {/* Privacy Policy Dialog */}
+      <Dialog open={openPrivacy} onClose={() => setOpenPrivacy(false)}>
+        <DialogTitle>Privacy Policy</DialogTitle>
+        <DialogContent>
+          <VuiTypography variant="body2">Your privacy is important to us. We do not share your data with third parties. For more details, see our full privacy policy on our website.</VuiTypography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenPrivacy(false)} color="primary">Close</Button>
+        </DialogActions>
+      </Dialog>
+      {/* Feedback Dialog */}
+      <Dialog open={openFeedback} onClose={() => setOpenFeedback(false)}>
+        <DialogTitle>Feedback</DialogTitle>
+        <DialogContent>
+          <VuiTypography variant="body2">We value your feedback! Please email us at <a href="mailto:feedback@example.com">feedback@example.com</a> or use the feedback form on our website.</VuiTypography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenFeedback(false)} color="primary">Close</Button>
+        </DialogActions>
+      </Dialog>
     </ConfiguratorRoot>
   );
 }
