@@ -105,26 +105,41 @@ function ReferralTracking() {
 						<FaEllipsisH color={info.main} size='18px' />
 					</VuiBox>
 				</VuiBox>
-				<Stack spacing={2}>
-					{todos.map((todo, idx) => (
-						<VuiBox key={idx} display='flex' alignItems='center' justifyContent='space-between' sx={{ background: '#23244B', borderRadius: 2, p: 2 }}>
-							<VuiBox>
-								<VuiTypography variant='button' color='white' fontWeight='bold'>
-									{todo.type.charAt(0).toUpperCase() + todo.type.slice(1)}
-								</VuiTypography>
-								<VuiTypography variant='caption' color='text' sx={{ fontSize: 12, display: 'block', mt: 0.5 }}>
-									{todo.date ? new Date(todo.date).toLocaleDateString() : ''}
-								</VuiTypography>
-								<VuiTypography variant='body2' color='white'>
-									{todo.label}
-								</VuiTypography>
+				{/* Scrollable list area: prevents card from expanding when many todos are added */}
+				<VuiBox
+					sx={{
+						maxHeight: { xs: 220, md: 280 },
+						minHeight: { xs: 120, md: 160 },
+						overflowY: 'auto',
+						pr: 0.5,
+						'::-webkit-scrollbar': { width: '6px', height: '6px', background: 'transparent' },
+						'::-webkit-scrollbar-thumb': { background: 'rgba(255,255,255,0.18)', borderRadius: '6px' },
+						'::-webkit-scrollbar-track': { background: 'transparent' },
+						scrollbarWidth: 'thin',
+						scrollbarColor: 'rgba(255,255,255,0.18) transparent'
+					}}
+				>
+					<Stack spacing={2}>
+						{todos.map((todo, idx) => (
+							<VuiBox key={idx} display='flex' alignItems='center' justifyContent='space-between' sx={{ background: '#23244B', borderRadius: 2, p: 2 }}>
+								<VuiBox>
+									<VuiTypography variant='button' color='white' fontWeight='bold'>
+										{todo.type.charAt(0).toUpperCase() + todo.type.slice(1)}
+									</VuiTypography>
+									<VuiTypography variant='caption' color='text' sx={{ fontSize: 12, display: 'block', mt: 0.5 }}>
+										{todo.date ? new Date(todo.date).toLocaleDateString() : ''}
+									</VuiTypography>
+									<VuiTypography variant='body2' color='white'>
+										{todo.label}
+									</VuiTypography>
+								</VuiBox>
+								<Button size='small' color='success' onClick={() => handleCompleteTodo(idx)}>
+									Done
+								</Button>
 							</VuiBox>
-							<Button size='small' color='success' onClick={() => handleCompleteTodo(idx)}>
-								Done
-							</Button>
-						</VuiBox>
-					))}
-				</Stack>
+						))}
+					</Stack>
+				</VuiBox>
 				<Dialog 
 					open={dialogOpen} 
 					onClose={() => setDialogOpen(false)}
