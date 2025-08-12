@@ -37,15 +37,17 @@ function MiniDayCalendar() {
   };
 
   return (
-  <Card sx={{ p: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(30,32,60,0.9)', borderRadius: 3, minWidth: 220, width: '100%', height: 420 }}>
-      <VuiTypography variant="lg" color="white" fontWeight="bold" mb={1}>
-        Daily Calendar
-      </VuiTypography>
-      <Box display="flex" alignItems="center" gap={1}>
+    <Card sx={{ height: 420, display: 'flex', flexDirection: 'column', minWidth: 220, width: '100%' }}>
+      <Box sx={{ px: 2, pt: 2 }}>
+        <VuiTypography variant="lg" color="white" fontWeight="bold" mb={1}>
+          Daily Calendar
+        </VuiTypography>
+      </Box>
+      <Box display="flex" alignItems="center" gap={1} sx={{ px: 2 }}>
         <IconButton onMouseEnter={() => handleDayHover('left')} sx={{ color: '#fff', borderRadius: 2, background: 'rgba(255,255,255,0.06)', p: 0.5, width: 28, height: 28, minWidth: 28, minHeight: 28, boxShadow: 'none', transition: 'background 0.2s', '&:hover': { background: 'rgba(255,255,255,0.13)' } }}>
           <ChevronLeftIcon sx={{ fontSize: 18, color: 'rgba(255,255,255,0.7)' }} />
         </IconButton>
-        <Box ref={scrollRef} sx={{ display: 'flex', gap: 1, overflowX: 'auto', scrollbarWidth: 'none', '&::-webkit-scrollbar': { display: 'none' }, maxWidth: 210, px: 1 }}>
+        <Box ref={scrollRef} sx={{ display: 'flex', gap: 1, overflowX: 'auto', scrollbarWidth: 'none', '&::-webkit-scrollbar': { display: 'none' }, maxWidth: '100%', width: '100%', px: 1 }}>
           {days.map((d, idx) => (
             <IconButton
               key={idx}
@@ -71,11 +73,11 @@ function MiniDayCalendar() {
           <ChevronRightIcon sx={{ fontSize: 18, color: 'rgba(255,255,255,0.7)' }} />
         </IconButton>
       </Box>
-      <VuiTypography color="text" variant="caption" mt={1}>
+      <VuiTypography color="text" variant="caption" mt={1} sx={{ px: 2 }}>
         <CalendarTodayIcon sx={{ fontSize: 16, mr: 0.5, verticalAlign: 'middle' }} />
         {selectedDate ? selectedDate.toDateString() : today.toDateString()}
       </VuiTypography>
-      <Box mt={2} width="100%">
+      <Box mt={2} width="100%" sx={{ px: 2, pb: 2, flex: 1, display: 'flex', flexDirection: 'column' }}>
         <VuiTypography color="white" fontWeight="bold" fontSize={15} mb={1}>
           Appointments & Tasks
         </VuiTypography>
