@@ -42,21 +42,36 @@ function ChatHistoryBox({ history, onRestoreChat, onDeleteChat }) {
 
   // Derive nice metadata for each chat item
   const getChatMeta = (chat) => {
-    const firstUser = chat.conversation?.find((m) => m.sender === 'user');
-    const firstAssistant = chat.conversation?.find((m) => m.sender !== 'user');
-    // topic: first 5 words of the first user message
-    let topic = 'General Chat';
-    if (firstUser?.text) {
-      topic = firstUser.text.split(' ').slice(0, 5).join(' ');
+    const conversation = Array.isArray(chat?.conversation) ? chat.conversation : [];
+    const userMsgs = conversation.filter((m) => m?.sender === 'user');
+    const firstUser = userMsgs[0];
+
+    // Topic: lightweight keyword extraction from the whole conversation
+    const STOP = new Set([
+      'the','and','for','with','that','this','from','your','have','has','was','were','are','you','about','what','when','where','why','how','can','could','should','would','into','onto','over','under','in','on','at','to','of','a','an','is','it','be','as','or','if','but','my','me','we','our','us','they','them','their','he','she','his','her','im','i','i\'m','i\'ve','i\'d','it\'s','its','not','no','yes','ok','okay','just','like','also','too','very','really','more','most','some','any','every','each','per','by'
+    ]);
+    const textAll = conversation.map((m) => (m?.text || '').toLowerCase()).join(' ');
+    const tokens = textAll.replace(/[^a-z0-9\s]/gi, ' ').split(/\s+/).filter(Boolean);
+    const counts = {};
+    for (const t of tokens) {
+      if (t.length < 4 || STOP.has(t)) continue;
+      counts[t] = (counts[t] || 0) + 1;
     }
-    if (topic.length > 42) topic = topic.slice(0, 42) + '...';
+    const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).map(([w]) => w);
+    const titleCase = (s) => s.replace(/\b\w/g, (c) => c.toUpperCase());
+    let topic = sorted.length ? titleCase(sorted.slice(0, 2).join(' ')) : (firstUser?.text ? titleCase(firstUser.text.split(/\s+/).slice(0, 3).join(' ')) : 'General Chat');
+    if (topic.length > 34) topic = topic.slice(0, 34) + '…';
 
-    // preview: a short snippet from the first assistant response
-    let preview = firstAssistant?.text || '';
-    if (preview.length > 80) preview = preview.slice(0, 80) + '…';
+    // Preview: first 9 words of the first USER message only
+    let preview = '';
+    if (firstUser?.text) {
+      const words = firstUser.text.trim().split(/\s+/);
+      const sliced = words.slice(0, 9).join(' ');
+      preview = sliced + (words.length > 9 ? '…' : '');
+    }
 
-    // timestamp: try several fields commonly used
-    const ts = chat.savedAt || chat.updatedAt || chat.createdAt || chat.conversation?.[0]?.timestamp || chat.conversation?.[0]?.time || null;
+    // Timestamp: try several fields commonly used
+    const ts = chat.savedAt || chat.updatedAt || chat.createdAt || conversation?.[0]?.timestamp || conversation?.[0]?.time || null;
     let when = '';
     try {
       if (ts) {
@@ -175,7 +190,7 @@ function ChatHistoryBox({ history, onRestoreChat, onDeleteChat }) {
         open={open}
         onClose={() => setOpen(false)}
         fullWidth
-        maxWidth="md"
+        maxWidth="lg"
         keepMounted
         TransitionComponent={Slide}
         TransitionProps={{ direction: 'up' }}
@@ -184,7 +199,9 @@ function ChatHistoryBox({ history, onRestoreChat, onDeleteChat }) {
             bgcolor: 'rgba(12, 14, 30, 0.98)',
             border: '1px solid rgba(255,255,255,0.08)',
             borderRadius: 3,
-            boxShadow: '0 10px 40px rgba(0,0,0,0.5)'
+            boxShadow: '0 10px 40px rgba(0,0,0,0.5)',
+            width: 'min(980px, 95vw)',
+            maxHeight: '88vh'
           }
         }}
       >
@@ -216,7 +233,7 @@ function ChatHistoryBox({ history, onRestoreChat, onDeleteChat }) {
             </IconButton>
           </Box>
         </DialogTitle>
-        <DialogContent dividers sx={{ px: 3, py: 2.5 }}>
+  <DialogContent dividers sx={{ px: 3, py: 2.5 }}>
           <TextField
             autoFocus
             fullWidth
@@ -250,7 +267,17 @@ function ChatHistoryBox({ history, onRestoreChat, onDeleteChat }) {
             }}
           />
 
-          <Box sx={{ maxHeight: '60vh', overflowY: 'auto' }}>
+          <Box sx={{
+            maxHeight: '72vh',
+            overflowY: 'auto',
+            overflowX: 'hidden',
+            pr: 0.5,
+            '::-webkit-scrollbar': { width: '6px', height: '6px', background: 'transparent' },
+            '::-webkit-scrollbar-thumb': { background: 'rgba(255,255,255,0.18)', borderRadius: '6px' },
+            '::-webkit-scrollbar-track': { background: 'transparent' },
+            scrollbarWidth: 'thin',
+            scrollbarColor: 'rgba(255,255,255,0.18) transparent'
+          }}>
             {filtered.length === 0 ? (
               <Typography sx={{ color: 'rgba(255,255,255,0.7)', fontSize: 14, textAlign: 'center', mt: 4 }}>
                 No chats found.
@@ -268,13 +295,14 @@ function ChatHistoryBox({ history, onRestoreChat, onDeleteChat }) {
                         </Tooltip>
                       ) : null
                     }>
-                      <ListItemButton
+            <ListItemButton
                         onClick={() => { onRestoreChat?.(history[idx]?.conversation); setOpen(false); }}
                         sx={{
                           py: 1.25,
                           px: 1.5,
                           borderRadius: 2,
-                          '&:hover': { backgroundColor: 'rgba(255,255,255,0.06)' }
+              '&:hover': { backgroundColor: 'rgba(255,255,255,0.06)' },
+              width: '100%'
                         }}
                       >
                         <ListItemAvatar>
@@ -308,7 +336,10 @@ function ChatHistoryBox({ history, onRestoreChat, onDeleteChat }) {
                           }
                           secondary={
                             preview ? (
-                              <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.65)', mt: 0.25 }}>
+                              <Typography
+                                variant="body2"
+                                sx={{ color: 'rgba(255,255,255,0.65)', mt: 0.25, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                              >
                                 {preview}
                               </Typography>
                             ) : null
