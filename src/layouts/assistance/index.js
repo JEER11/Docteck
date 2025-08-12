@@ -150,7 +150,7 @@ function Assistance() {
                 <VuiTypography variant="caption" color="text" mb={2} sx={{ textAlign: 'left' }}>
                   Ask your AI assistant anything about your appointments, prescriptions, or medical workflow.
                 </VuiTypography>
-                <Box flex={1} minHeight={0} display="flex" flexDirection="column" justifyContent="flex-end">
+                <Box flex={1} minHeight={0} display="flex" flexDirection="column" justifyContent="flex-start">
                   <DoctorAssistant messages={messages} setMessages={setMessages} />
                 </Box>
               </Card>
