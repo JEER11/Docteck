@@ -38,46 +38,53 @@ function MiniDayCalendar() {
 
   return (
     <Card sx={{ height: 420, display: 'flex', flexDirection: 'column', minWidth: 220, width: '100%' }}>
-      <Box sx={{ px: 2, pt: 2 }}>
+      {/* Header + compact day scroller (original internal layout) */}
+      <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <VuiTypography variant="lg" color="white" fontWeight="bold" mb={1}>
           Daily Calendar
         </VuiTypography>
-      </Box>
-      <Box display="flex" alignItems="center" gap={1} sx={{ px: 2 }}>
-        <IconButton onMouseEnter={() => handleDayHover('left')} sx={{ color: '#fff', borderRadius: 2, background: 'rgba(255,255,255,0.06)', p: 0.5, width: 28, height: 28, minWidth: 28, minHeight: 28, boxShadow: 'none', transition: 'background 0.2s', '&:hover': { background: 'rgba(255,255,255,0.13)' } }}>
-          <ChevronLeftIcon sx={{ fontSize: 18, color: 'rgba(255,255,255,0.7)' }} />
-        </IconButton>
-        <Box ref={scrollRef} sx={{ display: 'flex', gap: 1, overflowX: 'auto', scrollbarWidth: 'none', '&::-webkit-scrollbar': { display: 'none' }, maxWidth: '100%', width: '100%', px: 1 }}>
-          {days.map((d, idx) => (
-            <IconButton
-              key={idx}
-              onClick={() => setSelectedDate(new Date(d))}
-              sx={{
-                background: selectedDate && d.toDateString() === selectedDate.toDateString() ? 'linear-gradient(90deg,#6a6afc,#8b8bfc)' : 'rgba(255,255,255,0.08)',
-                color: '#fff',
-                borderRadius: 2,
-                width: 36,
-                height: 36,
-                border: selectedDate && d.toDateString() === selectedDate.toDateString() ? '2px solid #6a6afc' : 'none',
-                fontWeight: 700,
-                fontSize: 16,
-                transition: 'background 0.2s',
-                '&:hover': { background: 'rgba(106,106,252,0.18)' },
-              }}
-            >
-              {d.getDate()}
-            </IconButton>
-          ))}
+
+        <Box display="flex" alignItems="center" gap={1}>
+          <IconButton onMouseEnter={() => handleDayHover('left')} sx={{ color: '#fff', borderRadius: 2, background: 'rgba(255,255,255,0.06)', p: 0.5, width: 28, height: 28, minWidth: 28, minHeight: 28, boxShadow: 'none', transition: 'background 0.2s', '&:hover': { background: 'rgba(255,255,255,0.13)' } }}>
+            <ChevronLeftIcon sx={{ fontSize: 18, color: 'rgba(255,255,255,0.7)' }} />
+          </IconButton>
+
+          <Box ref={scrollRef} sx={{ display: 'flex', gap: 1, overflowX: 'auto', scrollbarWidth: 'none', '&::-webkit-scrollbar': { display: 'none' }, maxWidth: 210, px: 1 }}>
+            {days.map((d, idx) => (
+              <IconButton
+                key={idx}
+                onClick={() => setSelectedDate(new Date(d))}
+                sx={{
+                  background: selectedDate && d.toDateString() === selectedDate.toDateString() ? 'linear-gradient(90deg,#6a6afc,#8b8bfc)' : 'rgba(255,255,255,0.08)',
+                  color: '#fff',
+                  borderRadius: 2,
+                  width: 36,
+                  height: 36,
+                  border: selectedDate && d.toDateString() === selectedDate.toDateString() ? '2px solid #6a6afc' : 'none',
+                  fontWeight: 700,
+                  fontSize: 16,
+                  transition: 'background 0.2s',
+                  '&:hover': { background: 'rgba(106,106,252,0.18)' },
+                }}
+              >
+                {d.getDate()}
+              </IconButton>
+            ))}
+          </Box>
+
+          <IconButton onMouseEnter={() => handleDayHover('right')} sx={{ color: '#fff', borderRadius: 2, background: 'rgba(255,255,255,0.06)', p: 0.5, width: 28, height: 28, minWidth: 28, minHeight: 28, boxShadow: 'none', transition: 'background 0.2s', '&:hover': { background: 'rgba(255,255,255,0.13)' } }}>
+            <ChevronRightIcon sx={{ fontSize: 18, color: 'rgba(255,255,255,0.7)' }} />
+          </IconButton>
         </Box>
-        <IconButton onMouseEnter={() => handleDayHover('right')} sx={{ color: '#fff', borderRadius: 2, background: 'rgba(255,255,255,0.06)', p: 0.5, width: 28, height: 28, minWidth: 28, minHeight: 28, boxShadow: 'none', transition: 'background 0.2s', '&:hover': { background: 'rgba(255,255,255,0.13)' } }}>
-          <ChevronRightIcon sx={{ fontSize: 18, color: 'rgba(255,255,255,0.7)' }} />
-        </IconButton>
+
+        <VuiTypography color="text" variant="caption" mt={1}>
+          <CalendarTodayIcon sx={{ fontSize: 16, mr: 0.5, verticalAlign: 'middle' }} />
+          {selectedDate ? selectedDate.toDateString() : today.toDateString()}
+        </VuiTypography>
       </Box>
-      <VuiTypography color="text" variant="caption" mt={1} sx={{ px: 2 }}>
-        <CalendarTodayIcon sx={{ fontSize: 16, mr: 0.5, verticalAlign: 'middle' }} />
-        {selectedDate ? selectedDate.toDateString() : today.toDateString()}
-      </VuiTypography>
-      <Box mt={2} width="100%" sx={{ px: 2, pb: 2, flex: 1, display: 'flex', flexDirection: 'column' }}>
+
+      {/* Appointments section (original spacing) */}
+      <Box width="100%" sx={{ px: 2, pb: 2 }}>
         <VuiTypography color="white" fontWeight="bold" fontSize={15} mb={1}>
           Appointments & Tasks
         </VuiTypography>
