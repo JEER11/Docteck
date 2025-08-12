@@ -37,7 +37,7 @@ function MiniDayCalendar() {
   };
 
   return (
-    <Card sx={{ p: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(30,32,60,0.9)', borderRadius: 3, minWidth: 220, width: '100%', minHeight: 320, maxWidth: 270 }}>
+    <Card sx={{ p: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(30,32,60,0.9)', borderRadius: 3, minWidth: 220, width: '100%', minHeight: 420, maxWidth: 270 }}>
       <VuiTypography variant="lg" color="white" fontWeight="bold" mb={1}>
         Daily Calendar
       </VuiTypography>
