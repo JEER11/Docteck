@@ -36,7 +36,7 @@ function ChatHistoryBox({ history, onRestoreChat, onDeleteChat }) {
   };
 
   return (
-    <Card>
+    <Card sx={{ height: 420, display: 'flex', flexDirection: 'column' }}>
       <VuiBox sx={{ width: '100%' }}>
         <VuiBox display='flex' alignItems='center' justifyContent='space-between' sx={{ width: '100%' }} mb='28px'>
           <VuiTypography variant='lg' color='white' mr='auto' fontWeight='bold'>
@@ -44,8 +44,7 @@ function ChatHistoryBox({ history, onRestoreChat, onDeleteChat }) {
           </VuiTypography>
         </VuiBox>
         <Box sx={{
-          maxHeight: 420,
-          minHeight: 420,
+          flex: 1,
           overflowY: 'auto',
           px: 2,
           // Ultra-minimal scrollbar: only thumb, no background/track
