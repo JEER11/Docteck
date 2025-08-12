@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { IconButton, InputBase, Paper, Box, Tooltip, Switch, FormControlLabel } from "@mui/material";
+import { IconButton, InputBase, Paper, Box, Tooltip } from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
 import getApiBase from "../lib/apiBase";
 
@@ -7,7 +7,7 @@ import getApiBase from "../lib/apiBase";
 // Compute API base using helper to work across dev/prod and different host ports
 const API_URL = getApiBase();
 
-function DoctorAssistant({ messages: controlledMessages, setMessages: setControlledMessages }) {
+function DoctorAssistant({ messages: controlledMessages, setMessages: setControlledMessages, compact: compactProp }) {
   const isControlled = controlledMessages !== undefined && setControlledMessages !== undefined;
   const initialMessage = [
     { sender: "ai", text: "Hello! I'm your Medical Assistant. Describe your symptoms and I'll help you understand what you might have or suggest possible medication.", ts: Date.now() }
@@ -17,7 +17,8 @@ function DoctorAssistant({ messages: controlledMessages, setMessages: setControl
   const setMessages = isControlled ? setControlledMessages : setUncontrolledMessages;
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [compact, setCompact] = useState(false);
+  const [compactInternal] = useState(false);
+  const compact = compactProp !== undefined ? compactProp : compactInternal;
 
   // Scroll management
   const scrollRef = useRef(null);
@@ -75,13 +76,7 @@ function DoctorAssistant({ messages: controlledMessages, setMessages: setControl
       minHeight: 0,
       p: { xs: 1.5, md: 3 }
     }}>
-      {/* Controls: compact mode toggle */}
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
-        <FormControlLabel
-          control={<Switch size="small" checked={compact} onChange={(e) => setCompact(e.target.checked)} />}
-          label={<span style={{ color: '#bdbdbd', fontSize: 12 }}>Compact</span>}
-        />
-      </Box>
+  {/* Compact toggle moved to page header */}
       <Box sx={{
         flex: 1,
         overflowY: "auto",
