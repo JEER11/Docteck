@@ -150,7 +150,7 @@ function RTL() {
         <VuiBox mb={3}>
           <Grid container spacing={3}>
             <Grid item xs={12}>
-              <Card sx={{ minHeight: 900, height: { xs: 900, md: 1100 }, display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'stretch', background: 'rgba(34, 40, 74, 0.85)', boxShadow: 8, borderRadius: 4, p: { xs: 1, md: 3 }, direction: 'ltr', position: 'relative' }}>
+              <Card sx={{ minHeight: 900, height: { xs: 900, md: 1100 }, display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'stretch', borderRadius: 4, p: { xs: 1, md: 3 }, direction: 'ltr' }}>
                 <VuiBox display="flex" justifyContent="space-between" alignItems="center" mb={1}>
                   <VuiTypography variant="lg" color="white" fontWeight="bold" sx={{ textAlign: 'left' }}>
                     Medical Assistant

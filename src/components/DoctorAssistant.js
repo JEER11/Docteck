@@ -61,7 +61,7 @@ function DoctorAssistant({ messages: controlledMessages, setMessages: setControl
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'flex-start',
-        gap: { xs: 1.5, md: 2 },
+        gap: { xs: 1.25, md: 1.75 },
         pb: { xs: 3, md: 4 },
         '::-webkit-scrollbar': {
           width: '6px',
@@ -84,10 +84,11 @@ function DoctorAssistant({ messages: controlledMessages, setMessages: setControl
         {messages.map((msg, idx) => (
           <Box key={idx} sx={{ display: "flex", justifyContent: msg.sender === "user" ? "flex-end" : "flex-start" }}>
             <Paper sx={{
-              p: { xs: 1.5, md: 1.75 },
-              bgcolor: msg.sender === "user" ? "rgba(44, 50, 90, 0.85)" : "rgba(238, 238, 238, 0.5)",
-              color: msg.sender === "user" ? "white" : "black",
-              borderRadius: 2,
+              p: { xs: 1.25, md: 1.5 },
+              bgcolor: msg.sender === "user" ? "rgba(106,106,252,0.20)" : "rgba(255,255,255,0.10)",
+              color: 'white',
+              borderRadius: 3,
+              border: '1px solid rgba(255,255,255,0.08)',
               maxWidth: { xs: '86%', md: msg.sender === "ai" ? "66%" : "88%" },
               fontSize: "0.95rem",
               boxShadow: 'none',
@@ -99,7 +100,7 @@ function DoctorAssistant({ messages: controlledMessages, setMessages: setControl
         ))}
         {loading && (
           <Box sx={{ display: "flex", justifyContent: "flex-start" }}>
-            <Paper sx={{ p: { xs: 1.5, md: 1.75 }, bgcolor: "rgba(238, 238, 238, 0.5)", color: "black", borderRadius: 2, maxWidth: { xs: '86%', md: '66%' }, fontSize: "0.95rem", boxShadow: 'none' }}>
+            <Paper sx={{ p: { xs: 1.25, md: 1.5 }, bgcolor: "rgba(255,255,255,0.10)", color: "white", borderRadius: 3, border: '1px solid rgba(255,255,255,0.08)', maxWidth: { xs: '86%', md: '66%' }, fontSize: "0.95rem", boxShadow: 'none' }}>
               Doctor Assistant is typing...
             </Paper>
           </Box>
@@ -110,10 +111,10 @@ function DoctorAssistant({ messages: controlledMessages, setMessages: setControl
         sx={{
           display: "flex",
           alignItems: "center",
-          p: { xs: 1.5, md: 2 },
-          bgcolor: "rgba(238, 238, 238, 0.5)",
+          p: { xs: 1.25, md: 1.5 },
+          bgcolor: 'rgba(255,255,255,0.10)',
           boxShadow: 'none',
-          borderRadius: 2,
+          borderRadius: 3,
           mt: { xs: 2, md: 3 },
           border: '1px solid rgba(255,255,255,0.08)'
         }}
@@ -127,7 +128,11 @@ function DoctorAssistant({ messages: controlledMessages, setMessages: setControl
           onKeyDown={handleKeyDown}
           disabled={loading}
         />
-        <IconButton color="primary" onClick={handleSend} disabled={loading || !input.trim()}>
+        <IconButton color="primary" onClick={handleSend} disabled={loading || !input.trim()} sx={{
+          bgcolor: 'rgba(106,106,252,0.22)',
+          color: 'white',
+          '&:hover': { bgcolor: 'rgba(106,106,252,0.35)' }
+        }}>
           <SendIcon />
         </IconButton>
       </Paper>
