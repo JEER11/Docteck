@@ -199,7 +199,7 @@ function RTL() {
                 <VuiTypography variant="lg" color="white" fontWeight="bold">
                   Upload Files or Images
                 </VuiTypography>
-                <VuiTypography variant="caption" color="text">
+                <VuiTypography variant="caption" color="text" sx={{ ml: 1.5 }}>
                   Drag and drop files here, or click to select files
                 </VuiTypography>
               </Box>
