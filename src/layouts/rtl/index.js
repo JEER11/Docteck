@@ -61,6 +61,7 @@ function RTL() {
     const stored = localStorage.getItem(CHAT_HISTORY_KEY);
     return stored ? JSON.parse(stored) : [];
   });
+  const [compact, setCompact] = useState(false);
 
   // Add selectedDate state synced with context
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -155,16 +156,25 @@ function RTL() {
                   <VuiTypography variant="lg" color="white" fontWeight="bold" sx={{ textAlign: 'left' }}>
                     Medical Assistant
                   </VuiTypography>
-                  <button onClick={handleNewChat} style={{ background: 'rgba(25, 118, 210, 0.12)', color: '#bdbdbd', border: 'none', borderRadius: 6, padding: '6px 16px 6px 10px', fontWeight: 600, fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, transition: 'background 0.2s' }}>
-                    <FaRegEdit style={{ fontSize: 22, marginRight: 6 }} />
-                    New chat
-                  </button>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: '#bdbdbd', fontSize: 13, cursor: 'pointer', userSelect: 'none' }}>
+                      <input type="checkbox" checked={compact} onChange={(e) => setCompact(e.target.checked)} style={{ appearance: 'none', width: 34, height: 20, borderRadius: 12, background: compact ? 'rgba(106,106,252,0.6)' : 'rgba(255,255,255,0.15)', position: 'relative', outline: 'none', transition: 'background 0.2s' }} />
+                      <span style={{ position: 'relative', marginLeft: -34, width: 34, height: 20, pointerEvents: 'none' }}>
+                        <span style={{ position: 'absolute', top: 2, left: compact ? 18 : 2, width: 16, height: 16, borderRadius: 16, background: '#fff', transition: 'left 0.2s' }}></span>
+                      </span>
+                      <span>Compact</span>
+                    </label>
+                    <button onClick={handleNewChat} style={{ background: 'rgba(25, 118, 210, 0.12)', color: '#bdbdbd', border: 'none', borderRadius: 6, padding: '6px 16px 6px 10px', fontWeight: 600, fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, transition: 'background 0.2s' }}>
+                      <FaRegEdit style={{ fontSize: 22, marginRight: 6 }} />
+                      New chat
+                    </button>
+                  </Box>
                 </VuiBox>
                 <VuiTypography variant="caption" color="text" mb={2} sx={{ textAlign: 'left' }}>
                   Ask your AI assistant anything about your appointments, prescriptions, or medical workflow.
                 </VuiTypography>
                 <Box flex={1} minHeight={0} display="flex" flexDirection="column" justifyContent="flex-start">
-                  <DoctorAssistant messages={messages} setMessages={setMessages} />
+                  <DoctorAssistant messages={messages} setMessages={setMessages} compact={compact} />
                 </Box>
               </Card>
             </Grid>
