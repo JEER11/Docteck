@@ -1,7 +1,6 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import Header from "./components/Header";
-import PlatformSettings from "./components/PlatformSettings";
 import CarInformations from "./components/CarInformations";
 import VuiBox from "components/VuiBox";
 import VuiTypography from "components/VuiTypography";
@@ -14,6 +13,14 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
+import Tabs from "@mui/material/Tabs";
+import Tab from "@mui/material/Tab";
+import Avatar from "@mui/material/Avatar";
+import Chip from "@mui/material/Chip";
+import Stack from "@mui/material/Stack";
+import Switch from "@mui/material/Switch";
+import VuiButton from "components/VuiButton";
+import ArrowForwardIosOutlinedIcon from "@mui/icons-material/ArrowForwardIosOutlined";
 
 export default function Pets() {
   // State for modals and editing
@@ -35,7 +42,9 @@ export default function Pets() {
   });
   const [editPet, setEditPet] = useState({ name: "", species: "", breed: "", age: "", medical: "" });
   // Add state for popups
-  const [openPopup, setOpenPopup] = useState(null); // for button popups
+  // Settings dialog (tabbed)
+  const [openSettings, setOpenSettings] = useState(false);
+  const [activeTab, setActiveTab] = useState("care"); // "care" | "visits" | "tests" | "schedule" | "search" | "insurance"
 
   // Modal open/close
   const handleOpenModal = (section) => { setOpenModal(section); setEditIndex(null); };
@@ -71,26 +80,135 @@ export default function Pets() {
     setEditIndex(null);
   };
 
-  // Update optionBtnStyle to match Family
-  const optionBtnStyle = {
+  // Match Family button styling on the settings card (copied from Family.js)
+  const optionBtnSx = {
     width: '100%',
-    background: 'rgba(40,42,70,0.5)',
-    border: '1.5px solid #23244a',
-    color: '#b0b3c0', // grayish text
-    borderRadius: 8,
-    padding: '10px 0',
-    fontWeight: 600,
-    fontSize: 15,
-    cursor: 'pointer',
-    margin: 0,
-    outline: 'none',
+    justifyContent: 'space-between',
+    gap: 1,
+    color: '#e7e9f3',
+    textTransform: 'none',
+    fontWeight: 700,
+    fontSize: 14,
+    px: 1.75,
+    py: 1.1,
+    borderRadius: 2,
+    background: 'linear-gradient(180deg, rgba(24,26,47,0.8) 0%, rgba(22,24,45,0.85) 100%)',
+    border: '1px solid rgba(255,255,255,0.09)',
     boxShadow: 'none',
-    transition: 'background 0.2s, color 0.2s',
+    transition: 'all .15s ease',
     '&:hover': {
-      background: 'rgba(40,42,70,0.7)',
-      color: '#fff',
+      background: 'linear-gradient(180deg, rgba(30,32,60,0.9) 0%, rgba(24,26,47,0.95) 100%)',
+      borderColor: '#6a6afc',
+      boxShadow: '0 6px 18px rgba(0,0,0,0.25)'
     },
+    '&:focus-visible': {
+      outline: '2px solid rgba(106,106,252,0.6)',
+      outlineOffset: 2
+    }
   };
+
+  // Helpers for settings dialog
+  const sections = useMemo(() => Object.keys(pets), [pets]); // ["dogs","cats","other"]
+
+  const handleOpenSettings = (tabKey) => {
+    setActiveTab(tabKey);
+    setOpenSettings(true);
+  };
+  const handleCloseSettings = () => setOpenSettings(false);
+
+  const renderPetRowBase = (p) => (
+    <Stack direction="row" alignItems="center" spacing={1.5} sx={{ width: '100%' }}>
+      <Avatar sx={{ width: 36, height: 36, bgcolor: '#2f315a', fontSize: 16 }}>{(p.name || '?').charAt(0)}</Avatar>
+      <VuiTypography color="white" sx={{ fontWeight: 700, fontSize: 16, minWidth: 110 }}>{p.name}</VuiTypography>
+      <Chip size="small" label={p.breed || p.species || 'Pet'} sx={{ bgcolor: 'rgba(106,106,252,0.18)', color: '#bdbdfc', border: '1px solid #2c2e59' }} />
+    </Stack>
+  );
+
+  const RowContainer = ({ children }) => (
+    <VuiBox
+      display="flex"
+      alignItems="center"
+      justifyContent="space-between"
+      sx={{
+        gap: 1.5,
+        p: 1.25,
+        borderRadius: 2,
+        background: 'rgba(40,42,70,0.45)',
+        border: '1px solid #23244a',
+        mb: 1,
+      }}
+    >
+      {children}
+    </VuiBox>
+  );
+
+  const renderCareTeamRows = () => (
+    <>
+      {sections.map((section) => (
+        <VuiBox key={section} mb={2}>
+          <VuiTypography color="white" fontWeight="bold" mb={1} sx={{ fontSize: 18 }}>
+            {section.charAt(0).toUpperCase() + section.slice(1)}
+          </VuiTypography>
+          {pets[section].map((p, i) => (
+            <RowContainer key={`${section}-${i}`}>
+              {renderPetRowBase(p)}
+              <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} sx={{ alignItems: 'center', width: '100%', justifyContent: 'flex-end' }}>
+                <TextField size="small" variant="outlined" placeholder="Vet" sx={{ background: '#181a2f', borderRadius: 1, input: { color: 'white', fontSize: 14 }, width: 160 }} />
+                <TextField size="small" variant="outlined" placeholder="Pharmacy" sx={{ background: '#181a2f', borderRadius: 1, input: { color: 'white', fontSize: 14 }, width: 160 }} />
+                <Stack direction="row" alignItems="center" spacing={1}>
+                  <VuiTypography color="text" sx={{ fontSize: 13 }}>Share</VuiTypography>
+                  <Switch size="small" />
+                </Stack>
+                <Button size="small" color="info" sx={{ fontSize: 13, fontWeight: 700, textTransform: 'none' }}>Save</Button>
+              </Stack>
+            </RowContainer>
+          ))}
+        </VuiBox>
+      ))}
+    </>
+  );
+
+  const renderInsuranceRows = () => (
+    <>
+      {sections.map((section) => (
+        <VuiBox key={section} mb={2}>
+          <VuiTypography color="white" fontWeight="bold" mb={1} sx={{ fontSize: 18 }}>
+            {section.charAt(0).toUpperCase() + section.slice(1)}
+          </VuiTypography>
+          {pets[section].map((p, i) => (
+            <RowContainer key={`${section}-ins-${i}`}>
+              {renderPetRowBase(p)}
+              <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} sx={{ alignItems: 'center', width: '100%', justifyContent: 'flex-end' }}>
+                <TextField size="small" variant="outlined" placeholder="Insurance Company" sx={{ background: '#181a2f', borderRadius: 1, input: { color: 'white', fontSize: 14 }, width: 240 }} />
+                <Button size="small" color="info" sx={{ fontSize: 13, fontWeight: 700, textTransform: 'none' }}>Assign</Button>
+              </Stack>
+            </RowContainer>
+          ))}
+        </VuiBox>
+      ))}
+    </>
+  );
+
+  const renderVisitsRows = () => (
+    <>
+      {sections.map((section) => (
+        <VuiBox key={section} mb={2}>
+          <VuiTypography color="white" fontWeight="bold" mb={1} sx={{ fontSize: 18 }}>
+            {section.charAt(0).toUpperCase() + section.slice(1)}
+          </VuiTypography>
+          {pets[section].map((p, i) => (
+            <RowContainer key={`${section}-vis-${i}`}>
+              {renderPetRowBase(p)}
+              <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} sx={{ alignItems: 'center', width: '100%', justifyContent: 'flex-end' }}>
+                <VuiTypography color="text" sx={{ fontSize: 14 }}>No past visits</VuiTypography>
+                <Button size="small" color="info" sx={{ fontSize: 13, fontWeight: 700, textTransform: 'none' }}>Add</Button>
+              </Stack>
+            </RowContainer>
+          ))}
+        </VuiBox>
+      ))}
+    </>
+  );
 
   return (
     <DashboardLayout>
@@ -104,35 +222,36 @@ export default function Pets() {
       </VuiBox>
       <Grid container spacing={3} mb="30px">
         <Grid item xs={12} xl={3}>
-          {/* Pets Account Settings - Interactive Options */}
-          <Card sx={{
-            p: 3,
-            background: 'rgba(30,32,60,0.7)', // match Family/Account Settings
-            borderRadius: 3,
-            boxShadow: '0 4px 24px #0003',
-            border: 'none',
-            minHeight: 320,
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-          }}>
-            <VuiTypography color="white" fontWeight="bold" fontSize={17} mb={2}>
-              Pet Settings
-            </VuiTypography>
-            <VuiBox component="ul" sx={{ color: '#fff', pl: 2, mb: 2, listStyle: 'none', fontSize: 15, p: 0 }}>
-              {['Care Team', 'Visits', 'Test Results', 'Schedule Appointment', 'Search Provider', 'Insurance'].map((label, idx) => (
-                <li key={label} style={{ marginBottom: idx === 5 ? 0 : 14 }}>
-                  <button
-                    style={optionBtnStyle}
-                    onClick={() => setOpenPopup(label)}
+          {/* Pet settings card – styled like Family */}
+          <Card sx={{ minHeight: 360, height: "auto" }}>
+            <VuiBox mb="26px">
+              <VuiTypography variant="lg" fontWeight="bold" color="white" textTransform="capitalize">
+                Pet settings
+              </VuiTypography>
+            </VuiBox>
+            <VuiBox component="ul" sx={{ color: '#fff', pl: 0, mb: 2, listStyle: 'none', fontSize: 15, p: 0, display: 'flex', flexDirection: 'column', gap: 1.25 }}>
+              {['Care Team', 'Visits', 'Test Results', 'Schedule Appointment', 'Search Provider', 'Insurance'].map((label) => (
+                <li key={label}>
+                  <VuiButton
+                    variant="contained"
+                    color="info"
+                    onClick={() => handleOpenSettings(
+                      label === 'Care Team' ? 'care' :
+                      label === 'Visits' ? 'visits' :
+                      label === 'Test Results' ? 'tests' :
+                      label === 'Schedule Appointment' ? 'schedule' :
+                      label === 'Search Provider' ? 'search' : 'insurance'
+                    )}
+                    sx={optionBtnSx}
                   >
-                    {label}
-                  </button>
+                    <span>{label}</span>
+                    <ArrowForwardIosOutlinedIcon sx={{ fontSize: 16, opacity: 0.75 }} />
+                  </VuiButton>
                 </li>
               ))}
             </VuiBox>
-            {/* Popup Dialog for each button */}
-            <Dialog open={!!openPopup} onClose={() => setOpenPopup(null)} maxWidth="md" fullWidth
+            {/* Unified tabbed settings dialog */}
+            <Dialog open={openSettings} onClose={handleCloseSettings} maxWidth="md" fullWidth
               PaperProps={{
                 sx: {
                   backgroundColor: 'rgba(30, 32, 60, 0.7)',
@@ -140,64 +259,51 @@ export default function Pets() {
                   borderRadius: 3,
                   color: 'white',
                   minWidth: 500,
-                  maxWidth: 800,
-                  backdropFilter: 'blur(4px)',
+                  maxWidth: 900,
+                  backdropFilter: 'blur(6px)',
+                  border: '1px solid #23244a',
                 },
               }}
             >
-              <DialogTitle sx={{ fontSize: 22, fontWeight: 700, color: '#fff', mb: 1 }}>{openPopup}</DialogTitle>
-              <DialogContent>
-                {openPopup === 'Insurance' && (
+              <DialogTitle sx={{ fontSize: 22, fontWeight: 800, color: '#fff', pb: 0 }}>Pet Settings</DialogTitle>
+              <Tabs
+                value={activeTab}
+                onChange={(e, v) => setActiveTab(v)}
+                variant="scrollable"
+                scrollButtons="auto"
+                sx={{ px: 2, mt: 1, borderBottom: '1px solid #23244a',
+                  '& .MuiTab-root': { color: '#b0b3c0', textTransform: 'none', fontWeight: 700, minHeight: 44 },
+                  '& .Mui-selected': { color: '#fff' },
+                  '& .MuiTabs-indicator': { backgroundColor: '#6a6afc', height: 3 }
+                }}
+              >
+                <Tab value="care" label="Care Team" />
+                <Tab value="insurance" label="Insurance" />
+                <Tab value="visits" label="Visits" />
+                <Tab value="schedule" label="Schedule" />
+                <Tab value="search" label="Search Provider" />
+                <Tab value="tests" label="Test Results" />
+              </Tabs>
+              <DialogContent sx={{ pt: 2 }}>
+                {activeTab === 'insurance' && (
                   <>
                     <VuiTypography color="text" variant="button" mb={2} sx={{ fontSize: 16 }}>Search and assign insurance companies for each pet.</VuiTypography>
-                    {Object.keys(pets).map(section => (
-                      <div key={section} style={{ marginBottom: 20 }}>
-                        <VuiTypography color="white" fontWeight="bold" mb={1} sx={{ fontSize: 18 }}>{section.charAt(0).toUpperCase() + section.slice(1)}</VuiTypography>
-                        {pets[section].map((p, i) => (
-                          <VuiBox key={i} display="flex" alignItems="center" mb={1}>
-                            <VuiTypography color="text" mr={2} sx={{ fontSize: 16 }}>{p.name}</VuiTypography>
-                            <TextField size="small" variant="outlined" placeholder="Insurance Company" sx={{ background: '#181a2f', borderRadius: 1, input: { color: 'white', fontSize: 16 }, mr: 1, width: 220 }} />
-                            <Button size="small" color="info" sx={{ fontSize: 15, fontWeight: 600 }}>Assign</Button>
-                          </VuiBox>
-                        ))}
-                      </div>
-                    ))}
+                    {renderInsuranceRows()}
                   </>
                 )}
-                {openPopup === 'Care Team' && (
+                {activeTab === 'care' && (
                   <>
                     <VuiTypography color="text" variant="button" mb={2} sx={{ fontSize: 16 }}>Enter vet and pharmacy for each pet.</VuiTypography>
-                    {Object.keys(pets).map(section => (
-                      <div key={section} style={{ marginBottom: 20 }}>
-                        <VuiTypography color="white" fontWeight="bold" mb={1} sx={{ fontSize: 18 }}>{section.charAt(0).toUpperCase() + section.slice(1)}</VuiTypography>
-                        {pets[section].map((p, i) => (
-                          <VuiBox key={i} display="flex" alignItems="center" mb={1}>
-                            <VuiTypography color="text" mr={2} sx={{ fontSize: 16 }}>{p.name}</VuiTypography>
-                            <TextField size="small" variant="outlined" placeholder="Vet" sx={{ background: '#181a2f', borderRadius: 1, input: { color: 'white', fontSize: 16 }, mr: 1, width: 160 }} />
-                            <TextField size="small" variant="outlined" placeholder="Pharmacy" sx={{ background: '#181a2f', borderRadius: 1, input: { color: 'white', fontSize: 16 }, mr: 1, width: 160 }} />
-                            <Button size="small" color="info" sx={{ fontSize: 15, fontWeight: 600 }}>Save</Button>
-                          </VuiBox>
-                        ))}
-                      </div>
-                    ))}
+                    {renderCareTeamRows()}
                   </>
                 )}
-                {openPopup === 'Visits' && (
+                {activeTab === 'visits' && (
                   <>
                     <VuiTypography color="text" variant="button" mb={2} sx={{ fontSize: 16 }}>Past visit records for each pet.</VuiTypography>
-                    {Object.keys(pets).map(section => (
-                      <div key={section} style={{ marginBottom: 20 }}>
-                        <VuiTypography color="white" fontWeight="bold" mb={1} sx={{ fontSize: 18 }}>{section.charAt(0).toUpperCase() + section.slice(1)}</VuiTypography>
-                        {pets[section].map((p, i) => (
-                          <VuiBox key={i} mb={1}>
-                            <VuiTypography color="text" sx={{ fontSize: 16 }}>{p.name}: <span style={{ color: '#6a6afc' }}>No past visits</span></VuiTypography>
-                          </VuiBox>
-                        ))}
-                      </div>
-                    ))}
+                    {renderVisitsRows()}
                   </>
                 )}
-                {openPopup === 'Schedule Appointment' && (
+                {activeTab === 'schedule' && (
                   <>
                     <VuiTypography color="text" variant="button" mb={2} sx={{ fontSize: 16 }}>Schedule a new appointment and view upcoming appointments.</VuiTypography>
                     <VuiBox mb={2} display="flex" alignItems="center" gap={2}>
@@ -210,7 +316,7 @@ export default function Pets() {
                     <VuiTypography color="text" sx={{ fontSize: 16 }}>No upcoming appointments</VuiTypography>
                   </>
                 )}
-                {openPopup === 'Search Provider' && (
+                {activeTab === 'search' && (
                   <>
                     <VuiTypography color="text" variant="button" mb={2} sx={{ fontSize: 16 }}>Search and book a vet for your pet.</VuiTypography>
                     <VuiBox mb={2} display="flex" alignItems="center" gap={2}>
@@ -221,9 +327,15 @@ export default function Pets() {
                     <VuiTypography color="text" sx={{ fontSize: 16 }}>No providers found</VuiTypography>
                   </>
                 )}
+                {activeTab === 'tests' && (
+                  <>
+                    <VuiTypography color="text" variant="button" mb={1} sx={{ fontSize: 16 }}>Test results for each pet.</VuiTypography>
+                    <VuiTypography color="text" sx={{ fontSize: 15 }}>No test results available</VuiTypography>
+                  </>
+                )}
               </DialogContent>
               <DialogActions>
-                <Button onClick={() => setOpenPopup(null)} color="primary" sx={{ fontSize: 15, fontWeight: 600, px: 3, py: 1 }}>Close</Button>
+                <Button onClick={handleCloseSettings} color="primary" sx={{ fontSize: 15, fontWeight: 600, px: 3, py: 1 }}>Close</Button>
               </DialogActions>
             </Dialog>
           </Card>
@@ -231,120 +343,48 @@ export default function Pets() {
         <Grid item xs={12} xl={9}>
           <VuiBox display="flex" flexDirection={{ xs: "column", md: "row" }} gap={3}>
             {/* Dogs Section */}
-            <Card sx={{
-              flex: 1,
-              minWidth: 0,
-              maxWidth: 380,
-              p: 3,
-              background: '#0f1121',
-              borderRadius: 4,
-              boxShadow: '0 4px 24px #0003',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              height: 340,
-              border: '1px solid #23244a',
-            }}>
-              <VuiTypography color="white" fontWeight="bold" fontSize={17} mb={1}>
-                Dogs
-              </VuiTypography>
-              <VuiTypography color="text" fontSize={13} mb={2}>
-                View and manage dog information and care.
-              </VuiTypography>
-              <VuiBox component="ul" sx={{ color: '#fff', pl: 2, mb: 2, listStyle: 'disc', fontSize: 14 }}>
-                {pets.dogs.map((p, i) => <li key={i}>{p.name} <span style={{ color: '#6a6afc', fontWeight: 500 }}>({p.breed})</span></li>)}
-              </VuiBox>
-              <VuiBox mt="auto" display="flex" justifyContent="flex-end">
-                <Button variant="outlined" sx={{
-                  borderColor: '#6a6afc',
-                  color: '#6a6afc',
-                  borderRadius: 2,
-                  fontWeight: 600,
-                  fontSize: 13,
-                  px: 3,
-                  py: 1,
-                  textTransform: 'none',
-                  borderWidth: 2,
-                  '&:hover': { borderColor: '#8b8bfc', color: '#8b8bfc' }
-                }} onClick={() => handleOpenModal('dogs')}>VIEW ALL</Button>
+            <Card sx={{ flex: 1, minWidth: 0 }}>
+              <VuiBox display="flex" flexDirection="column" height="100%" p={3}>
+                <VuiBox display="flex" flexDirection="column" mb="12px">
+                  <VuiTypography color="white" variant="lg" fontWeight="bold" mb="6px">Dogs</VuiTypography>
+                  <VuiTypography color="text" variant="button">View and manage dog information and care.</VuiTypography>
+                </VuiBox>
+                <VuiBox component="ul" sx={{ color: '#fff', pl: 2, mb: 2, listStyle: 'disc', fontSize: 14 }}>
+                  {pets.dogs.map((p, i) => <li key={i}>{p.name} <span style={{ color: '#6a6afc', fontWeight: 500 }}>({p.breed})</span></li>)}
+                </VuiBox>
+                <VuiBox mt="auto" display="flex" justifyContent="flex-end">
+                  <VuiButton variant="text" size="small" onClick={() => handleOpenModal('dogs')}>VIEW ALL</VuiButton>
+                </VuiBox>
               </VuiBox>
             </Card>
             {/* Cats Section */}
-            <Card sx={{
-              flex: 1,
-              minWidth: 0,
-              maxWidth: 380,
-              p: 3,
-              background: '#0f1121',
-              borderRadius: 4,
-              boxShadow: '0 4px 24px #0003',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              height: 340,
-              border: '1px solid #23244a',
-            }}>
-              <VuiTypography color="white" fontWeight="bold" fontSize={17} mb={1}>
-                Cats
-              </VuiTypography>
-              <VuiTypography color="text" fontSize={13} mb={2}>
-                View and manage cat information and care.
-              </VuiTypography>
-              <VuiBox component="ul" sx={{ color: '#fff', pl: 2, mb: 2, listStyle: 'disc', fontSize: 14 }}>
-                {pets.cats.map((p, i) => <li key={i}>{p.name} <span style={{ color: '#6a6afc', fontWeight: 500 }}>({p.breed})</span></li>)}
-              </VuiBox>
-              <VuiBox mt="auto" display="flex" justifyContent="flex-end">
-                <Button variant="outlined" sx={{
-                  borderColor: '#6a6afc',
-                  color: '#6a6afc',
-                  borderRadius: 2,
-                  fontWeight: 600,
-                  fontSize: 13,
-                  px: 3,
-                  py: 1,
-                  textTransform: 'none',
-                  borderWidth: 2,
-                  '&:hover': { borderColor: '#8b8bfc', color: '#8b8bfc' }
-                }} onClick={() => handleOpenModal('cats')}>VIEW ALL</Button>
+            <Card sx={{ flex: 1, minWidth: 0 }}>
+              <VuiBox display="flex" flexDirection="column" height="100%" p={3}>
+                <VuiBox display="flex" flexDirection="column" mb="12px">
+                  <VuiTypography color="white" variant="lg" fontWeight="bold" mb="6px">Cats</VuiTypography>
+                  <VuiTypography color="text" variant="button">View and manage cat information and care.</VuiTypography>
+                </VuiBox>
+                <VuiBox component="ul" sx={{ color: '#fff', pl: 2, mb: 2, listStyle: 'disc', fontSize: 14 }}>
+                  {pets.cats.map((p, i) => <li key={i}>{p.name} <span style={{ color: '#6a6afc', fontWeight: 500 }}>({p.breed})</span></li>)}
+                </VuiBox>
+                <VuiBox mt="auto" display="flex" justifyContent="flex-end">
+                  <VuiButton variant="text" size="small" onClick={() => handleOpenModal('cats')}>VIEW ALL</VuiButton>
+                </VuiBox>
               </VuiBox>
             </Card>
             {/* Other Pets Section */}
-            <Card sx={{
-              flex: 1,
-              minWidth: 0,
-              maxWidth: 380,
-              p: 3,
-              background: '#0f1121',
-              borderRadius: 4,
-              boxShadow: '0 4px 24px #0003',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              height: 340,
-              border: '1px solid #23244a',
-            }}>
-              <VuiTypography color="white" fontWeight="bold" fontSize={17} mb={1}>
-                Other Pets
-              </VuiTypography>
-              <VuiTypography color="text" fontSize={13} mb={2}>
-                View and manage other pet information and care.
-              </VuiTypography>
-              <VuiBox component="ul" sx={{ color: '#fff', pl: 2, mb: 2, listStyle: 'disc', fontSize: 14 }}>
-                {pets.other.map((p, i) => <li key={i}>{p.name} <span style={{ color: '#6a6afc', fontWeight: 500 }}>({p.species})</span></li>)}
-              </VuiBox>
-              <VuiBox mt="auto" display="flex" justifyContent="flex-end">
-                <Button variant="outlined" sx={{
-                  borderColor: '#6a6afc',
-                  color: '#6a6afc',
-                  borderRadius: 2,
-                  fontWeight: 600,
-                  fontSize: 13,
-                  px: 3,
-                  py: 1,
-                  textTransform: 'none',
-                  borderWidth: 2,
-                  '&:hover': { borderColor: '#8b8bfc', color: '#8b8bfc' }
-                }} onClick={() => handleOpenModal('other')}>VIEW ALL</Button>
+            <Card sx={{ flex: 1, minWidth: 0 }}>
+              <VuiBox display="flex" flexDirection="column" height="100%" p={3}>
+                <VuiBox display="flex" flexDirection="column" mb="12px">
+                  <VuiTypography color="white" variant="lg" fontWeight="bold" mb="6px">Other Pets</VuiTypography>
+                  <VuiTypography color="text" variant="button">View and manage other pet information and care.</VuiTypography>
+                </VuiBox>
+                <VuiBox component="ul" sx={{ color: '#fff', pl: 2, mb: 2, listStyle: 'disc', fontSize: 14 }}>
+                  {pets.other.map((p, i) => <li key={i}>{p.name} <span style={{ color: '#6a6afc', fontWeight: 500 }}>({p.species})</span></li>)}
+                </VuiBox>
+                <VuiBox mt="auto" display="flex" justifyContent="flex-end">
+                  <VuiButton variant="text" size="small" onClick={() => handleOpenModal('other')}>VIEW ALL</VuiButton>
+                </VuiBox>
               </VuiBox>
             </Card>
           </VuiBox>
@@ -374,16 +414,18 @@ export default function Pets() {
         <DialogContent sx={{ background: 'transparent', color: '#fff', px: 4, pt: 2, pb: 1 }}>
           {openModal && editIndex === null && (
             <>
-              <ul style={{ color: '#fff', paddingLeft: 18, marginBottom: 16, fontSize: 15 }}>
+              <VuiBox>
                 {pets[openModal].map((p, i) => (
-                  <li key={i} style={{ marginBottom: 14, background: 'rgba(40,42,70,0.6)', borderRadius: 8, padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <span style={{ fontWeight: 600, fontSize: 16 }}>{p.name} <span style={{ color: '#6a6afc', fontWeight: 500 }}>({p.species || p.breed})</span></span>
-                    <span style={{ fontSize: 13, color: '#bdbdfc' }}>Breed: {p.breed} | Age: {p.age}</span>
-                    <span style={{ fontSize: 13, color: '#bdbdfc' }}>Medical: {p.medical}</span>
-                    <Button size="small" sx={{ mt: 1, alignSelf: 'flex-end', color: '#6a6afc', textTransform: 'none', fontWeight: 600 }} onClick={() => handleEdit(openModal, i)}>Edit</Button>
-                  </li>
+                  <RowContainer key={`view-${openModal}-${i}`}>
+                    {renderPetRowBase(p)}
+                    <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} sx={{ alignItems: 'center', width: '100%', justifyContent: 'flex-end' }}>
+                      <VuiTypography color="text" sx={{ fontSize: 13 }}>Breed: {p.breed} • Age: {p.age}</VuiTypography>
+                      <VuiTypography color="text" sx={{ fontSize: 13 }}>Medical: {p.medical}</VuiTypography>
+                      <Button size="small" sx={{ color: '#6a6afc', textTransform: 'none', fontWeight: 700 }} onClick={() => handleEdit(openModal, i)}>Edit</Button>
+                    </Stack>
+                  </RowContainer>
                 ))}
-              </ul>
+              </VuiBox>
               <Button variant="contained" sx={{ mt: 1, background: 'linear-gradient(90deg,#6a6afc,#8b8bfc)', color: '#fff', borderRadius: 2, fontWeight: 600, textTransform: 'none', px: 3, py: 1, boxShadow: '0 2px 8px #6a6afc33' }} onClick={handleAddPet}>Add Pet</Button>
             </>
           )}
