@@ -1,5 +1,6 @@
 // @mui material components
 import Card from "@mui/material/Card";
+import Grid from "@mui/material/Grid";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
@@ -35,6 +36,10 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import React, { useState } from "react";
 import { dateFnsLocalizer } from "react-big-calendar";
+
+// Reuse billing widgets
+import Invoices from "layouts/billing/components/Invoices";
+import BillingInformation from "layouts/billing/components/BillingInformation";
 
 function Tables() {
   const { columns, rows } = authorsTableData;
@@ -321,7 +326,7 @@ function Tables() {
       <DashboardNavbar />
       <VuiBox py={3} minHeight="calc(100vh - 120px)">
         <VuiBox mb={3}>
-          <Card sx={{ minHeight: 220, height: 320 }}>
+          <Card sx={{ minHeight: 220, height: 320, display: 'flex', flexDirection: 'column' }}>
             <VuiBox display="flex" justifyContent="space-between" alignItems="center" mb="22px">
               <VuiTypography variant="lg" color="white">
                 Appointments
@@ -337,12 +342,32 @@ function Tables() {
             </VuiBox>
             <VuiBox
               sx={{
-                "& th": {
+                flex: 1,
+                minHeight: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                overflow: 'hidden',
+                // Make the TableContainer own the scrollbar at the very bottom
+                '& .MuiTableContainer-root': {
+                  flex: 1,
+                  minHeight: 0,
+                  overflowX: 'auto',
+                  overflowY: 'hidden',
+                },
+                '& .MuiTableContainer-root table': { minWidth: 650 },
+                // Simplified, consistent scrollbar styling (like dashboard)
+                '& .MuiTableContainer-root::-webkit-scrollbar': { height: 8, background: 'transparent' },
+                '& .MuiTableContainer-root::-webkit-scrollbar-thumb': { background: 'rgba(255,255,255,0.13)', borderRadius: 6 },
+                '& .MuiTableContainer-root::-webkit-scrollbar-track': { background: 'transparent' },
+                scrollbarWidth: 'thin',
+                scrollbarColor: 'rgba(255,255,255,0.13) transparent',
+                // Table borders
+                '& th': {
                   borderBottom: ({ borders: { borderWidth }, palette: { grey } }) =>
                     `${borderWidth[1]} solid ${grey[700]}`,
                 },
-                "& .MuiTableRow-root:not(:last-child)": {
-                  "& td": {
+                '& .MuiTableRow-root:not(:last-child)': {
+                  '& td': {
                     borderBottom: ({ borders: { borderWidth }, palette: { grey } }) =>
                       `${borderWidth[1]} solid ${grey[700]}`,
                   },
@@ -367,30 +392,44 @@ function Tables() {
               Add Info
             </Button>
           </VuiBox>
-          <VuiBox sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', justifyContent: 'flex-start' }}>
+          <VuiBox sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
             <VuiBox
               sx={{
                 flex: 1,
                 minHeight: 0,
-                overflowX: 'auto',
-                '& table': {
-                  minWidth: 650,
+                display: 'flex',
+                flexDirection: 'column',
+                overflow: 'hidden',
+                '& .MuiTableContainer-root': {
+                  flex: 1,
+                  minHeight: 0,
+                  overflowX: 'auto',
+                  overflowY: 'hidden',
                 },
-                '&::-webkit-scrollbar': {
-                  height: 8,
-                },
-                '&::-webkit-scrollbar-thumb': {
-                  background: '#2D2E5F',
-                  borderRadius: 4,
-                },
+                '& .MuiTableContainer-root table': { minWidth: 650 },
+                // Simplified, consistent scrollbar styling (like dashboard)
+                '& .MuiTableContainer-root::-webkit-scrollbar': { height: 8, background: 'transparent' },
+                '& .MuiTableContainer-root::-webkit-scrollbar-thumb': { background: 'rgba(255,255,255,0.13)', borderRadius: 6 },
+                '& .MuiTableContainer-root::-webkit-scrollbar-track': { background: 'transparent' },
+                scrollbarWidth: 'thin',
+                scrollbarColor: 'rgba(255,255,255,0.13) transparent',
               }}
             >
               <Table columns={prCols} rows={prRows} />
             </VuiBox>
-            {/* Spacer to push scrollbar to bottom */}
-            <Box sx={{ height: 8 }} />
           </VuiBox>
         </Card>
+        {/* Replicated boxes from Billing page: Pharmacy Information and Prescriptions */}
+        <VuiBox my={3}>
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={7}>
+              <BillingInformation />
+            </Grid>
+            <Grid item xs={12} md={5}>
+              <Invoices />
+            </Grid>
+          </Grid>
+        </VuiBox>
       </VuiBox>
       <Footer />
       <Dialog open={dialogOpen} onClose={handleClose} maxWidth="xs" fullWidth
