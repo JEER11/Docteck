@@ -44,13 +44,22 @@ function ReferralTracking() {
 	const remainingTasks = todos.length;
 	const percent = totalTasks === 0 ? 100 : ((totalTasks - remainingTasks) / totalTasks) * 100;
 
+	// Only show scrollbar if more than two todos (otherwise keep it hidden)
+	const shouldScroll = todos.length > 2;
+
 	return (
 		<Card
 			sx={{
-				height: '100%',
+				// Fix height so the card never grows with content; allow inner area to scroll instead
+				height: { xs: 300, md: 340 },
+				maxHeight: { xs: 300, md: 340 },
+				minHeight: { xs: 300, md: 340 },
+				display: 'flex',
+				flexDirection: 'column',
+				overflow: 'hidden',
 				background: linearGradient(gradients.cardDark.main, gradients.cardDark.state, gradients.cardDark.deg)
 			}}>
-			<VuiBox sx={{ width: '100%' }}>
+			<VuiBox sx={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
 				<VuiBox
 					display='flex'
 					alignItems='center'
@@ -105,12 +114,12 @@ function ReferralTracking() {
 						<FaEllipsisH color={info.main} size='18px' />
 					</VuiBox>
 				</VuiBox>
-				{/* Scrollable list area: prevents card from expanding when many todos are added */}
+				{/* Scrollable list area: flexes to fill the fixed-height card; shows scrollbar only when > 2 todos */}
 				<VuiBox
 					sx={{
-						maxHeight: { xs: 220, md: 280 },
-						minHeight: { xs: 120, md: 160 },
-						overflowY: 'auto',
+						flex: 1,
+						minHeight: 0,
+						overflowY: shouldScroll ? 'auto' : 'hidden',
 						pr: 0.5,
 						'::-webkit-scrollbar': { width: '6px', height: '6px', background: 'transparent' },
 						'::-webkit-scrollbar-thumb': { background: 'rgba(255,255,255,0.18)', borderRadius: '6px' },

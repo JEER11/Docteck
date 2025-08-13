@@ -173,7 +173,18 @@ function Tables() {
           {p.completion}%
         </VuiTypography>
         <VuiBox width="8rem">
-          <VuiProgress value={p.completion} color="info" sx={{ background: "#2D2E5F" }} label={false} />
+          <VuiProgress
+            value={p.completion}
+            color="info"
+            variant="gradient"
+            label={false}
+            sx={{
+              background: "#2D2E5F",
+              '& .MuiLinearProgress-bar': {
+                backgroundImage: 'linear-gradient(90deg, #0A2E7B 0%, #3FA9F5 50%, #0A2E7B 100%) !important',
+              },
+            }}
+          />
         </VuiBox>
       </VuiBox>
     ),

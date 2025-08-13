@@ -7,7 +7,8 @@ import IconButton from "@mui/material/IconButton";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import Tooltip from "@mui/material/Tooltip";
 
 // Dashboard React components
 import VuiBox from "components/VuiBox";
@@ -18,45 +19,164 @@ import VuiProgress from "components/VuiProgress";
 // Dashboard Material-UI example components
 import Table from "examples/Tables/Table";
 
+// Compact-mode circular progress with gradient stroke
+function GradientCircularProgress({ value, size = 42, stroke = 4, id = "gcp" }) {
+  const r = (size - stroke) / 2;
+  const c = 2 * Math.PI * r;
+  const offset = c * (1 - value / 100);
+  const cx = size / 2;
+  const cy = size / 2;
+
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label={`${value}%`}>
+      <defs>
+        <linearGradient id={`grad-${id}`} x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#0A2E7B" />
+          <stop offset="50%" stopColor="#3FA9F5" />
+          <stop offset="100%" stopColor="#0A2E7B" />
+        </linearGradient>
+      </defs>
+      {/* track */}
+      <circle cx={cx} cy={cy} r={r} stroke="rgba(255,255,255,0.18)" strokeWidth={stroke} fill="none" />
+      {/* progress */}
+      <circle
+        cx={cx}
+        cy={cy}
+        r={r}
+        stroke={`url(#grad-${id})`}
+        strokeWidth={stroke}
+        strokeLinecap="round"
+        fill="none"
+        strokeDasharray={`${c} ${c}`}
+        strokeDashoffset={offset}
+        transform={`rotate(-90 ${cx} ${cy})`}
+      />
+    </svg>
+  );
+}
+
 function Projects() {
   const { projects } = useProjects();
   const [menuAnchor, setMenuAnchor] = useState(null);
   const [menuProjectId, setMenuProjectId] = useState(null);
+  // local ref to detect when the table overflows horizontally (scrollbar shows)
+  const tableRegionRef = useRef(null);
+  const [compact, setCompact] = useState(false);
+
+  // Utility: deterministic color per hospital
+  const getHospitalColor = (name) => {
+    if (!name) return "#5A6ABF";
+    // simple hash to index a palette
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) hash = (hash << 5) - hash + name.charCodeAt(i);
+    const palette = [
+      "#6C63FF", // indigo
+      "#00D1FF", // cyan
+      "#FF6B6B", // coral
+      "#FFD166", // amber
+      "#06D6A0", // teal
+      "#9C27B0", // purple
+      "#29B6F6", // light blue
+      "#EF5350", // red
+      "#66BB6A", // green
+      "#FFA726", // orange
+    ];
+    const idx = Math.abs(hash) % palette.length;
+    return palette[idx];
+  };
+
+  const getInitials = (name) => {
+    if (!name) return "?";
+    const parts = name.split(/\s+/).filter(Boolean);
+    const first = parts[0]?.[0] || "";
+    const second = parts[1]?.[0] || "";
+    return (first + second).toUpperCase();
+  };
+
+  // Detect overflow to toggle compact mode
+  useEffect(() => {
+    const el = tableRegionRef.current;
+    if (!el) return;
+    const container = el.querySelector('.MuiTableContainer-root') || el;
+
+    const checkOverflow = () => {
+      if (!container) return;
+      const hasOverflow = container.scrollWidth > container.clientWidth + 1; // tolerance
+      setCompact(hasOverflow);
+    };
+
+    // Initial check after a tick to ensure layout is done
+    const id = requestAnimationFrame(checkOverflow);
+
+    // Watch size changes
+    let ro;
+    if (typeof ResizeObserver !== "undefined") {
+      ro = new ResizeObserver(checkOverflow);
+      ro.observe(container);
+    } else {
+      window.addEventListener("resize", checkOverflow);
+    }
+
+    return () => {
+      cancelAnimationFrame(id);
+      if (ro) ro.disconnect();
+      else window.removeEventListener("resize", checkOverflow);
+    };
+  }, []);
 
   // Helper to render avatars (doctors)
   const renderAvatars = (doctors) =>
     doctors.map((name, idx) => (
-      <VuiAvatar
-        key={name}
-        src={null}
-        alt={name}
-        size="xs"
-        sx={{
-          border: ({ borders: { borderWidth }, palette: { dark } }) =>
-            `${borderWidth[2]} solid ${dark.focus}`,
-          cursor: "pointer",
-          position: "relative",
-          "&:not(:first-of-type)": { ml: -1.25 },
-          "&:hover, &:focus": { zIndex: "10" },
-        }}
-      >{name[0]}</VuiAvatar>
+      <VuiBox key={name} sx={{ display: 'inline-flex', ml: idx === 0 ? 0 : '-10px' }}>
+        <Tooltip title={name} placement="top" arrow>
+          <VuiAvatar
+            src={null}
+            alt={name}
+            size="xs"
+            sx={{
+              border: ({ borders: { borderWidth }, palette: { dark } }) =>
+                `${borderWidth[2]} solid ${dark.focus}`,
+              cursor: "pointer",
+              position: "relative",
+              "&:hover, &:focus": { zIndex: "10" },
+            }}
+          >{name[0]}</VuiAvatar>
+        </Tooltip>
+      </VuiBox>
     ));
 
   // Table columns
-  const columns = [
+  const columns = useMemo(() => ([
     { name: "hospital", align: "left", label: "Hospitals" },
     { name: "doctor", align: "left", label: "Doctors" },
-    { name: "bill", align: "center", label: "Bill" },
+    { name: "bill", align: compact ? "center" : "center", label: "Bill" },
     { name: "completion", align: "center", label: "Completion" },
-    { name: "actions", align: "center", label: "Actions" },
-  ];
+    { name: "actions", align: compact ? "left" : "center", label: "Actions" },
+  ]), [compact]);
 
   // Table rows from context
   const rows = projects.map((project) => ({
     hospital: (
-      <VuiTypography pl="8px" color="white" variant="button" fontWeight="medium">
-        {project.hospital}
-      </VuiTypography>
+  compact ? (
+        <Tooltip title={project.hospital} placement="top" arrow>
+      <VuiAvatar
+            alt={project.hospital}
+    size="sm"
+            sx={{
+        width: 38,
+        height: 38,
+      fontSize: 12,
+      backgroundColor: 'transparent',
+      color: "#FFFFFF",
+      border: `2px solid ${getHospitalColor(project.hospital)}`,
+            }}
+          >{getInitials(project.hospital)}</VuiAvatar>
+        </Tooltip>
+      ) : (
+        <VuiTypography pl="8px" color="white" variant="button" fontWeight="medium" noWrap>
+          {project.hospital}
+        </VuiTypography>
+      )
     ),
     doctor: (
       <VuiBox display="flex" py={1}>
@@ -69,12 +189,37 @@ function Projects() {
       </VuiTypography>
     ),
     completion: (
-      <VuiBox width="8rem" textAlign="left">
-        <VuiTypography color="white" variant="button" fontWeight="bold">
-          {project.completion}%
-        </VuiTypography>
-        <VuiProgress value={project.completion} color="info" label={false} sx={{ background: "#2D2E5F" }} />
-      </VuiBox>
+      compact ? (
+        <VuiBox position="relative" width={50} height={50} display="flex" alignItems="center" justifyContent="center">
+          <GradientCircularProgress value={project.completion} id={`hub-${project.id}`} />
+          <VuiTypography
+            variant="button"
+            color="white"
+            fontWeight="bold"
+            sx={{ position: 'absolute', fontSize: 12 }}
+          >
+            {project.completion}%
+          </VuiTypography>
+        </VuiBox>
+      ) : (
+        <VuiBox width="8rem" textAlign="left">
+          <VuiTypography color="white" variant="button" fontWeight="bold">
+            {project.completion}%
+          </VuiTypography>
+          <VuiProgress
+            value={project.completion}
+            color="info"
+            variant="gradient"
+            label={false}
+            sx={{
+              background: "#2D2E5F",
+              '& .MuiLinearProgress-bar': {
+                backgroundImage: 'linear-gradient(90deg, #0A2E7B 0%, #3FA9F5 50%, #0A2E7B 100%) !important',
+              },
+            }}
+          />
+        </VuiBox>
+      )
     ),
     actions: (
       <IconButton color="primary" onClick={e => { setMenuAnchor(e.currentTarget); setMenuProjectId(project.id); }} size="small">
@@ -98,10 +243,14 @@ function Projects() {
   return (
     <Card
       sx={{
-  height: "100%",
-  width: "100%",
-  minWidth: 0,
-  ml: 0,
+        height: '100%',
+        minHeight: { xs: 420, md: 520, lg: 600 }, // match calendar
+        width: "100%",
+        minWidth: 0,
+        ml: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden'
       }}
     >
       <VuiBox display="flex" justifyContent="space-between" alignItems="center" mb="32px">
@@ -117,43 +266,77 @@ function Projects() {
           </VuiBox>
         </VuiBox>
       </VuiBox>
-      <VuiBox
-        sx={{
-          maxHeight: 340,
-          minHeight: 180,
-          overflowY: 'auto',
-          // Ultra-minimal scrollbar: only thumb, no background/track
-          '::-webkit-scrollbar': {
-            width: '6px',
-            background: 'transparent',
-          },
-          '::-webkit-scrollbar-track': {
-            background: 'transparent',
-          },
-          '::-webkit-scrollbar-thumb': {
-            background: 'rgba(255,255,255,0.13)',
-            borderRadius: '6px',
-            minHeight: '40px',
-          },
-          '::-webkit-scrollbar-corner': {
-            background: 'transparent',
-          },
-          'scrollbarWidth': 'thin',
-          'scrollbarColor': 'rgba(255,255,255,0.13) transparent',
-          "& th": {
-            borderBottom: ({ borders: { borderWidth }, palette: { grey } }) =>
-              `${borderWidth[1]} solid ${grey[700]}`,
-          },
-          "& .MuiTableRow-root:not(:last-child)": {
-            "& td": {
+      {/* Content area: make table region scroll and place horizontal scrollbar at the very bottom */}
+      <VuiBox sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+        <VuiBox
+          ref={tableRegionRef}
+          sx={{
+            flex: 1,
+            minHeight: 0,
+            // Let the TableContainer own the scrollbar; stretch it to fill so bar is at card bottom
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+            '& .MuiTableContainer-root': {
+              flex: 1,
+              minHeight: 0,
+              overflowX: 'auto',
+              overflowY: 'hidden',
+            },
+            '& .MuiTableContainer-root table': { minWidth: compact ? 380 : 650 },
+            '& table': { minWidth: compact ? 380 : 650 },
+            // Horizontal scrollbar styling
+            '& .MuiTableContainer-root::-webkit-scrollbar': { height: 8, background: 'transparent' },
+            '& .MuiTableContainer-root::-webkit-scrollbar-thumb': { background: 'rgba(255,255,255,0.13)', borderRadius: 6 },
+            '& .MuiTableContainer-root::-webkit-scrollbar-track': { background: 'transparent' },
+            scrollbarWidth: 'thin',
+            scrollbarColor: 'rgba(255,255,255,0.13) transparent',
+            "& th": {
               borderBottom: ({ borders: { borderWidth }, palette: { grey } }) =>
                 `${borderWidth[1]} solid ${grey[700]}`,
             },
-          },
-        }}
-      >
-        <Table columns={columns} rows={rows} />
-        {renderMenu}
+            "& .MuiTableRow-root:not(:last-child)": {
+              "& td": {
+                borderBottom: ({ borders: { borderWidth }, palette: { grey } }) =>
+                  `${borderWidth[1]} solid ${grey[700]}`,
+              },
+            },
+            // visually tighten first column spacing when compact
+            ...(compact && {
+              '& td:first-of-type': { width: 52, minWidth: 52, paddingLeft: '10px' },
+              '& th:first-of-type > div': { whiteSpace: 'nowrap' },
+              // Tighten Doctor column right padding
+              '& th:nth-of-type(2), & td:nth-of-type(2)': {
+                paddingRight: '8px !important',
+                minWidth: 72,
+              },
+              // Bill column: center and nudge slightly right with balanced padding
+              '& th:nth-of-type(3), & td:nth-of-type(3)': {
+                textAlign: 'center !important',
+                paddingLeft: '10px !important',
+                paddingRight: '6px !important',
+                width: 40,
+                minWidth: 40,
+              },
+              // Completion: room for the circular progress
+              '& th:nth-of-type(4), & td:nth-of-type(4)': {
+                textAlign: 'center !important',
+                width: 72,
+                minWidth: 72,
+              },
+              // Actions: move slightly left and keep narrow
+              '& th:nth-of-type(5), & td:nth-of-type(5)': {
+                textAlign: 'left !important',
+                paddingLeft: '6px !important',
+                width: 28,
+                minWidth: 28,
+              },
+            })
+          }}
+        >
+          <Table columns={columns} rows={rows} />
+          {renderMenu}
+        </VuiBox>
       </VuiBox>
     </Card>
   );
