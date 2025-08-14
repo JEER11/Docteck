@@ -2,6 +2,14 @@
 import Card from "@mui/material/Card";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogActions from "@mui/material/DialogActions";
+import TextField from "@mui/material/TextField";
+import Button from "@mui/material/Button";
+import IconButton from "@mui/material/IconButton";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 
 // Vision UI Dashboard React components
 import VuiBox from "components/VuiBox";
@@ -11,11 +19,22 @@ import VuiButton from "components/VuiButton";
 // Billing page components
 import Invoice from "layouts/billing/components/Invoice";
 import React, { useState } from "react";
-import ReactDOM from "react-dom";
+// ReactDOM no longer needed; using MUI Dialogs
 import AddIcon from "@mui/icons-material/Add";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 
 function Invoices() {
+  // Match HUB dialog input style (no inner bubbles)
+  const fieldSx = {
+    width: '100%',
+    ml: 0,
+    background: '#181a2f',
+    borderRadius: 1.5,
+    '& .MuiOutlinedInput-notchedOutline': { border: '1px solid #23244a' },
+    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#2f3570' },
+    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#6a6afc' },
+    '& .MuiInputBase-input': { color: '#e7e9f3', fontSize: 14, py: 1, background: 'transparent' },
+  };
   // Save changes in the Edit modal
   const handleEditSave = () => {
     if (editIdx == null) return;
@@ -122,227 +141,96 @@ function Invoices() {
     setDocModalFile(file);
   };
 
-  // Render document modal
-  const DocModal = docModalOpen && (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      width: '100vw',
-      height: '100vh',
-      background: 'rgba(0,0,0,0.45)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 99999,
-      backdropFilter: 'blur(6px)'
-    }}>
-      <div style={{
-        background: 'rgba(34,34,34,0.92)',
-        color: '#fff',
-        padding: '36px 32px 32px 32px',
-        borderRadius: 20,
-        minWidth: 340,
-        maxWidth: 420,
-        width: '100%',
-        maxHeight: '80vh',
-        overflowY: 'auto',
-        boxShadow: '0 8px 32px 0 rgba(0,0,0,0.5)',
-        border: '2.5px solid #fff',
-        position: 'relative',
-        backdropFilter: 'blur(8px)',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}>
-        <button
-          onClick={handleDocModalClose}
-          style={{
-            position: 'absolute',
-            top: 16,
-            right: 20,
-            background: 'transparent',
-            border: 'none',
-            color: '#fff',
-            fontSize: 26,
-            cursor: 'pointer',
-            fontWeight: 700,
-            opacity: 0.85,
-            transition: 'opacity 0.2s',
-          }}
-          aria-label="Close"
-        >×</button>
+  // Document Dialog
+  const DocDialog = (
+    <Dialog open={docModalOpen} onClose={handleDocModalClose} maxWidth="sm" fullWidth
+      PaperProps={{ sx: { background: 'rgba(34, 40, 74, 0.75)', boxShadow: 24, borderRadius: 4, color: 'white', backdropFilter: 'blur(10px)', p: 2, minWidth: 360, maxWidth: 640 } }}
+    >
+      <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 18, pb: 1, pr: 5 }}>
+        Prescription Document
+        <IconButton aria-label="close" onClick={handleDocModalClose} sx={{ position: 'absolute', right: 8, top: 8, color: '#bfc6e0' }}>
+          <CloseRoundedIcon />
+        </IconButton>
+      </DialogTitle>
+      <DialogContent sx={{ pt: 1 }}>
         {docModalFile ? (
-          <>
-            <VuiTypography variant="h6" color="white" mb={2} style={{ textAlign: 'center', fontWeight: 700, fontSize: 22, marginBottom: 18 }}>Prescription Document</VuiTypography>
-            {docModalFile.type?.startsWith('image') ? (
-              <img src={URL.createObjectURL(docModalFile)} alt="Prescription" style={{ maxWidth: 320, maxHeight: 340, borderRadius: 12, margin: '0 auto', display: 'block', boxShadow: '0 2px 16px #0008' }} />
-            ) : docModalFile.type === 'application/pdf' ? (
-              <iframe src={URL.createObjectURL(docModalFile)} title="Prescription PDF" style={{ width: 320, height: 340, border: 'none', borderRadius: 12, background: '#222', boxShadow: '0 2px 16px #0008' }} />
-            ) : (
-              <VuiTypography color="white" style={{ textAlign: 'center', margin: '24px 0' }}>Cannot preview this file type.</VuiTypography>
-            )}
-          </>
+          docModalFile.type?.startsWith('image') ? (
+            <img src={URL.createObjectURL(docModalFile)} alt="Prescription" style={{ maxWidth: '100%', maxHeight: 380, borderRadius: 12, display: 'block', margin: '0 auto' }} />
+          ) : docModalFile.type === 'application/pdf' ? (
+            <iframe src={URL.createObjectURL(docModalFile)} title="Prescription PDF" style={{ width: '100%', height: 400, border: 'none', borderRadius: 12, background: '#222' }} />
+          ) : (
+            <VuiTypography color="white" style={{ textAlign: 'center', margin: '24px 0' }}>Cannot preview this file type.</VuiTypography>
+          )
         ) : (
-          <>
-            <VuiTypography variant="h6" color="white" mb={2} style={{ textAlign: 'center', fontWeight: 700, fontSize: 22, marginBottom: 18 }}>No document attached</VuiTypography>
-            <label style={{ color: '#fff', marginBottom: 18, display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
-              <input
-                type="file"
-                accept="image/*,application/pdf"
-                onChange={handleDocUpload}
-                style={{
-                  display: 'block',
-                  margin: '0 0 18px 0',
-                  background: 'rgba(51,51,51,0.8)',
-                  color: '#fff',
-                  borderRadius: 8,
-                  border: '1.5px solid #fff',
-                  padding: '8px 12px',
-                  fontSize: 15,
-                  width: '100%',
-                  maxWidth: 260,
-                  outline: 'none',
-                  cursor: 'pointer',
-                }}
-              />
-              <VuiButton
-                variant="contained"
-                color="info"
-                component="span"
-                style={{
-                  fontWeight: 700,
-                  fontSize: 17,
-                  borderRadius: 12,
-                  padding: '12px 0',
-                  width: 200,
-                  marginTop: 2,
-                  boxShadow: 'none',
-                  letterSpacing: 0.5,
-                }}
-              >Add Document</VuiButton>
-            </label>
-          </>
+          <VuiBox display="flex" flexDirection="column" alignItems="center" gap={2}>
+            <VuiTypography color="white">No document attached</VuiTypography>
+            <input type="file" accept="image/*,application/pdf" onChange={handleDocUpload} style={{ color: '#fff' }} />
+          </VuiBox>
         )}
-      </div>
-    </div>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={handleDocModalClose} sx={{ color: '#bfc6e0' }}>Close</Button>
+      </DialogActions>
+    </Dialog>
   );
   const medicineOptions = [
     "Atorvastatin 20mg", "Lisinopril 10mg", "Metformin 500mg", "Levothyroxine 50mcg", "Amlodipine 5mg", "Simvastatin 40mg", "Omeprazole 20mg", "Losartan 50mg", "Gabapentin 300mg", "Hydrochlorothiazide 25mg", "Sertraline 50mg", "Furosemide 40mg", "Metoprolol 50mg", "Pantoprazole 40mg", "Escitalopram 10mg", "Rosuvastatin 10mg", "Tamsulosin 0.4mg", "Alprazolam 0.5mg", "Citalopram 20mg", "Ciprofloxacin 500mg", "Duloxetine 30mg", "Fluoxetine 20mg", "Atenolol 50mg", "Clopidogrel 75mg", "Doxycycline 100mg", "Enalapril 10mg", "Glipizide 5mg", "Insulin Glargine 100U/mL", "Lamotrigine 100mg", "Lansoprazole 30mg", "Levetiracetam 500mg", "Levocetirizine 5mg", "Loratadine 10mg", "Meloxicam 15mg", "Montelukast 10mg", "Naproxen 500mg", "Olmesartan 20mg", "Paroxetine 20mg", "Pioglitazone 30mg", "Pravastatin 40mg", "Prednisone 20mg", "Pregabalin 75mg", "Propranolol 40mg", "Quetiapine 100mg", "Ranitidine 150mg", "Rivaroxaban 20mg", "Sitagliptin 100mg", "Spironolactone 25mg", "Trazodone 50mg", "Valsartan 80mg", "Venlafaxine 75mg", "Warfarin 5mg", "Zolpidem 10mg", "Amoxicillin 500mg", "Azithromycin 250mg", "Baclofen 10mg", "Bisoprolol 5mg", "Budesonide 200mcg", "Carvedilol 12.5mg", "Cetirizine 10mg", "Chlorthalidone 25mg", "Clonazepam 1mg", "Clonidine 0.1mg", "Colchicine 0.6mg", "Desvenlafaxine 50mg", "Diazepam 5mg", "Digoxin 0.25mg", "Diphenhydramine 25mg", "Divalproex 250mg", "Donepezil 10mg", "Dulcolax 5mg", "Empagliflozin 10mg", "Esomeprazole 40mg", "Famotidine 20mg", "Finasteride 5mg", "Fluticasone 50mcg", "Folic Acid 1mg", "Gliclazide 80mg", "Glyburide 5mg", "Hydralazine 25mg", "Hydroxyzine 25mg", "Indapamide 2.5mg", "Irbesartan 150mg", "Isosorbide 30mg", "Ketorolac 10mg", "Labetalol 100mg", "Lactulose 10g", "Lidocaine 5%", "Linagliptin 5mg", "Liraglutide 1.2mg", "Magnesium Oxide 400mg", "Memantine 10mg", "Methotrexate 2.5mg", "Methylprednisolone 4mg", "Mirtazapine 15mg", "Mometasone 50mcg", "Nebivolol 5mg", "Nitrofurantoin 100mg", "Olanzapine 10mg", "Ondansetron 4mg", "Oxcarbazepine 300mg", "Phenytoin 100mg", "Pramipexole 0.25mg", "Rabeprazole 20mg", "Ramipril 5mg", "Risperidone 2mg", "Saxagliptin 5mg", "Sildenafil 50mg", "Sotalol 80mg", "Terazosin 5mg", "Topiramate 25mg", "Tramadol 50mg", "Valacyclovir 500mg", "Valsartan 160mg", "Vildagliptin 50mg"
   ];
 
-  const AddModal = (
-    <div style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh", background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 99999 }}>
-      <div style={{ background: "rgba(34,34,34,0.85)", color: "#fff", padding: 32, borderRadius: 16, minWidth: 340, boxShadow: "0 8px 32px 0 rgba(0,0,0,0.5)", border: "2px solid #fff", position: "relative", backdropFilter: "blur(4px)" }}>
-        <button onClick={handleClose} style={{ position: "absolute", top: 12, right: 12, background: "transparent", border: "none", color: "#fff", fontSize: 22, cursor: "pointer" }} aria-label="Close">×</button>
-        <VuiTypography variant="h6" color="white" mb={2} style={{ textAlign: "center" }}>Add Prescription</VuiTypography>
-        <input
-          name="medicine"
-          placeholder="Medicine Name & mg"
-          value={newPrescription.medicine}
-          onChange={handleChange}
-          list="medicine-options"
-          style={{ width: "100%", marginBottom: 12, padding: 10, borderRadius: 8, border: "1px solid #fff", background: "rgba(51,51,51,0.8)", color: "#fff" }}
-        />
+  const AddDialog = (
+    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth
+      PaperProps={{ sx: { background: 'rgba(34, 40, 74, 0.65)', boxShadow: 24, borderRadius: 4, color: 'white', backdropFilter: 'blur(10px)', p: 2, minWidth: 360, maxWidth: 600 } }}
+    >
+      <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 18, pb: 1 }}>Add Prescription</DialogTitle>
+      <DialogContent sx={{ pt: 1 }}>
+        <TextField label="Medicine Name & mg" name="medicine" value={newPrescription.medicine} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mt: 1, mb: 1 }} inputProps={{ list: 'medicine-options' }} />
         <datalist id="medicine-options">
-          {medicineOptions.map((name, i) => (
-            <option value={name} key={i} />
-          ))}
+          {medicineOptions.map((name, i) => (<option value={name} key={i} />))}
         </datalist>
-        <input
-          name="price"
-          type="text"
-          placeholder="Monthly Price ($)"
-          value={newPrescription.price}
-          onChange={handleChange}
-          style={{ width: "100%", marginBottom: 12, padding: 10, borderRadius: 8, border: "1px solid #fff", background: "rgba(51,51,51,0.8)", color: "#fff" }}
-        />
-        <input
-          name="date"
-          type="date"
-          placeholder="Pick-up Date"
-          value={newPrescription.date}
-          onChange={handleChange}
-          style={{ width: "100%", marginBottom: 12, padding: 10, borderRadius: 8, border: "1px solid #fff", background: "rgba(51,51,51,0.8)", color: "#fff" }}
-        />
-        <label style={{ color: "#fff", marginBottom: 8, display: "block" }}>Prescription Info
-          <input
-            name="info"
-            type="file"
-            accept="application/pdf"
-            onChange={handleChange}
-            style={{ display: "block", marginTop: 4, color: "#fff" }}
-          />
-        </label>
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
-          <VuiButton variant="outlined" color="secondary" onClick={handleClose}>Cancel</VuiButton>
-          <VuiButton variant="contained" color="info" onClick={handleAdd} disabled={!newPrescription.medicine || !newPrescription.price || !newPrescription.date}>
-            Add
-          </VuiButton>
-        </div>
-      </div>
-    </div>
+        <TextField label="Monthly Price ($)" name="price" type="text" value={newPrescription.price} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 1 }} />
+        <TextField label="Pick-up Date" name="date" type="date" value={newPrescription.date} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 1 }} />
+        <VuiBox mt={1}>
+          <VuiTypography color="white" sx={{ fontSize: 14, mb: 0.5, opacity: 0.8 }}>Prescription Info</VuiTypography>
+          <input name="info" type="file" accept="application/pdf,image/*" onChange={handleChange} style={{ color: '#fff' }} />
+        </VuiBox>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={handleClose} sx={{ color: '#bfc6e0' }}>Cancel</Button>
+        <Button onClick={handleAdd} variant="contained" color="info" disabled={!newPrescription.medicine || !newPrescription.price || !newPrescription.date} sx={{ borderRadius: 2, px: 3, fontWeight: 600 }}>Add</Button>
+      </DialogActions>
+    </Dialog>
   );
 
-  const EditModal = (
-    <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99999 }}>
-      <div style={{ background: 'rgba(34,34,34,0.85)', color: '#fff', padding: 32, borderRadius: 16, minWidth: 340, boxShadow: '0 8px 32px 0 rgba(0,0,0,0.5)', border: '2px solid #fff', position: 'relative', backdropFilter: 'blur(4px)' }}>
-        <button onClick={handleEditClose} style={{ position: 'absolute', top: 12, right: 12, background: 'transparent', border: 'none', color: '#fff', fontSize: 22, cursor: 'pointer' }} aria-label="Close">×</button>
-        <VuiTypography variant="h6" color="white" mb={2} style={{ textAlign: 'center' }}>Edit Prescription</VuiTypography>
-        <input
-          name="medicine"
-          placeholder="Medicine Name & mg"
-          value={editPrescription.medicine}
-          onChange={handleEditChange}
-          list="medicine-options"
-          style={{ width: '100%', marginBottom: 12, padding: 10, borderRadius: 8, border: '1px solid #fff', background: 'rgba(51,51,51,0.8)', color: '#fff' }}
-        />
+  const EditDialog = (
+    <Dialog open={editIdx !== null} onClose={handleEditClose} maxWidth="sm" fullWidth
+      PaperProps={{ sx: { background: 'rgba(34, 40, 74, 0.65)', boxShadow: 24, borderRadius: 4, color: 'white', backdropFilter: 'blur(10px)', p: 2, minWidth: 360, maxWidth: 600 } }}
+    >
+      <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 18, pb: 1 }}>Edit Prescription</DialogTitle>
+      <DialogContent sx={{ pt: 1 }}>
+        <TextField label="Medicine Name & mg" name="medicine" value={editPrescription.medicine} onChange={handleEditChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mt: 1, mb: 1 }} inputProps={{ list: 'medicine-options' }} />
         <datalist id="medicine-options">
-          {medicineOptions.map((name, i) => (
-            <option value={name} key={i} />
-          ))}
+          {medicineOptions.map((name, i) => (<option value={name} key={i} />))}
         </datalist>
-        <input
-          name="price"
-          type="text"
-          placeholder="Monthly Price ($)"
-          value={editPrescription.price}
-          onChange={handleEditChange}
-          style={{ width: '100%', marginBottom: 12, padding: 10, borderRadius: 8, border: '1px solid #fff', background: 'rgba(51,51,51,0.8)', color: '#fff' }}
-        />
-        <input
-          name="date"
-          type="date"
-          placeholder="Pick-up Date"
-          value={editPrescription.date}
-          onChange={handleEditChange}
-          style={{ width: '100%', marginBottom: 12, padding: 10, borderRadius: 8, border: '1px solid #fff', background: 'rgba(51,51,51,0.8)', color: '#fff' }}
-        />
-        <label style={{ color: '#fff', marginBottom: 8, display: 'block' }}>Prescription Info
-          <input
-            name="info"
-            type="file"
-            accept="application/pdf"
-            onChange={handleEditChange}
-            style={{ display: 'block', marginTop: 4, color: '#fff' }}
-          />
-        </label>
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-          <VuiButton variant="outlined" color="secondary" onClick={handleEditClose}>Cancel</VuiButton>
-          <VuiButton variant="contained" color="info" onClick={handleEditSave} disabled={!editPrescription.medicine || !editPrescription.price || !editPrescription.date}>
-            Save
-          </VuiButton>
-        </div>
-      </div>
-    </div>
+        <TextField label="Monthly Price ($)" name="price" type="text" value={editPrescription.price} onChange={handleEditChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 1 }} />
+        <TextField label="Pick-up Date" name="date" type="date" value={editPrescription.date} onChange={handleEditChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 1 }} />
+        <VuiBox mt={1}>
+          <VuiTypography color="white" sx={{ fontSize: 14, mb: 0.5, opacity: 0.8 }}>Prescription Info</VuiTypography>
+          <input name="info" type="file" accept="application/pdf,image/*" onChange={handleEditChange} style={{ color: '#fff' }} />
+        </VuiBox>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={handleEditClose} sx={{ color: '#bfc6e0' }}>Cancel</Button>
+        <Button onClick={handleEditSave} variant="contained" color="info" disabled={!editPrescription.medicine || !editPrescription.price || !editPrescription.date} sx={{ borderRadius: 2, px: 3, fontWeight: 600 }}>Save</Button>
+      </DialogActions>
+    </Dialog>
   );
 
-  const ViewAllModal = (
-    <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99999 }}>
-      <div style={{ background: 'rgba(34,34,34,0.95)', color: '#fff', padding: 32, borderRadius: 16, minWidth: 340, maxWidth: 480, maxHeight: '80vh', overflowY: 'auto', boxShadow: '0 8px 32px 0 rgba(0,0,0,0.5)', border: '2px solid #fff', position: 'relative', backdropFilter: 'blur(4px)' }}>
-        <button onClick={handleViewAllClose} style={{ position: 'absolute', top: 12, right: 12, background: 'transparent', border: 'none', color: '#fff', fontSize: 22, cursor: 'pointer' }} aria-label="Close">×</button>
-        <VuiTypography variant="h6" color="white" mb={2} style={{ textAlign: 'center' }}>All Prescriptions</VuiTypography>
+  const ViewAllDialog = (
+    <Dialog open={viewAllOpen} onClose={handleViewAllClose} maxWidth="sm" fullWidth
+      PaperProps={{ sx: { background: 'rgba(34, 40, 74, 0.95)', boxShadow: 24, borderRadius: 4, color: 'white', backdropFilter: 'blur(10px)', p: 2, minWidth: 360, maxWidth: 640 } }}
+    >
+      <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 18, pb: 1 }}>All Prescriptions</DialogTitle>
+      <DialogContent sx={{ pt: 1 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {prescriptions.map((rx, idx) => (
             <Invoice
@@ -355,8 +243,11 @@ function Invoices() {
             />
           ))}
         </div>
-      </div>
-    </div>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={handleViewAllClose} sx={{ color: '#bfc6e0' }}>Close</Button>
+      </DialogActions>
+    </Dialog>
   );
 
   return (
@@ -474,18 +365,10 @@ function Invoices() {
         <MenuItem onClick={() => handleEditOpen(menuIdx)} style={{ color: '#fff' }}>Edit</MenuItem>
         <MenuItem onClick={handleDelete} style={{ color: '#fff' }}>Delete</MenuItem>
       </Menu>
-      {open && (typeof document !== "undefined" && document.body
-        ? ReactDOM.createPortal(AddModal, document.body)
-        : AddModal)}
-      {editIdx !== null && (typeof document !== "undefined" && document.body
-        ? ReactDOM.createPortal(EditModal, document.body)
-        : EditModal)}
-      {viewAllOpen && (typeof document !== "undefined" && document.body
-        ? ReactDOM.createPortal(ViewAllModal, document.body)
-        : ViewAllModal)}
-      {docModalOpen && (typeof document !== "undefined" && document.body
-        ? ReactDOM.createPortal(DocModal, document.body)
-        : DocModal)}
+  {AddDialog}
+  {EditDialog}
+  {ViewAllDialog}
+  {DocDialog}
     </Card>
   );
 }
