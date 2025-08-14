@@ -49,7 +49,12 @@ function MiniStatisticsCard({ bgColor, title, count, percentage, icon, direction
                 </VuiTypography>
                 <VuiTypography variant="subtitle1" fontWeight="bold" color="white">
                   {count}{" "}
-                  <VuiTypography variant="button" color={percentage.color} fontWeight="bold">
+                  <VuiTypography
+                    variant="button"
+                    color={percentage.color}
+                    fontWeight="bold"
+                    sx={percentage.hexColor ? { color: percentage.hexColor } : undefined}
+                  >
                     {percentage.text}
                   </VuiTypography>
                 </VuiTypography>

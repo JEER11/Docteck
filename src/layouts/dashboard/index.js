@@ -265,7 +265,7 @@ function Dashboard() {
               <MiniStatisticsCard
                 title={{ text: "Insurance Monthly Bill", fontWeight: "regular" }}
                 count={insuranceBill}
-                percentage={{ color: "success", text: insuranceDaysText }}
+                percentage={{ color: "primary", hexColor: "#A58AFF", text: insuranceDaysText }}
                 icon={{ color: "info", component: <FaFileInvoiceDollar size="22px" color="rgba(33,150,243,0.5)" /> }}
               />
             </Grid>
@@ -273,7 +273,7 @@ function Dashboard() {
               <MiniStatisticsCard
                 title={{ text: "Due Bill" }}
                 count={dueBill}
-                percentage={{ color: "success", text: dueBillDate }}
+                percentage={{ color: "primary", hexColor: "#A58AFF", text: dueBillDate }}
                 icon={{ color: "info", component: <FaMoneyCheckAlt size="22px" color="rgba(33,150,243,0.5)" /> }}
               />
             </Grid>
@@ -284,7 +284,8 @@ function Dashboard() {
                 percentage={
                   nextAppointment
                     ? {
-                        color: "success",
+                        color: "primary",
+                        hexColor: "#A58AFF",
                         text: nextAppointment.title
                       }
                     : { color: "secondary", text: "No Upcoming Appt." }
@@ -296,7 +297,7 @@ function Dashboard() {
               <MiniStatisticsCard
                 title={{ text: "Next Todo" }}
                 count={nextTodo}
-                percentage={daysUntil !== null ? { color: "success", text: `${daysUntil} days` } : { color: "secondary", text: "-" }}
+                percentage={daysUntil !== null ? { color: "primary", hexColor: "#A58AFF", text: `${daysUntil} days` } : { color: "secondary", text: "-" }}
                 icon={{ color: "info", component: <FaClipboardList size="20px" color="rgba(33,150,243,0.5)" /> }}
               />
             </Grid>
