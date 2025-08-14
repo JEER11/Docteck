@@ -118,31 +118,35 @@ export default function Family() {
     }
   };
 
-  // Shared styling for Profile-like dialogs
+  // Shared styling for dialogs to match Account Settings popups exactly
   const popupPaperSx = {
-    background: 'linear-gradient(145deg, rgba(20,22,40,0.9), rgba(24,26,47,0.92))',
-    backdropFilter: 'blur(16px)',
-    borderRadius: 4,
-    boxShadow: '0 12px 48px rgba(0,0,0,0.5)',
-    border: '1.5px solid #23244a',
-    color: '#fff',
+    backgroundColor: 'rgba(30, 32, 60, 0.7)',
+    boxShadow: 24,
+    borderRadius: 3,
+    color: 'white',
+    backdropFilter: 'blur(4px)'
   };
 
   const sectionCardSx = {
-    background: 'rgba(40,42,70,0.45)',
-    border: '1px solid #23244a',
+    background: 'linear-gradient(180deg, rgba(24,26,47,0.7) 0%, rgba(22,24,45,0.7) 100%)',
+    border: '1px solid rgba(255,255,255,0.08)',
     borderRadius: 3,
     p: 2,
     mb: 2,
   };
 
+  // TextField styles cloned from Account Settings password dialog (consistent inputs)
   const inputSx = {
-    background: 'rgba(26,28,52,0.85)',
-    borderRadius: 2,
-    input: { color: '#fff', fontSize: 15, '::placeholder': { color: '#9fa3c1' } },
-    '& .MuiOutlinedInput-notchedOutline': { borderColor: '#2b2d55' },
-    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#4a4c7d' },
+    width: '100%',
+    ml: 0,
+    background: '#181a2f',
+    borderRadius: 1.5,
+    '& .MuiOutlinedInput-notchedOutline': { border: '1px solid #23244a' },
+    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#2f3570' },
     '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#6a6afc' },
+    '& .MuiInputBase-input': { color: '#e7e9f3', fontSize: 14, py: 1 },
+    '& .MuiInputAdornment-positionEnd': { mr: -1.25 },
+    '& .MuiFormLabel-root': { color: '#aeb3d5', fontSize: 12 }
   };
 
   const smallActionBtnSx = {
@@ -486,8 +490,8 @@ export default function Family() {
                 )}
               </DialogContent>
               <Divider sx={{ borderColor: '#23244a' }} />
-              <DialogActions sx={{ px: 4, py: 2 }}>
-                <VuiButton variant="text" color="info" onClick={() => setOpenPopup(null)} sx={{ fontWeight: 700 }}>Close</VuiButton>
+              <DialogActions sx={{ px: 4, py: 2, display: 'flex', justifyContent: 'flex-end' }}>
+                <Button onClick={() => setOpenPopup(null)} sx={{ color: '#a259ec', textTransform: 'none', fontWeight: 600 }}>Close</Button>
               </DialogActions>
             </Dialog>
           </Card>
@@ -552,27 +556,25 @@ export default function Family() {
         onClose={handleCloseModal} 
         maxWidth="sm" 
         fullWidth
-        PaperProps={{
-          sx: {
-            background: 'rgba(20, 22, 40, 0.7)',
-            backdropFilter: 'blur(16px)',
-            borderRadius: 4,
-            boxShadow: '0 8px 40px #0008',
-            border: '1.5px solid #23244a',
-            color: '#fff',
-            p: 0,
-          }
-        }}
+        PaperProps={{ sx: popupPaperSx }}
       >
-        <DialogTitle sx={{ background: 'transparent', color: '#fff', fontWeight: 700, fontSize: 20, px: 4, pt: 3, pb: 1, borderBottom: '1px solid #23244a' }}>
+        <DialogTitle sx={{ position: 'relative', px: 4, pt: 3, pb: 2 }}>
           {openModal ? `${openModal.charAt(0).toUpperCase() + openModal.slice(1)} Members` : ''}
+          <IconButton
+            aria-label="close"
+            onClick={handleCloseModal}
+            sx={{ position: 'absolute', right: 12, top: 10, color: '#9fa3c1', '&:hover': { color: '#fff', background: 'rgba(255,255,255,0.06)' } }}
+          >
+            <CloseRoundedIcon />
+          </IconButton>
         </DialogTitle>
-        <DialogContent sx={{ background: 'transparent', color: '#fff', px: 4, pt: 2, pb: 1 }}>
+        <Divider sx={{ borderColor: '#23244a' }} />
+        <DialogContent sx={{ px: 4, py: 3 }}>
           {openModal && editIndex === null && (
             <>
               <ul style={{ color: '#fff', paddingLeft: 18, marginBottom: 16, fontSize: 15 }}>
                 {members[openModal].map((m, i) => (
-                  <li key={i} style={{ marginBottom: 14, background: 'rgba(40,42,70,0.6)', borderRadius: 8, padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <li key={i} style={{ marginBottom: 14, background: 'linear-gradient(180deg, rgba(24,26,47,0.7) 0%, rgba(22,24,45,0.7) 100%)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 2 }}>
                     <span style={{ fontWeight: 600, fontSize: 16 }}>{m.name} <span style={{ color: '#6a6afc', fontWeight: 500 }}>({m.relation})</span></span>
                     <span style={{ fontSize: 13, color: '#bdbdfc' }}>Email: {m.email} | Phone: {m.phone}</span>
                     <span style={{ fontSize: 13, color: '#bdbdfc' }}>Blood: {m.blood} | Allergies: {m.allergies}</span>
@@ -580,24 +582,25 @@ export default function Family() {
                   </li>
                 ))}
               </ul>
-              <Button variant="contained" sx={{ mt: 1, background: 'linear-gradient(90deg,#6a6afc,#8b8bfc)', color: '#fff', borderRadius: 2, fontWeight: 600, textTransform: 'none', px: 3, py: 1, boxShadow: '0 2px 8px #6a6afc33' }} onClick={handleAddMember}>Add Member</Button>
+              <Button variant="contained" sx={{ mt: 1, background: 'linear-gradient(90deg,#6a6afc,#8b8bfc)', color: '#fff', borderRadius: 2, fontWeight: 700, textTransform: 'none', px: 3, py: 1, boxShadow: '0 2px 8px #6a6afc33' }} onClick={handleAddMember}>Add Member</Button>
             </>
           )}
           {openModal && editIndex !== null && (
             <form>
-              <TextField label="Name" name="name" value={editMember.name} onChange={handleEditChange} fullWidth sx={{ mb: 2, input: { color: '#fff' }, label: { color: '#bdbdfc' }, '& .MuiOutlinedInput-root': { background: 'rgba(40,42,70,0.5)', borderRadius: 2 } }} />
-              <TextField label="Relation" name="relation" value={editMember.relation} onChange={handleEditChange} fullWidth sx={{ mb: 2, input: { color: '#fff' }, label: { color: '#bdbdfc' }, '& .MuiOutlinedInput-root': { background: 'rgba(40,42,70,0.5)', borderRadius: 2 } }} />
-              <TextField label="Email" name="email" value={editMember.email} onChange={handleEditChange} fullWidth sx={{ mb: 2, input: { color: '#fff' }, label: { color: '#bdbdfc' }, '& .MuiOutlinedInput-root': { background: 'rgba(40,42,70,0.5)', borderRadius: 2 } }} />
-              <TextField label="Phone" name="phone" value={editMember.phone} onChange={handleEditChange} fullWidth sx={{ mb: 2, input: { color: '#fff' }, label: { color: '#bdbdfc' }, '& .MuiOutlinedInput-root': { background: 'rgba(40,42,70,0.5)', borderRadius: 2 } }} />
-              <TextField label="Blood Type" name="blood" value={editMember.blood} onChange={handleEditChange} fullWidth sx={{ mb: 2, input: { color: '#fff' }, label: { color: '#bdbdfc' }, '& .MuiOutlinedInput-root': { background: 'rgba(40,42,70,0.5)', borderRadius: 2 } }} />
-              <TextField label="Allergies" name="allergies" value={editMember.allergies} onChange={handleEditChange} fullWidth sx={{ mb: 2, input: { color: '#fff' }, label: { color: '#bdbdfc' }, '& .MuiOutlinedInput-root': { background: 'rgba(40,42,70,0.5)', borderRadius: 2 } }} />
+              <TextField label="Name" name="name" value={editMember.name} onChange={handleEditChange} fullWidth sx={{ mb: 2, ...inputSx }} />
+              <TextField label="Relation" name="relation" value={editMember.relation} onChange={handleEditChange} fullWidth sx={{ mb: 2, ...inputSx }} />
+              <TextField label="Email" name="email" value={editMember.email} onChange={handleEditChange} fullWidth sx={{ mb: 2, ...inputSx }} />
+              <TextField label="Phone" name="phone" value={editMember.phone} onChange={handleEditChange} fullWidth sx={{ mb: 2, ...inputSx }} />
+              <TextField label="Blood Type" name="blood" value={editMember.blood} onChange={handleEditChange} fullWidth sx={{ mb: 2, ...inputSx }} />
+              <TextField label="Allergies" name="allergies" value={editMember.allergies} onChange={handleEditChange} fullWidth sx={{ mb: 2, ...inputSx }} />
             </form>
           )}
         </DialogContent>
-        <DialogActions sx={{ background: 'transparent', px: 4, pb: 3, pt: 1 }}>
-          <Button onClick={handleCloseModal} sx={{ color: '#fff', borderRadius: 2, textTransform: 'none', fontWeight: 600, px: 2, py: 1, background: 'rgba(40,42,70,0.3)', '&:hover': { background: 'rgba(40,42,70,0.5)' } }}>Close</Button>
+        <Divider sx={{ borderColor: '#23244a' }} />
+        <DialogActions sx={{ px: 4, py: 2, display: 'flex', justifyContent: 'space-between' }}>
+          <Button onClick={handleCloseModal} sx={{ color: '#a259ec', textTransform: 'none', fontWeight: 600 }}>Close</Button>
           {openModal && editIndex !== null && (
-            <Button onClick={editIndex < members[openModal].length ? handleSaveEdit : handleSaveAdd} sx={{ color: '#fff', borderRadius: 2, textTransform: 'none', fontWeight: 600, px: 2, py: 1, background: 'linear-gradient(90deg,#6a6afc,#8b8bfc)', boxShadow: '0 2px 8px #6a6afc33', '&:hover': { background: 'linear-gradient(90deg,#8b8bfc,#6a6afc)' } }}>
+            <Button onClick={editIndex < members[openModal].length ? handleSaveEdit : handleSaveAdd} sx={{ color: '#fff', background: 'linear-gradient(90deg, #3a8dde 0%, #6f7cf7 100%)', textTransform: 'none', fontWeight: 700, px: 2.5 }}>
               Save
             </Button>
           )}
