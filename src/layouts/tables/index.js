@@ -111,6 +111,18 @@ function Tables() {
     handleMenuClose();
   };
 
+  // Unified TextField styles (no inner blue bubble). Match Account Settings inputs.
+  const fieldSx = {
+    width: '100%',
+    ml: 0,
+    background: '#181a2f',
+    borderRadius: 1.5,
+    '& .MuiOutlinedInput-notchedOutline': { border: '1px solid #23244a' },
+    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#2f3570' },
+    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#6a6afc' },
+    '& .MuiInputBase-input': { color: '#e7e9f3', fontSize: 14, py: 1, background: 'transparent' },
+  };
+
   // Open dialog for new appointment
   const handleOpenApptAdd = () => {
     setEditApptIdx(null);
@@ -453,55 +465,23 @@ function Tables() {
           <VuiBox display="flex" flexDirection="column" gap={1}>
             <TextField label="Hospital" name="hospital" value={form.hospital} onChange={handleChange} fullWidth 
               InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
-              sx={{
-                input: { color: 'white', background: 'rgba(44, 50, 90, 0.65)', borderRadius: 2, px: 2, py: 1.2, fontSize: 16 },
-                background: 'rgba(44, 50, 90, 0.65)',
-                borderRadius: 2,
-                mb: 0.5,
-                minHeight: 48,
-                mt: 2,
-                '& .MuiOutlinedInput-root': {
-                  background: 'rgba(44, 50, 90, 0.65)',
-                  borderRadius: 2,
-                },
-                '& .MuiOutlinedInput-notchedOutline': { borderColor: '#3a3f6e' },
-              }}
+              sx={{ ...fieldSx, mt: 2, mb: 0.5, minHeight: 48 }}
             />
             <TextField label="Doctors (comma separated)" name="doctors" value={form.doctors} onChange={handleChange} fullWidth 
               InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
-              sx={{ 
-                input: { color: 'white', background: 'rgba(44, 50, 90, 0.65)', borderRadius: 2, px: 2, py: 1.2, fontSize: 16 }, 
-                background: 'rgba(44, 50, 90, 0.65)',
-                borderRadius: 2,
-                mb: 0.5 
-              }}
+              sx={{ ...fieldSx, mb: 0.5 }}
             />
             <TextField label="Bill" name="bill" value={form.bill} onChange={handleChange} fullWidth 
               InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
-              sx={{ 
-                input: { color: 'white', background: 'rgba(44, 50, 90, 0.65)', borderRadius: 2, px: 2, py: 1.2, fontSize: 16 }, 
-                background: 'rgba(44, 50, 90, 0.65)',
-                borderRadius: 2,
-                mb: 0.5 
-              }}
+              sx={{ ...fieldSx, mb: 0.5 }}
             />
             <TextField label="Status" name="status" value={form.status || ""} onChange={handleChange} fullWidth 
               InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
-              sx={{ 
-                input: { color: 'white', background: 'rgba(44, 50, 90, 0.65)', borderRadius: 2, px: 2, py: 1.2, fontSize: 16 }, 
-                background: 'rgba(44, 50, 90, 0.65)',
-                borderRadius: 2,
-                mb: 0.5 
-              }}
+              sx={{ ...fieldSx, mb: 0.5 }}
             />
             <TextField label="Completion (%)" name="completion" type="number" value={form.completion} onChange={handleChange} fullWidth 
               InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
-              sx={{ 
-                input: { color: 'white', background: 'rgba(44, 50, 90, 0.65)', borderRadius: 2, px: 2, py: 1.2, fontSize: 16 }, 
-                background: 'rgba(44, 50, 90, 0.65)',
-                borderRadius: 2,
-                mb: 0.5 
-              }}
+              sx={{ ...fieldSx, mb: 0.5 }}
             />
           </VuiBox>
         </DialogContent>
@@ -551,55 +531,23 @@ function Tables() {
           <VuiBox display="flex" flexDirection="column" gap={1}>
             <TextField label="Doctor Name" name="name" value={apptForm.name} onChange={e => setApptForm(f => ({ ...f, name: e.target.value }))} fullWidth 
               InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
-              sx={{ 
-                input: { color: 'white', background: 'rgba(44, 50, 90, 0.65)', borderRadius: 2, px: 2, py: 1.2, fontSize: 16 }, 
-                background: 'rgba(44, 50, 90, 0.65)',
-                borderRadius: 2,
-                mb: 0.5,
-                minHeight: 48,
-                mt: 2, // move it lower
-                '& .MuiOutlinedInput-root': {
-                  background: 'rgba(44, 50, 90, 0.65)',
-                  borderRadius: 2,
-                },
-                '& .MuiOutlinedInput-notchedOutline': { borderColor: '#3a3f6e' },
-              }}
+              sx={{ ...fieldSx, mt: 2, mb: 0.5, minHeight: 48 }}
             />
             <TextField label="Email" name="email" value={apptForm.email} onChange={e => setApptForm(f => ({ ...f, email: e.target.value }))} fullWidth 
               InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
-              sx={{ 
-                input: { color: 'white', background: 'rgba(44, 50, 90, 0.65)', borderRadius: 2, px: 2, py: 1.2, fontSize: 16 }, 
-                background: 'rgba(44, 50, 90, 0.65)',
-                borderRadius: 2,
-                mb: 0.5 
-              }}
+              sx={{ ...fieldSx, mb: 0.5 }}
             />
             <TextField label="Type" name="type" value={apptForm.type} onChange={e => setApptForm(f => ({ ...f, type: e.target.value }))} fullWidth 
               InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
-              sx={{ 
-                input: { color: 'white', background: 'rgba(44, 50, 90, 0.65)', borderRadius: 2, px: 2, py: 1.2, fontSize: 16 }, 
-                background: 'rgba(44, 50, 90, 0.65)',
-                borderRadius: 2,
-                mb: 0.5 
-              }}
+              sx={{ ...fieldSx, mb: 0.5 }}
             />
             <TextField label="Hospital" name="hospital" value={apptForm.hospital} onChange={e => setApptForm(f => ({ ...f, hospital: e.target.value }))} fullWidth 
               InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
-              sx={{ 
-                input: { color: 'white', background: 'rgba(44, 50, 90, 0.65)', borderRadius: 2, px: 2, py: 1.2, fontSize: 16 }, 
-                background: 'rgba(44, 50, 90, 0.65)',
-                borderRadius: 2,
-                mb: 0.5 
-              }}
+              sx={{ ...fieldSx, mb: 0.5 }}
             />
             <TextField label="Status" name="status" value={apptForm.status} onChange={e => setApptForm(f => ({ ...f, status: e.target.value }))} select fullWidth
               InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
-              sx={{ 
-                select: { color: 'white', background: 'rgba(44, 50, 90, 0.65)', borderRadius: 2, px: 2, py: 1.2, fontSize: 16 },
-                background: 'rgba(44, 50, 90, 0.65)',
-                borderRadius: 2,
-                mb: 0.5, color: 'white' 
-              }}
+              sx={{ ...fieldSx, mb: 0.5, color: 'white', '& .MuiSelect-select': { color: '#e7e9f3', py: 1, background: 'transparent' } }}
             >
               <MenuItem value="In Progress">In Progress</MenuItem>
               <MenuItem value="Inactive">Inactive</MenuItem>
@@ -609,12 +557,7 @@ function Tables() {
             </TextField>
             <TextField label="Date" name="date" type="date" value={apptForm.date} onChange={e => setApptForm(f => ({ ...f, date: e.target.value }))} fullWidth 
               InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
-              sx={{ 
-                input: { color: 'white', background: 'rgba(44, 50, 90, 0.65)', borderRadius: 2, px: 2, py: 1.2, fontSize: 16 }, 
-                background: 'rgba(44, 50, 90, 0.65)',
-                borderRadius: 2,
-                mb: 0.5 
-              }}
+              sx={{ ...fieldSx, mb: 0.5 }}
             />
           </VuiBox>
         </DialogContent>
