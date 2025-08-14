@@ -444,24 +444,24 @@ function Tables() {
         </VuiBox>
       </VuiBox>
       <Footer />
-      <Dialog open={dialogOpen} onClose={handleClose} maxWidth="xs" fullWidth
+  <Dialog open={dialogOpen} onClose={handleClose} maxWidth="xs" fullWidth
         PaperProps={{
           sx: {
-            background: 'rgba(34, 40, 74, 0.65)', // even more transparent
-            boxShadow: 24,
-            borderRadius: 4,
-            color: 'white',
-            backdropFilter: 'blur(10px)',
-            p: 4,
-            minWidth: 400,
-            maxWidth: 500,
+    background: 'rgba(34, 40, 74, 0.65)',
+    boxShadow: 24,
+    borderRadius: 4,
+    color: 'white',
+    backdropFilter: 'blur(10px)',
+    p: 4,
+    minWidth: 400,
+    maxWidth: 600,
           }
         }}
       >
-        <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 22, pb: 2, background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+    <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 22, pb: 2, background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           {editId ? "Edit" : "Add info"}
         </DialogTitle>
-        <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 1.5, mt: 1, background: 'transparent', color: 'white', px: 2, minWidth: 300 }}>
+    <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 1.5, mt: 1, background: 'transparent', color: 'white', px: 2, minWidth: 400 }}>
           <VuiBox display="flex" flexDirection="column" gap={1}>
             <TextField label="Hospital" name="hospital" value={form.hospital} onChange={handleChange} fullWidth 
               InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
@@ -485,7 +485,7 @@ function Tables() {
             />
           </VuiBox>
         </DialogContent>
-        <DialogActions sx={{ background: 'transparent', px: 2, pb: 2, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+  <DialogActions sx={{ background: 'transparent', px: 2, pb: 2, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
           {editId && (
             <Button onClick={() => handleDelete(editId)} color="error" variant="outlined" sx={{ borderColor: '#e57373', color: '#e57373', fontWeight: 600, fontSize: 14, px: 2, py: 0.5, minWidth: 0, mr: 1 }}>
               Delete

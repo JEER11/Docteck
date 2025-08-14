@@ -116,10 +116,10 @@ function BillingInformation() {
   // MUI Dialogs replacing custom overlays
   const AddDialog = (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth
-      PaperProps={{ sx: { background: 'rgba(34, 40, 74, 0.65)', boxShadow: 24, borderRadius: 4, color: 'white', backdropFilter: 'blur(10px)', p: 2, minWidth: 360, maxWidth: 600 } }}
+      PaperProps={{ sx: { background: 'rgba(34, 40, 74, 0.65)', boxShadow: 24, borderRadius: 4, color: 'white', backdropFilter: 'blur(10px)', p: 4, minWidth: 400, maxWidth: 600 } }}
     >
-      <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 18, pb: 1 }}>Add Pharmacy</DialogTitle>
-      <DialogContent sx={{ pt: 1 }}>
+      <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 22, pb: 2 }}>Add Pharmacy</DialogTitle>
+      <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 1, background: 'transparent', color: 'white', px: 2, minWidth: 400 }}>
         <TextField label="Pharmacy Name" name="name" value={newPharmacy.name} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mt: 1, mb: 1 }} />
         <TextField label="Address" name="address" value={newPharmacy.address} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 1 }} />
         <TextField label="Email" name="email" type="email" value={newPharmacy.email} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 1 }} />
@@ -129,7 +129,7 @@ function BillingInformation() {
           {medicineOptions.map((name, i) => (<option value={name} key={i} />))}
         </datalist>
       </DialogContent>
-      <DialogActions>
+      <DialogActions sx={{ background: 'transparent', px: 2, pb: 2, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
         <Button onClick={handleClose} sx={{ color: '#bfc6e0' }}>Cancel</Button>
         <Button onClick={handleAdd} variant="contained" color="info" disabled={!newPharmacy.name || !newPharmacy.address || !newPharmacy.email || !newPharmacy.phone || !newPharmacy.prescription} sx={{ borderRadius: 2, px: 3, fontWeight: 600 }}>Add</Button>
       </DialogActions>
@@ -138,10 +138,10 @@ function BillingInformation() {
 
   const EditDialog = (
     <Dialog open={editIdx !== null} onClose={handleEditClose} maxWidth="sm" fullWidth
-      PaperProps={{ sx: { background: 'rgba(34, 40, 74, 0.65)', boxShadow: 24, borderRadius: 4, color: 'white', backdropFilter: 'blur(10px)', p: 2, minWidth: 360, maxWidth: 600 } }}
+      PaperProps={{ sx: { background: 'rgba(34, 40, 74, 0.65)', boxShadow: 24, borderRadius: 4, color: 'white', backdropFilter: 'blur(10px)', p: 4, minWidth: 400, maxWidth: 600 } }}
     >
-      <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 18, pb: 1 }}>Edit Pharmacy</DialogTitle>
-      <DialogContent sx={{ pt: 1 }}>
+      <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 22, pb: 2 }}>Edit Pharmacy</DialogTitle>
+      <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 1, background: 'transparent', color: 'white', px: 2, minWidth: 400 }}>
         <TextField label="Pharmacy Name" name="name" value={editPharmacy.name} onChange={handleEditChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mt: 1, mb: 1 }} />
         <TextField label="Address" name="address" value={editPharmacy.address} onChange={handleEditChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 1 }} />
         <TextField label="Email" name="email" type="email" value={editPharmacy.email} onChange={handleEditChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 1 }} />
@@ -151,7 +151,7 @@ function BillingInformation() {
           {medicineOptions.map((name, i) => (<option value={name} key={i} />))}
         </datalist>
       </DialogContent>
-      <DialogActions>
+      <DialogActions sx={{ background: 'transparent', px: 2, pb: 2, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
         <Button onClick={handleEditClose} sx={{ color: '#bfc6e0' }}>Cancel</Button>
         <Button onClick={handleEditSave} variant="contained" color="info" disabled={!editPharmacy.name || !editPharmacy.address || !editPharmacy.email || !editPharmacy.phone || !editPharmacy.prescription} sx={{ borderRadius: 2, px: 3, fontWeight: 600 }}>Save</Button>
       </DialogActions>
@@ -160,10 +160,10 @@ function BillingInformation() {
 
   const ViewAllDialog = (
     <Dialog open={viewAllOpen} onClose={handleViewAllClose} maxWidth="sm" fullWidth
-      PaperProps={{ sx: { background: 'rgba(34, 40, 74, 0.95)', boxShadow: 24, borderRadius: 4, color: 'white', backdropFilter: 'blur(10px)', p: 2, minWidth: 360, maxWidth: 640 } }}
+      PaperProps={{ sx: { background: 'rgba(34, 40, 74, 0.65)', boxShadow: 24, borderRadius: 4, color: 'white', backdropFilter: 'blur(10px)', p: 4, minWidth: 400, maxWidth: 640 } }}
     >
-      <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 18, pb: 1 }}>All Pharmacies</DialogTitle>
-      <DialogContent sx={{ pt: 1 }}>
+      <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 22, pb: 2 }}>All Pharmacies</DialogTitle>
+      <DialogContent sx={{ pt: 1, background: 'transparent', color: 'white', px: 2, minWidth: 400 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {pharmacies.map((ph, idx) => (
             <Bill
@@ -180,7 +180,7 @@ function BillingInformation() {
           ))}
         </div>
       </DialogContent>
-      <DialogActions>
+      <DialogActions sx={{ background: 'transparent', px: 2, pb: 2 }}>
         <Button onClick={handleViewAllClose} sx={{ color: '#bfc6e0' }}>Close</Button>
       </DialogActions>
     </Dialog>
