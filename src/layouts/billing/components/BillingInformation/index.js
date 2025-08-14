@@ -1,5 +1,11 @@
 // @mui material components
 import Card from "@mui/material/Card";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogActions from "@mui/material/DialogActions";
+import TextField from "@mui/material/TextField";
+import Button from "@mui/material/Button";
 
 // Vision UI Dashboard React components
 import VuiBox from "components/VuiBox";
@@ -44,6 +50,18 @@ function BillingInformation() {
   const MAX_VISIBLE = 3; // Show up to 3 pharmacies in the main box
   const visiblePharmacies = pharmacies.slice(0, MAX_VISIBLE);
   const extraPharmacies = pharmacies.length > MAX_VISIBLE ? pharmacies.slice(MAX_VISIBLE) : [];
+
+  // Match HUB dialog input style (no inner bubbles)
+  const fieldSx = {
+    width: '100%',
+    ml: 0,
+    background: '#181a2f',
+    borderRadius: 1.5,
+    '& .MuiOutlinedInput-notchedOutline': { border: '1px solid #23244a' },
+    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#2f3570' },
+    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#6a6afc' },
+    '& .MuiInputBase-input': { color: '#e7e9f3', fontSize: 14, py: 1, background: 'transparent' },
+  };
 
   // List of common prescription medicines (at least 100)
   const medicineOptions = [
@@ -95,125 +113,57 @@ function BillingInformation() {
   const handleViewAllOpen = () => setViewAllOpen(true);
   const handleViewAllClose = () => setViewAllOpen(false);
 
-  const AddModal = (
-    <div style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh", background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 99999 }}>
-      <div style={{ background: "rgba(34,34,34,0.85)", color: "#fff", padding: 32, borderRadius: 16, minWidth: 340, boxShadow: "0 8px 32px 0 rgba(0,0,0,0.5)", border: "2px solid #fff", position: "relative", backdropFilter: "blur(4px)" }}>
-        <button onClick={handleClose} style={{ position: "absolute", top: 12, right: 12, background: "transparent", border: "none", color: "#fff", fontSize: 22, cursor: "pointer" }} aria-label="Close">×</button>
-        <VuiTypography variant="h6" color="white" mb={2} style={{ textAlign: "center" }}>Add Pharmacy</VuiTypography>
-        <input
-          name="name"
-          placeholder="Pharmacy Name"
-          value={newPharmacy.name}
-          onChange={handleChange}
-          style={{ width: "100%", marginBottom: 12, padding: 10, borderRadius: 8, border: "1px solid #fff", background: "rgba(51,51,51,0.8)", color: "#fff" }}
-        />
-        <input
-          name="address"
-          placeholder="Address"
-          value={newPharmacy.address}
-          onChange={handleChange}
-          style={{ width: "100%", marginBottom: 12, padding: 10, borderRadius: 8, border: "1px solid #fff", background: "rgba(51,51,51,0.8)", color: "#fff" }}
-        />
-        <input
-          name="email"
-          type="email"
-          placeholder="Email"
-          value={newPharmacy.email}
-          onChange={handleChange}
-          style={{ width: "100%", marginBottom: 12, padding: 10, borderRadius: 8, border: "1px solid #fff", background: "rgba(51,51,51,0.8)", color: "#fff" }}
-        />
-        <input
-          name="phone"
-          placeholder="Phone"
-          value={newPharmacy.phone}
-          onChange={handleChange}
-          style={{ width: "100%", marginBottom: 12, padding: 10, borderRadius: 8, border: "1px solid #fff", background: "rgba(51,51,51,0.8)", color: "#fff" }}
-        />
-        <input
-          name="prescription"
-          placeholder="Prescription to Pick Up"
-          value={newPharmacy.prescription}
-          onChange={handleChange}
-          list="medicine-options"
-          style={{ width: "100%", marginBottom: 12, padding: 10, borderRadius: 8, border: "1px solid #fff", background: "rgba(51,51,51,0.8)", color: "#fff" }}
-        />
+  // MUI Dialogs replacing custom overlays
+  const AddDialog = (
+    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth
+      PaperProps={{ sx: { background: 'rgba(34, 40, 74, 0.65)', boxShadow: 24, borderRadius: 4, color: 'white', backdropFilter: 'blur(10px)', p: 2, minWidth: 360, maxWidth: 600 } }}
+    >
+      <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 18, pb: 1 }}>Add Pharmacy</DialogTitle>
+      <DialogContent sx={{ pt: 1 }}>
+        <TextField label="Pharmacy Name" name="name" value={newPharmacy.name} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mt: 1, mb: 1 }} />
+        <TextField label="Address" name="address" value={newPharmacy.address} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 1 }} />
+        <TextField label="Email" name="email" type="email" value={newPharmacy.email} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 1 }} />
+        <TextField label="Phone" name="phone" value={newPharmacy.phone} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 1 }} />
+        <TextField label="Prescription to Pick Up" name="prescription" value={newPharmacy.prescription} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 1 }} inputProps={{ list: 'medicine-options' }} />
         <datalist id="medicine-options">
-          {medicineOptions.map((name, i) => (
-            <option value={name} key={i} />
-          ))}
+          {medicineOptions.map((name, i) => (<option value={name} key={i} />))}
         </datalist>
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
-          <VuiButton variant="outlined" color="secondary" onClick={handleClose}>Cancel</VuiButton>
-          <VuiButton variant="contained" color="info" onClick={handleAdd} disabled={!newPharmacy.name || !newPharmacy.address || !newPharmacy.email || !newPharmacy.phone || !newPharmacy.prescription}>
-            Add
-          </VuiButton>
-        </div>
-      </div>
-    </div>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={handleClose} sx={{ color: '#bfc6e0' }}>Cancel</Button>
+        <Button onClick={handleAdd} variant="contained" color="info" disabled={!newPharmacy.name || !newPharmacy.address || !newPharmacy.email || !newPharmacy.phone || !newPharmacy.prescription} sx={{ borderRadius: 2, px: 3, fontWeight: 600 }}>Add</Button>
+      </DialogActions>
+    </Dialog>
   );
 
-  const EditModal = (
-    <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99999 }}>
-      <div style={{ background: 'rgba(34,34,34,0.85)', color: '#fff', padding: 32, borderRadius: 16, minWidth: 340, boxShadow: '0 8px 32px 0 rgba(0,0,0,0.5)', border: '2px solid #fff', position: 'relative', backdropFilter: 'blur(4px)' }}>
-        <button onClick={handleEditClose} style={{ position: 'absolute', top: 12, right: 12, background: 'transparent', border: 'none', color: '#fff', fontSize: 22, cursor: 'pointer' }} aria-label="Close">×</button>
-        <VuiTypography variant="h6" color="white" mb={2} style={{ textAlign: 'center' }}>Edit Pharmacy</VuiTypography>
-        <input
-          name="name"
-          placeholder="Pharmacy Name"
-          value={editPharmacy.name}
-          onChange={handleEditChange}
-          style={{ width: '100%', marginBottom: 12, padding: 10, borderRadius: 8, border: '1px solid #fff', background: 'rgba(51,51,51,0.8)', color: '#fff' }}
-        />
-        <input
-          name="address"
-          placeholder="Address"
-          value={editPharmacy.address}
-          onChange={handleEditChange}
-          style={{ width: '100%', marginBottom: 12, padding: 10, borderRadius: 8, border: '1px solid #fff', background: 'rgba(51,51,51,0.8)', color: '#fff' }}
-        />
-        <input
-          name="email"
-          type="email"
-          placeholder="Email"
-          value={editPharmacy.email}
-          onChange={handleEditChange}
-          style={{ width: '100%', marginBottom: 12, padding: 10, borderRadius: 8, border: '1px solid #fff', background: 'rgba(51,51,51,0.8)', color: '#fff' }}
-        />
-        <input
-          name="phone"
-          placeholder="Phone"
-          value={editPharmacy.phone}
-          onChange={handleEditChange}
-          style={{ width: '100%', marginBottom: 12, padding: 10, borderRadius: 8, border: '1px solid #fff', background: 'rgba(51,51,51,0.8)', color: '#fff' }}
-        />
-        <input
-          name="prescription"
-          placeholder="Prescription to Pick Up"
-          value={editPharmacy.prescription}
-          onChange={handleEditChange}
-          list="medicine-options"
-          style={{ width: '100%', marginBottom: 12, padding: 10, borderRadius: 8, border: '1px solid #fff', background: 'rgba(51,51,51,0.8)', color: '#fff' }}
-        />
+  const EditDialog = (
+    <Dialog open={editIdx !== null} onClose={handleEditClose} maxWidth="sm" fullWidth
+      PaperProps={{ sx: { background: 'rgba(34, 40, 74, 0.65)', boxShadow: 24, borderRadius: 4, color: 'white', backdropFilter: 'blur(10px)', p: 2, minWidth: 360, maxWidth: 600 } }}
+    >
+      <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 18, pb: 1 }}>Edit Pharmacy</DialogTitle>
+      <DialogContent sx={{ pt: 1 }}>
+        <TextField label="Pharmacy Name" name="name" value={editPharmacy.name} onChange={handleEditChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mt: 1, mb: 1 }} />
+        <TextField label="Address" name="address" value={editPharmacy.address} onChange={handleEditChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 1 }} />
+        <TextField label="Email" name="email" type="email" value={editPharmacy.email} onChange={handleEditChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 1 }} />
+        <TextField label="Phone" name="phone" value={editPharmacy.phone} onChange={handleEditChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 1 }} />
+        <TextField label="Prescription to Pick Up" name="prescription" value={editPharmacy.prescription} onChange={handleEditChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 1 }} inputProps={{ list: 'medicine-options' }} />
         <datalist id="medicine-options">
-          {medicineOptions.map((name, i) => (
-            <option value={name} key={i} />
-          ))}
+          {medicineOptions.map((name, i) => (<option value={name} key={i} />))}
         </datalist>
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-          <VuiButton variant="outlined" color="secondary" onClick={handleEditClose}>Cancel</VuiButton>
-          <VuiButton variant="contained" color="info" onClick={handleEditSave} disabled={!editPharmacy.name || !editPharmacy.address || !editPharmacy.email || !editPharmacy.phone || !editPharmacy.prescription}>
-            Save
-          </VuiButton>
-        </div>
-      </div>
-    </div>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={handleEditClose} sx={{ color: '#bfc6e0' }}>Cancel</Button>
+        <Button onClick={handleEditSave} variant="contained" color="info" disabled={!editPharmacy.name || !editPharmacy.address || !editPharmacy.email || !editPharmacy.phone || !editPharmacy.prescription} sx={{ borderRadius: 2, px: 3, fontWeight: 600 }}>Save</Button>
+      </DialogActions>
+    </Dialog>
   );
 
-  const ViewAllModal = (
-    <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99999 }}>
-      <div style={{ background: 'rgba(34,34,34,0.95)', color: '#fff', padding: 32, borderRadius: 16, minWidth: 340, maxWidth: 600, maxHeight: '80vh', overflowY: 'auto', boxShadow: '0 8px 32px 0 rgba(0,0,0,0.5)', border: '2px solid #fff', position: 'relative', backdropFilter: 'blur(4px)' }}>
-        <button onClick={handleViewAllClose} style={{ position: 'absolute', top: 12, right: 12, background: 'transparent', border: 'none', color: '#fff', fontSize: 22, cursor: 'pointer' }} aria-label="Close">×</button>
-        <VuiTypography variant="h6" color="white" mb={2} style={{ textAlign: 'center' }}>All Pharmacies</VuiTypography>
+  const ViewAllDialog = (
+    <Dialog open={viewAllOpen} onClose={handleViewAllClose} maxWidth="sm" fullWidth
+      PaperProps={{ sx: { background: 'rgba(34, 40, 74, 0.95)', boxShadow: 24, borderRadius: 4, color: 'white', backdropFilter: 'blur(10px)', p: 2, minWidth: 360, maxWidth: 640 } }}
+    >
+      <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 18, pb: 1 }}>All Pharmacies</DialogTitle>
+      <DialogContent sx={{ pt: 1 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {pharmacies.map((ph, idx) => (
             <Bill
@@ -229,8 +179,11 @@ function BillingInformation() {
             />
           ))}
         </div>
-      </div>
-    </div>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={handleViewAllClose} sx={{ color: '#bfc6e0' }}>Close</Button>
+      </DialogActions>
+    </Dialog>
   );
 
   return (
@@ -302,15 +255,9 @@ function BillingInformation() {
             />
           ))}
         </VuiBox>
-        {open && (typeof document !== "undefined" && document.body
-          ? require("react-dom").createPortal(AddModal, document.body)
-          : AddModal)}
-        {editIdx !== null && (typeof document !== "undefined" && document.body
-          ? require("react-dom").createPortal(EditModal, document.body)
-          : EditModal)}
-        {viewAllOpen && (typeof document !== "undefined" && document.body
-          ? require("react-dom").createPortal(ViewAllModal, document.body)
-          : ViewAllModal)}
+  {AddDialog}
+  {EditDialog}
+  {ViewAllDialog}
       </VuiBox>
     </Card>
   );
