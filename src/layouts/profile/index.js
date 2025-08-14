@@ -697,7 +697,7 @@ function Overview() {
                 },
               })}
             >
-              <CarInformations />
+              <CarInformations popupVariant="settings" />
             </Grid>
             <Grid
               item
