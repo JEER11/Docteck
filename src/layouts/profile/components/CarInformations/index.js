@@ -427,14 +427,14 @@ const CarInformations = ({ popupVariant = 'legacy' }) => {
 						</DialogTitle>
 						<Divider sx={{ borderColor: '#23244a' }} />
 						<DialogContent sx={{ px: 4, py: 3 }}>
-																												{['conditions', 'allergies', 'medications', 'emergencyContacts'].includes(openBox) && (
+							{['conditions', 'allergies', 'medications', 'emergencyContacts'].includes(openBox) && (
 																						<>
-																														{/* Collapsible editor */}
-																														<Accordion disableGutters expanded={editorOpen} onChange={() => setEditorOpen((v) => !v)} sx={{ bgcolor: 'transparent', boxShadow: 'none', border: '1px solid #23244a', borderRadius: 2, '&:before': { display: 'none' } }}>
-																															<AccordionSummary expandIcon={<ExpandMoreRoundedIcon sx={{ color: '#aeb3d5' }} />} sx={{ px: 1.5 }}>
+																														{/* Collapsible editor — clean like Settings */}
+																														<Accordion disableGutters expanded={editorOpen} onChange={() => setEditorOpen((v) => !v)} sx={{ bgcolor: 'transparent', boxShadow: 'none', '&:before': { display: 'none' } }}>
+																															<AccordionSummary expandIcon={<ExpandMoreRoundedIcon sx={{ color: '#aeb3d5' }} />} sx={{ px: 0 }}>
 																																<VuiTypography color='white' fontWeight='bold'>Add {openBox === 'conditions' ? 'condition' : openBox === 'allergies' ? 'allergy' : openBox === 'medications' ? 'medication' : 'contact'}</VuiTypography>
 																															</AccordionSummary>
-																															<AccordionDetails sx={{ pt: 0, px: 1.5, pb: 1.5 }}>
+																															<AccordionDetails sx={{ pt: 0, px: 0, pb: 1.5 }}>
 																															{openBox === 'conditions' && (
 																								<VuiBox display='grid' gridTemplateColumns={{ xs: '1fr', sm: '1fr 1fr' }} gap={1} mt={1}>
 																																	<TextField size='small' label='Condition' placeholder='e.g., Hypertension' value={editItem?.name || ''} onChange={(e) => setEditItem({ ...(editItem||{}), name: e.target.value })} sx={inputSx} />
@@ -446,7 +446,7 @@ const CarInformations = ({ popupVariant = 'legacy' }) => {
 																																	</TextField>
 																									<TextField size='small' label='Onset date' type='date' value={editItem?.onset || ''} onChange={(e) => setEditItem({ ...(editItem||{}), onset: e.target.value })} sx={inputSx} InputLabelProps={{ shrink: true }} />
 																									<TextField size='small' label='Notes' placeholder='optional' value={editItem?.notes || ''} onChange={(e) => setEditItem({ ...(editItem||{}), notes: e.target.value })} sx={{ gridColumn: '1 / -1', ...inputSx }} multiline minRows={2} />
-																									<VuiBox gridColumn='1 / -1' display='flex' justifyContent='flex-end' gap={1}>
+																									  <VuiBox gridColumn='1 / -1' display='flex' justifyContent='flex-end' gap={1} mt={0.5}>
 																										<VuiButton size='small' color='info' onClick={commitItem} sx={{ fontWeight: 700 }}>{editingIndex !== null ? 'Update' : 'Add'}</VuiButton>
 																									</VuiBox>
 																								</VuiBox>
@@ -461,7 +461,7 @@ const CarInformations = ({ popupVariant = 'legacy' }) => {
 																																	<TextField size='small' select label='Severity' value={editItem?.severity || 'Mild'} onChange={(e) => setEditItem({ ...(editItem||{}), severity: e.target.value })} sx={inputSx}>
 																																		{['Mild','Moderate','Severe'].map(opt => <MenuItem key={opt} value={opt}>{opt}</MenuItem>)}
 																																	</TextField>
-																									<VuiBox gridColumn='1 / -1' display='flex' justifyContent='flex-end' gap={1}>
+																									  <VuiBox gridColumn='1 / -1' display='flex' justifyContent='flex-end' gap={1} mt={0.5}>
 																										<VuiButton size='small' color='info' onClick={commitItem} sx={{ fontWeight: 700 }}>{editingIndex !== null ? 'Update' : 'Add'}</VuiButton>
 																									</VuiBox>
 																								</VuiBox>
@@ -474,7 +474,7 @@ const CarInformations = ({ popupVariant = 'legacy' }) => {
 																								<TextField size='small' label='Prescriber' value={editItem?.prescriber || ''} onChange={(e) => setEditItem({ ...(editItem||{}), prescriber: e.target.value })} sx={inputSx} />
 																									<TextField size='small' label='Start date' type='date' value={editItem?.start || ''} onChange={(e) => setEditItem({ ...(editItem||{}), start: e.target.value })} sx={inputSx} InputLabelProps={{ shrink: true }} />
 																									<TextField size='small' label='End date' type='date' value={editItem?.end || ''} onChange={(e) => setEditItem({ ...(editItem||{}), end: e.target.value })} sx={inputSx} InputLabelProps={{ shrink: true }} />
-																									<VuiBox gridColumn='1 / -1' display='flex' justifyContent='flex-end' gap={1}>
+																									  <VuiBox gridColumn='1 / -1' display='flex' justifyContent='flex-end' gap={1} mt={0.5}>
 																										<VuiButton size='small' color='info' onClick={commitItem} sx={{ fontWeight: 700 }}>{editingIndex !== null ? 'Update' : 'Add'}</VuiButton>
 																									</VuiBox>
 																								</VuiBox>
@@ -489,7 +489,7 @@ const CarInformations = ({ popupVariant = 'legacy' }) => {
 																										<VuiTypography variant='caption' color='text'>Mark as primary contact</VuiTypography>
 																										<Button onClick={() => setEditItem({ ...(editItem||{}), primary: !editItem?.primary })} sx={{ color: editItem?.primary ? '#00FFD0' : '#c6c9e5', textTransform: 'none' }}>{editItem?.primary ? 'Primary' : 'Not primary'}</Button>
 																									</VuiBox>
-																									<VuiBox gridColumn='1 / -1' display='flex' justifyContent='flex-end' gap={1}>
+																									  <VuiBox gridColumn='1 / -1' display='flex' justifyContent='flex-end' gap={1} mt={0.5}>
 																										<VuiButton size='small' color='info' onClick={commitItem} sx={{ fontWeight: 700 }}>{editingIndex !== null ? 'Update' : 'Add'}</VuiButton>
 																									</VuiBox>
 																								</VuiBox>
@@ -498,11 +498,11 @@ const CarInformations = ({ popupVariant = 'legacy' }) => {
 																														</Accordion>
 
 																														{/* List below the editor with empty state */}
-																														{(() => {
+															{(() => {
 																															const list = (openBox === 'conditions' ? conditions : openBox === 'allergies' ? allergies : openBox === 'medications' ? medications : emergencyContacts);
 																															if (!list || list.length === 0) {
 																																const label = openBox === 'conditions' ? 'No condition added' : openBox === 'allergies' ? 'No allergies added' : openBox === 'medications' ? 'No medication added' : 'No contact added';
-																																return <VuiTypography color='text' sx={{ mt: 1 }}>{label}</VuiTypography>;
+																return <VuiTypography color='text' sx={{ mt: 1.25 }}>{label}</VuiTypography>;
 																															}
 																															return list.map((item, idx) => {
 																																const isObj = typeof item === 'object' && item !== null;
