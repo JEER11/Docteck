@@ -495,7 +495,7 @@ export default function Family() {
         <Grid item xs={12} xl={9}>
           <VuiBox display="flex" flexDirection={{ xs: "column", md: "row" }} gap={3}>
             {/* Parents card – styled like Profile's Settings card */}
-            <Card sx={{ flex: 1, minWidth: 0 }}>
+            <Card sx={{ flex: 1, minWidth: 0, minHeight: 360 }}>
               <VuiBox display="flex" flexDirection="column" height="100%" p={3}>
                 <VuiBox display="flex" flexDirection="column" mb="12px">
                   <VuiTypography color="white" variant="lg" fontWeight="bold" mb="6px">Parents</VuiTypography>
@@ -510,7 +510,7 @@ export default function Family() {
               </VuiBox>
             </Card>
             {/* Spouse card */}
-            <Card sx={{ flex: 1, minWidth: 0 }}>
+            <Card sx={{ flex: 1, minWidth: 0, minHeight: 360 }}>
               <VuiBox display="flex" flexDirection="column" height="100%" p={3}>
                 <VuiBox display="flex" flexDirection="column" mb="12px">
                   <VuiTypography color="white" variant="lg" fontWeight="bold" mb="6px">Spouse</VuiTypography>
@@ -529,7 +529,7 @@ export default function Family() {
               </VuiBox>
             </Card>
             {/* Children card */}
-            <Card sx={{ flex: 1, minWidth: 0 }}>
+            <Card sx={{ flex: 1, minWidth: 0, minHeight: 360 }}>
               <VuiBox display="flex" flexDirection="column" height="100%" p={3}>
                 <VuiBox display="flex" flexDirection="column" mb="12px">
                   <VuiTypography color="white" variant="lg" fontWeight="bold" mb="6px">Children</VuiTypography>

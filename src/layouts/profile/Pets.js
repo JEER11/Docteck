@@ -343,7 +343,7 @@ export default function Pets() {
         <Grid item xs={12} xl={9}>
           <VuiBox display="flex" flexDirection={{ xs: "column", md: "row" }} gap={3}>
             {/* Dogs Section */}
-            <Card sx={{ flex: 1, minWidth: 0 }}>
+            <Card sx={{ flex: 1, minWidth: 0, minHeight: 360 }}>
               <VuiBox display="flex" flexDirection="column" height="100%" p={3}>
                 <VuiBox display="flex" flexDirection="column" mb="12px">
                   <VuiTypography color="white" variant="lg" fontWeight="bold" mb="6px">Dogs</VuiTypography>
@@ -358,7 +358,7 @@ export default function Pets() {
               </VuiBox>
             </Card>
             {/* Cats Section */}
-            <Card sx={{ flex: 1, minWidth: 0 }}>
+            <Card sx={{ flex: 1, minWidth: 0, minHeight: 360 }}>
               <VuiBox display="flex" flexDirection="column" height="100%" p={3}>
                 <VuiBox display="flex" flexDirection="column" mb="12px">
                   <VuiTypography color="white" variant="lg" fontWeight="bold" mb="6px">Cats</VuiTypography>
@@ -373,7 +373,7 @@ export default function Pets() {
               </VuiBox>
             </Card>
             {/* Other Pets Section */}
-            <Card sx={{ flex: 1, minWidth: 0 }}>
+            <Card sx={{ flex: 1, minWidth: 0, minHeight: 360 }}>
               <VuiBox display="flex" flexDirection="column" height="100%" p={3}>
                 <VuiBox display="flex" flexDirection="column" mb="12px">
                   <VuiTypography color="white" variant="lg" fontWeight="bold" mb="6px">Other Pets</VuiTypography>
