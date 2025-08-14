@@ -144,15 +144,15 @@ function Invoices() {
   // Document Dialog
   const DocDialog = (
     <Dialog open={docModalOpen} onClose={handleDocModalClose} maxWidth="sm" fullWidth
-      PaperProps={{ sx: { background: 'rgba(34, 40, 74, 0.75)', boxShadow: 24, borderRadius: 4, color: 'white', backdropFilter: 'blur(10px)', p: 2, minWidth: 360, maxWidth: 640 } }}
+      PaperProps={{ sx: { background: 'rgba(34, 40, 74, 0.65)', boxShadow: 24, borderRadius: 4, color: 'white', backdropFilter: 'blur(10px)', p: 4, minWidth: 400, maxWidth: 640 } }}
     >
-      <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 18, pb: 1, pr: 5 }}>
+      <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 22, pb: 2, pr: 5 }}>
         Prescription Document
         <IconButton aria-label="close" onClick={handleDocModalClose} sx={{ position: 'absolute', right: 8, top: 8, color: '#bfc6e0' }}>
           <CloseRoundedIcon />
         </IconButton>
       </DialogTitle>
-      <DialogContent sx={{ pt: 1 }}>
+      <DialogContent sx={{ pt: 1, background: 'transparent', color: 'white', px: 2, minWidth: 400 }}>
         {docModalFile ? (
           docModalFile.type?.startsWith('image') ? (
             <img src={URL.createObjectURL(docModalFile)} alt="Prescription" style={{ maxWidth: '100%', maxHeight: 380, borderRadius: 12, display: 'block', margin: '0 auto' }} />
@@ -168,7 +168,7 @@ function Invoices() {
           </VuiBox>
         )}
       </DialogContent>
-      <DialogActions>
+      <DialogActions sx={{ background: 'transparent', px: 2, pb: 2 }}>
         <Button onClick={handleDocModalClose} sx={{ color: '#bfc6e0' }}>Close</Button>
       </DialogActions>
     </Dialog>
@@ -179,10 +179,10 @@ function Invoices() {
 
   const AddDialog = (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth
-      PaperProps={{ sx: { background: 'rgba(34, 40, 74, 0.65)', boxShadow: 24, borderRadius: 4, color: 'white', backdropFilter: 'blur(10px)', p: 2, minWidth: 360, maxWidth: 600 } }}
+      PaperProps={{ sx: { background: 'rgba(34, 40, 74, 0.65)', boxShadow: 24, borderRadius: 4, color: 'white', backdropFilter: 'blur(10px)', p: 4, minWidth: 400, maxWidth: 600 } }}
     >
-      <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 18, pb: 1 }}>Add Prescription</DialogTitle>
-      <DialogContent sx={{ pt: 1 }}>
+      <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 22, pb: 2 }}>Add Prescription</DialogTitle>
+      <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 1, background: 'transparent', color: 'white', px: 2, minWidth: 400 }}>
         <TextField label="Medicine Name & mg" name="medicine" value={newPrescription.medicine} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mt: 1, mb: 1 }} inputProps={{ list: 'medicine-options' }} />
         <datalist id="medicine-options">
           {medicineOptions.map((name, i) => (<option value={name} key={i} />))}
@@ -194,7 +194,7 @@ function Invoices() {
           <input name="info" type="file" accept="application/pdf,image/*" onChange={handleChange} style={{ color: '#fff' }} />
         </VuiBox>
       </DialogContent>
-      <DialogActions>
+      <DialogActions sx={{ background: 'transparent', px: 2, pb: 2, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
         <Button onClick={handleClose} sx={{ color: '#bfc6e0' }}>Cancel</Button>
         <Button onClick={handleAdd} variant="contained" color="info" disabled={!newPrescription.medicine || !newPrescription.price || !newPrescription.date} sx={{ borderRadius: 2, px: 3, fontWeight: 600 }}>Add</Button>
       </DialogActions>
@@ -203,10 +203,10 @@ function Invoices() {
 
   const EditDialog = (
     <Dialog open={editIdx !== null} onClose={handleEditClose} maxWidth="sm" fullWidth
-      PaperProps={{ sx: { background: 'rgba(34, 40, 74, 0.65)', boxShadow: 24, borderRadius: 4, color: 'white', backdropFilter: 'blur(10px)', p: 2, minWidth: 360, maxWidth: 600 } }}
+      PaperProps={{ sx: { background: 'rgba(34, 40, 74, 0.65)', boxShadow: 24, borderRadius: 4, color: 'white', backdropFilter: 'blur(10px)', p: 4, minWidth: 400, maxWidth: 600 } }}
     >
-      <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 18, pb: 1 }}>Edit Prescription</DialogTitle>
-      <DialogContent sx={{ pt: 1 }}>
+      <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 22, pb: 2 }}>Edit Prescription</DialogTitle>
+      <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 1, background: 'transparent', color: 'white', px: 2, minWidth: 400 }}>
         <TextField label="Medicine Name & mg" name="medicine" value={editPrescription.medicine} onChange={handleEditChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mt: 1, mb: 1 }} inputProps={{ list: 'medicine-options' }} />
         <datalist id="medicine-options">
           {medicineOptions.map((name, i) => (<option value={name} key={i} />))}
@@ -218,7 +218,7 @@ function Invoices() {
           <input name="info" type="file" accept="application/pdf,image/*" onChange={handleEditChange} style={{ color: '#fff' }} />
         </VuiBox>
       </DialogContent>
-      <DialogActions>
+      <DialogActions sx={{ background: 'transparent', px: 2, pb: 2, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
         <Button onClick={handleEditClose} sx={{ color: '#bfc6e0' }}>Cancel</Button>
         <Button onClick={handleEditSave} variant="contained" color="info" disabled={!editPrescription.medicine || !editPrescription.price || !editPrescription.date} sx={{ borderRadius: 2, px: 3, fontWeight: 600 }}>Save</Button>
       </DialogActions>
@@ -227,10 +227,10 @@ function Invoices() {
 
   const ViewAllDialog = (
     <Dialog open={viewAllOpen} onClose={handleViewAllClose} maxWidth="sm" fullWidth
-      PaperProps={{ sx: { background: 'rgba(34, 40, 74, 0.95)', boxShadow: 24, borderRadius: 4, color: 'white', backdropFilter: 'blur(10px)', p: 2, minWidth: 360, maxWidth: 640 } }}
+      PaperProps={{ sx: { background: 'rgba(34, 40, 74, 0.65)', boxShadow: 24, borderRadius: 4, color: 'white', backdropFilter: 'blur(10px)', p: 4, minWidth: 400, maxWidth: 640 } }}
     >
-      <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 18, pb: 1 }}>All Prescriptions</DialogTitle>
-      <DialogContent sx={{ pt: 1 }}>
+      <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 22, pb: 2 }}>All Prescriptions</DialogTitle>
+      <DialogContent sx={{ pt: 1, background: 'transparent', color: 'white', px: 2, minWidth: 400 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {prescriptions.map((rx, idx) => (
             <Invoice
@@ -244,7 +244,7 @@ function Invoices() {
           ))}
         </div>
       </DialogContent>
-      <DialogActions>
+      <DialogActions sx={{ background: 'transparent', px: 2, pb: 2 }}>
         <Button onClick={handleViewAllClose} sx={{ color: '#bfc6e0' }}>Close</Button>
       </DialogActions>
     </Dialog>
