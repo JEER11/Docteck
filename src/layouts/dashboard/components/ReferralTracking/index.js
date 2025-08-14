@@ -47,6 +47,18 @@ function ReferralTracking() {
 	// Only show scrollbar if more than two todos (otherwise keep it hidden)
 	const shouldScroll = todos.length > 2;
 
+	// Match Appointments dialog input styling (no blue bubbles, consistent borders/colors)
+	const fieldSx = {
+		width: '100%',
+		ml: 0,
+		background: '#181a2f',
+		borderRadius: 1.5,
+		'& .MuiOutlinedInput-notchedOutline': { border: '1px solid #23244a' },
+		'&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#2f3570' },
+		'&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#6a6afc' },
+		'& .MuiInputBase-input': { color: '#e7e9f3', fontSize: 14, py: 1, background: 'transparent' },
+	};
+
 	return (
 		<Card
 			sx={{
@@ -154,55 +166,74 @@ function ReferralTracking() {
 					onClose={() => setDialogOpen(false)}
 					PaperProps={{
 						sx: {
-							backgroundColor: 'rgba(34,35,75,0.85)',
-							backdropFilter: 'blur(4px)',
-							width: 500, // bigger dialog
-							maxWidth: '95vw',
-							borderRadius: 3,
-							p: 3
+							background: 'rgba(34, 40, 74, 0.65)',
+							boxShadow: 24,
+							borderRadius: 4,
+							color: 'white',
+							backdropFilter: 'blur(10px)',
+							p: 4,
+							minWidth: 400,
+							maxWidth: 600,
 						}
 					}}
 				>
-					<DialogTitle sx={{ color: 'white', fontWeight: 'bold', fontSize: 26, pb: 2 }}>Add To Do</DialogTitle>
-					<DialogContent>
-						<Stack spacing={3} sx={{ minWidth: 400 }}>
-							<Select 
-								value={newType} 
+					<DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 22, pb: 2, background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+						Add To Do
+					</DialogTitle>
+					<DialogContent 
+						sx={{ 
+							display: 'flex', 
+							flexDirection: 'column', 
+							gap: 1.5, 
+							mt: 1, 
+							background: 'transparent',
+							color: 'white',
+							px: 2,
+							minWidth: 400,
+						}}
+					>
+						<Stack spacing={1}>
+							{/* Type (select) */}
+							<TextField
+								label="Type"
+								select
+								value={newType}
 								onChange={e => setNewType(e.target.value)}
 								fullWidth
-								variant="outlined"
-								sx={{ background: 'rgba(255,255,255,0.08)', color: 'white', borderRadius: 1, fontSize: 18 }}
+								InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
+								sx={{ ...fieldSx, mt: 2, mb: 0.5, color: 'white', '& .MuiSelect-select': { color: '#e7e9f3', py: 1, background: 'transparent' } }}
 							>
 								<MenuItem value='medicine'>Medicine</MenuItem>
 								<MenuItem value='appointment'>Appointment</MenuItem>
 								<MenuItem value='other'>Other</MenuItem>
-							</Select>
-							<TextField 
-								label='Description' 
-								value={newLabel} 
-								onChange={e => setNewLabel(e.target.value)} 
+							</TextField>
+							{/* Description */}
+							<TextField
+								label='Description'
+								value={newLabel}
+								onChange={e => setNewLabel(e.target.value)}
 								fullWidth
 								variant="outlined"
 								multiline
 								minRows={3}
-								InputLabelProps={{ style: { color: '#aaa', fontSize: 16 }, shrink: true }}
-								InputProps={{ style: { color: 'white', background: 'rgba(255,255,255,0.08)', borderRadius: 4, fontSize: 16, padding: 10 } }}
+								InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
+								sx={{ ...fieldSx, mb: 0.5 }}
 							/>
-							<TextField 
-								label='Date' 
-								type='date' 
-								InputLabelProps={{ shrink: true, style: { color: '#aaa', fontSize: 16 } }} 
-								value={newDate} 
-								onChange={e => setNewDate(e.target.value)} 
+							{/* Date */}
+							<TextField
+								label='Date'
+								type='date'
+								InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
+								value={newDate}
+								onChange={e => setNewDate(e.target.value)}
 								fullWidth
-								variant="outlined"
-								InputProps={{ style: { color: 'white', background: 'rgba(255,255,255,0.08)', borderRadius: 4, fontSize: 16 } }}
+								sx={{ ...fieldSx, mb: 0.5 }}
 							/>
 						</Stack>
 					</DialogContent>
-					<DialogActions sx={{ px: 3, pb: 2, pt: 1 }}>
-						<Button onClick={() => setDialogOpen(false)} sx={{ color: '#aaa', fontSize: 16 }}>Cancel</Button>
-						<Button onClick={handleAddTodo} variant='contained' color='primary' sx={{ fontSize: 16, px: 4 }}>
+					<DialogActions sx={{ background: 'transparent', px: 2, pb: 2, display: 'flex', justifyContent: 'flex-end' }}>
+						<Button onClick={() => setDialogOpen(false)} sx={{ color: '#bfc6e0', mr: 1 }}>Cancel</Button>
+						<Button onClick={handleAddTodo} variant='contained' color='info' sx={{ borderRadius: 2, px: 3, fontWeight: 600 }}>
 							Add
 						</Button>
 					</DialogActions>
