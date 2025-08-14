@@ -1,6 +1,12 @@
 // prop-types is a library for typechecking of props
 // @mui material components
 import Card from "@mui/material/Card";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogActions from "@mui/material/DialogActions";
+import TextField from "@mui/material/TextField";
+import Button from "@mui/material/Button";
 import Jelly1 from "assets/images/Jelly1.jpg";
 // Vision UI Dashboard React components
 import VuiBox from "components/VuiBox";
@@ -9,9 +15,7 @@ import PropTypes from "prop-types";
 import { FiEdit2, FiPlus } from "react-icons/fi";
 import React, { useState } from "react";
 
-import ReactDOM from "react-dom";
-
-function MasterCard({ insuranceName, memberName, memberId, monthlyBill, onAdd, onEdit, onDelete }) {
+function MasterCard({ insuranceName, memberName, memberId, monthlyBill, onAdd, onEdit, onDelete, canAdd = true, overlayOpacity = 0.35 }) {
   const [openAdd, setOpenAdd] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
   const [form, setForm] = useState({
@@ -56,12 +60,16 @@ function MasterCard({ insuranceName, memberName, memberId, monthlyBill, onAdd, o
     handleClose(e);
   };
 
-  // Helper to render modal in portal
-  const renderModal = (content) => {
-    return ReactDOM.createPortal(
-      content,
-      document.body
-    );
+  // Match Pharmacy dialog input style
+  const fieldSx = {
+    width: '100%',
+    ml: 0,
+    background: '#181a2f',
+    borderRadius: 1.5,
+    '& .MuiOutlinedInput-notchedOutline': { border: '1px solid #23244a' },
+    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#2f3570' },
+    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#6a6afc' },
+    '& .MuiInputBase-input': { color: '#e7e9f3', fontSize: 14, py: 1, background: 'transparent' },
   };
 
   // List of 100+ insurance company names
@@ -95,7 +103,7 @@ function MasterCard({ insuranceName, memberName, memberId, monthlyBill, onAdd, o
         backgroundPosition: "center",
         // Remove the dark overlay pseudo-element
       }}>
-        {/* Overlay for transparency */}
+    {/* Overlay for transparency (tunable) */}
         <VuiBox
           sx={{
             position: "absolute",
@@ -103,7 +111,7 @@ function MasterCard({ insuranceName, memberName, memberId, monthlyBill, onAdd, o
             left: 0,
             width: "100%",
             height: "100%",
-            background: "rgba(24, 44, 90, 0.45)",
+      background: `rgba(24, 44, 90, ${overlayOpacity})`,
             borderRadius: "inherit",
             zIndex: 1,
             pointerEvents: "none",
@@ -123,27 +131,29 @@ function MasterCard({ insuranceName, memberName, memberId, monthlyBill, onAdd, o
               {insuranceName || "Insurance Card"}
             </VuiTypography>
             <VuiBox display="flex" alignItems="center" gap={1}>
-              <VuiBox
-                component="button"
-                onClick={handleAddClick}
-                sx={{
-                  background: "rgba(255,255,255,0.12)",
-                  border: "none",
-                  borderRadius: "50%",
-                  width: 32,
-                  height: 32,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  cursor: "pointer",
-                  marginRight: 1,
-                  padding: 0,
-                }}
-                aria-label="Add Insurance"
-                type="button"
-              >
-                <FiPlus size={18} color="#fff" />
-              </VuiBox>
+              {canAdd && (
+                <VuiBox
+                  component="button"
+                  onClick={handleAddClick}
+                  sx={{
+                    background: "rgba(255,255,255,0.12)",
+                    border: "none",
+                    borderRadius: "50%",
+                    width: 32,
+                    height: 32,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                    marginRight: 1,
+                    padding: 0,
+                  }}
+                  aria-label="Add Insurance"
+                  type="button"
+                >
+                  <FiPlus size={18} color="#fff" />
+                </VuiBox>
+              )}
               <VuiBox
                 component="button"
                 onClick={handleEditClick}
@@ -207,100 +217,55 @@ function MasterCard({ insuranceName, memberName, memberId, monthlyBill, onAdd, o
           </VuiBox>
         </VuiBox>
       </Card>
-      {/* Popups for Add and Edit, now rendered in portal */}
-      {openAdd && renderModal(
-        <VuiBox
-          sx={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100vw",
-            height: "100vh",
-            background: "rgba(0,0,0,0.4)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 99999,
-          }}
-          onClick={handleClose}
-        >
-          <form onSubmit={handleAddSubmit} onClick={e => e.stopPropagation()}>
-            <VuiBox sx={{ background: "#222b", color: "#fff", p: 8, borderRadius: 4, minWidth: 600, maxWidth: 800, boxShadow: 16, border: "2px solid #fff", position: "relative", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-              <button onClick={handleClose} type="button" style={{ position: "absolute", top: 18, right: 18, background: "transparent", border: "none", color: "#fff", fontSize: 28, cursor: "pointer" }} aria-label="Close">×</button>
-              <VuiTypography variant="h5" color="white" mb={3} style={{ textAlign: "center" }}>Add Insurance</VuiTypography>
-              <input
-                name="insuranceName"
-                list="insurance-options"
-                placeholder="Insurance Name"
-                value={form.insuranceName}
-                onChange={handleFormChange}
-                style={{ width: "100%", marginBottom: 18, padding: 12, borderRadius: 8, border: "1px solid #fff", background: "rgba(51,51,51,0.8)", color: "#fff", fontSize: 18 }}
-                required
-              />
-              <datalist id="insurance-options">
-                {INSURANCE_OPTIONS.map((name, idx) => (
-                  <option key={idx} value={name} />
-                ))}
-              </datalist>
-              <input name="memberName" placeholder="Member Name" value={form.memberName} onChange={handleFormChange} style={{ width: "100%", marginBottom: 18, padding: 12, borderRadius: 8, border: "1px solid #fff", background: "rgba(51,51,51,0.8)", color: "#fff", fontSize: 18 }} />
-              <input name="memberId" placeholder="Member ID" value={form.memberId} onChange={handleFormChange} style={{ width: "100%", marginBottom: 18, padding: 12, borderRadius: 8, border: "1px solid #fff", background: "rgba(51,51,51,0.8)", color: "#fff", fontSize: 18 }} />
-              <input name="monthlyBill" placeholder="Monthly Bill ($)" value={form.monthlyBill} onChange={handleFormChange} style={{ width: "100%", marginBottom: 24, padding: 12, borderRadius: 8, border: "1px solid #fff", background: "rgba(51,51,51,0.8)", color: "#fff", fontSize: 18 }} />
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, width: "100%" }}>
-                <button type="button" onClick={handleClose} style={{ background: "#444", color: "#fff", border: "none", borderRadius: 8, padding: "10px 28px", cursor: "pointer", fontSize: 16 }}>Cancel</button>
-                <button type="submit" style={{ background: "#1976d2", color: "#fff", border: "none", borderRadius: 8, padding: "10px 28px", cursor: "pointer", fontSize: 16 }}>Add</button>
-              </div>
-            </VuiBox>
-          </form>
-        </VuiBox>
-      )}
-      {openEdit && renderModal(
-        <VuiBox
-          sx={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100vw",
-            height: "100vh",
-            background: "rgba(0,0,0,0.4)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 99999,
-          }}
-          onClick={handleClose}
-        >
-          <form onSubmit={handleEditSubmit} onClick={e => e.stopPropagation()}>
-            <VuiBox sx={{ background: "#222b", color: "#fff", p: 8, borderRadius: 4, minWidth: 600, maxWidth: 800, boxShadow: 16, border: "2px solid #fff", position: "relative", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-              <button onClick={handleClose} type="button" style={{ position: "absolute", top: 18, right: 18, background: "transparent", border: "none", color: "#fff", fontSize: 28, cursor: "pointer" }} aria-label="Close">×</button>
-              <VuiTypography variant="h5" color="white" mb={3} style={{ textAlign: "center" }}>Edit Insurance</VuiTypography>
-              <input
-                name="insuranceName"
-                list="insurance-options"
-                placeholder="Insurance Name"
-                value={form.insuranceName}
-                onChange={handleFormChange}
-                style={{ width: "100%", marginBottom: 18, padding: 12, borderRadius: 8, border: "1px solid #fff", background: "rgba(51,51,51,0.8)", color: "#fff", fontSize: 18 }}
-                required
-              />
-              <datalist id="insurance-options">
-                {INSURANCE_OPTIONS.map((name, idx) => (
-                  <option key={idx} value={name} />
-                ))}
-              </datalist>
-              <input name="memberName" placeholder="Member Name" value={form.memberName} onChange={handleFormChange} style={{ width: "100%", marginBottom: 18, padding: 12, borderRadius: 8, border: "1px solid #fff", background: "rgba(51,51,51,0.8)", color: "#fff", fontSize: 18 }} />
-              <input name="memberId" placeholder="Member ID" value={form.memberId} onChange={handleFormChange} style={{ width: "100%", marginBottom: 18, padding: 12, borderRadius: 8, border: "1px solid #fff", background: "rgba(51,51,51,0.8)", color: "#fff", fontSize: 18 }} />
-              <input name="monthlyBill" placeholder="Monthly Bill ($)" value={form.monthlyBill} onChange={handleFormChange} style={{ width: "100%", marginBottom: 24, padding: 12, borderRadius: 8, border: "1px solid #fff", background: "rgba(51,51,51,0.8)", color: "#fff", fontSize: 18 }} />
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", marginTop: 8 }}>
-                <button type="button" onClick={handleDelete} style={{ background: "#d32f2f", color: "#fff", border: "none", borderRadius: 8, padding: "10px 28px", cursor: "pointer", fontSize: 16 }}>Delete</button>
-                <div style={{ display: "flex", gap: 12 }}>
-                  <button type="button" onClick={handleClose} style={{ background: "#444", color: "#fff", border: "none", borderRadius: 8, padding: "10px 28px", cursor: "pointer", fontSize: 16 }}>Cancel</button>
-                  <button type="submit" style={{ background: "#1976d2", color: "#fff", border: "none", borderRadius: 8, padding: "10px 28px", cursor: "pointer", fontSize: 16 }}>Save</button>
-                </div>
-              </div>
-            </VuiBox>
-          </form>
-        </VuiBox>
-      )}
+      {/* Popups for Add and Edit – now MUI Dialogs matching Pharmacy UI */}
+      <Dialog
+        open={openAdd}
+        onClose={handleClose}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{ sx: { background: 'rgba(34, 40, 74, 0.65)', boxShadow: 24, borderRadius: 4, color: 'white', backdropFilter: 'blur(10px)', p: 4, minWidth: 400, maxWidth: 600 } }}
+      >
+        <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 22, pb: 2 }}>Add Insurance</DialogTitle>
+        <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 1, background: 'transparent', color: 'white', px: 2, minWidth: 400 }}>
+          <TextField label="Insurance Name" name="insuranceName" value={form.insuranceName} onChange={handleFormChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mt: 1, mb: 1 }} inputProps={{ list: 'insurance-options' }} />
+          <datalist id="insurance-options">
+            {INSURANCE_OPTIONS.map((name, idx) => (<option key={idx} value={name} />))}
+          </datalist>
+          <TextField label="Member Name" name="memberName" value={form.memberName} onChange={handleFormChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 1 }} />
+          <TextField label="Member ID" name="memberId" value={form.memberId} onChange={handleFormChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 1 }} />
+          <TextField label="Monthly Bill ($)" name="monthlyBill" value={form.monthlyBill} onChange={handleFormChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 1 }} />
+        </DialogContent>
+        <DialogActions sx={{ background: 'transparent', px: 2, pb: 2, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+          <Button onClick={handleClose} sx={{ color: '#bfc6e0' }}>Cancel</Button>
+          <Button onClick={handleAddSubmit} variant="contained" color="info" disabled={!form.insuranceName || !form.memberName || !form.memberId || !form.monthlyBill} sx={{ borderRadius: 2, px: 3, fontWeight: 600 }}>Add</Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={openEdit}
+        onClose={handleClose}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{ sx: { background: 'rgba(34, 40, 74, 0.65)', boxShadow: 24, borderRadius: 4, color: 'white', backdropFilter: 'blur(10px)', p: 4, minWidth: 400, maxWidth: 600 } }}
+      >
+        <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 22, pb: 2 }}>Edit Insurance</DialogTitle>
+        <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 1, background: 'transparent', color: 'white', px: 2, minWidth: 400 }}>
+          <TextField label="Insurance Name" name="insuranceName" value={form.insuranceName} onChange={handleFormChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mt: 1, mb: 1 }} inputProps={{ list: 'insurance-options' }} />
+          <datalist id="insurance-options">
+            {INSURANCE_OPTIONS.map((name, idx) => (<option key={idx} value={name} />))}
+          </datalist>
+          <TextField label="Member Name" name="memberName" value={form.memberName} onChange={handleFormChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 1 }} />
+          <TextField label="Member ID" name="memberId" value={form.memberId} onChange={handleFormChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 1 }} />
+          <TextField label="Monthly Bill ($)" name="monthlyBill" value={form.monthlyBill} onChange={handleFormChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 1 }} />
+        </DialogContent>
+        <DialogActions sx={{ background: 'transparent', px: 2, pb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Button onClick={handleDelete} color="error" variant="outlined" sx={{ borderColor: '#e57373', color: '#e57373', fontWeight: 600 }}>Delete</Button>
+          <div>
+            <Button onClick={handleClose} sx={{ color: '#bfc6e0', mr: 1 }}>Cancel</Button>
+            <Button onClick={handleEditSubmit} variant="contained" color="info" disabled={!form.insuranceName || !form.memberName || !form.memberId || !form.monthlyBill} sx={{ borderRadius: 2, px: 3, fontWeight: 600 }}>Save</Button>
+          </div>
+        </DialogActions>
+      </Dialog>
     </>
   );
 }
@@ -314,6 +279,8 @@ MasterCard.defaultProps = {
   onAdd: () => {},
   onEdit: () => {},
   onDelete: () => {},
+  canAdd: true,
+  overlayOpacity: 0.35,
 };
 
 // Typechecking props for the MasterCard
@@ -325,13 +292,20 @@ MasterCard.propTypes = {
   onAdd: PropTypes.func,
   onEdit: PropTypes.func,
   onDelete: PropTypes.func,
+  canAdd: PropTypes.bool,
+  overlayOpacity: PropTypes.number,
 };
 
 function MasterCardStack({ cards, setCards, onAdd, onEdit, onDelete }) {
   const [activeIndex, setActiveIndex] = useState(0);
 
   // Handler to add a new card and show it under the current one
+  const MAX_CARDS = 4;
   const handleAdd = (form) => {
+    if (cards.length >= MAX_CARDS) {
+      // Soft guard; UI hides add button anyway
+      return;
+    }
     const newCards = [...cards, form];
     setCards(newCards);
     setActiveIndex(newCards.length - 1); // Show the new card on top
@@ -354,24 +328,42 @@ function MasterCardStack({ cards, setCards, onAdd, onEdit, onDelete }) {
   };
 
   // Show all cards stacked, each peeking out a bit more
-  const CARD_OFFSET = 36;
+  const CARD_HEIGHT = 220; // base height approximation
+  const PEEK_OFFSET = 14;  // balanced peek amount
+  const MAX_PEEKS = 3;     // show up to 3 peeks (cards 2,3,4)
   return (
-    <div style={{ position: "relative", width: "100%", minHeight: 220 + CARD_OFFSET * (cards.length - 1) }}>
-      {cards.map((card, idx) => {
-        const isActive = idx === activeIndex;
+    <div style={{ position: "relative", width: "100%", minHeight: CARD_HEIGHT + PEEK_OFFSET * Math.min(Math.max(cards.length - 1, 0), MAX_PEEKS) }}>
+  {cards.map((card, idx) => {
+    const isActive = idx === activeIndex;
+        const depth = Math.min(idx, MAX_PEEKS); // 0..3
+  // Darken progressively by depth so each lower card is distinguishable
+  const dim = isActive ? 1 : [1, 0.94, 0.88, 0.82][depth] || 0.82;
+  const sat = isActive ? 1 : [1, 0.95, 0.90, 0.86][depth] || 0.86;
+        const scale = isActive ? 1 : [1, 0.997, 0.994, 0.991][depth] || 0.991;
+        const boxShadow = isActive
+          ? '0 10px 24px rgba(15,22,60,0.35)'
+          : ['0 8px 18px rgba(5,8,28,0.55)', '0 7px 16px rgba(5,8,28,0.6)', '0 6px 14px rgba(5,8,28,0.62)'][depth-1] || '0 6px 14px rgba(5,8,28,0.6)';
+  // Depth-scaled dark gradient (darker the lower the card)
+  const overlayTopA = 0.06 + depth * 0.04;    // 0.06, 0.10, 0.14, 0.18
+  const overlayBottomA = 0.18 + depth * 0.10; // 0.18, 0.28, 0.38, 0.48
         return (
           <div
             key={idx}
             style={{
               position: "absolute",
-              top: CARD_OFFSET * idx,
+      top: PEEK_OFFSET * depth,
               left: 0,
               width: "100%",
-              zIndex: idx,
-              filter: isActive ? undefined : "blur(0.5px) brightness(0.93)",
-              opacity: isActive ? 1 : 0.85,
+              zIndex: isActive ? cards.length + 1 : idx,
+      filter: isActive ? undefined : `brightness(${dim}) saturate(${sat})`,
+  opacity: isActive ? 1 : 0.95 - depth * 0.05,
               cursor: isActive ? "default" : "pointer",
-              transition: "top 0.3s, opacity 0.3s, filter 0.3s",
+              transform: `scale(${scale})`,
+              transformOrigin: 'top center',
+              boxShadow,
+              borderRadius: 18,
+              transition: "top 260ms cubic-bezier(0.25,0.8,0.25,1), opacity 220ms ease, filter 220ms ease, transform 260ms cubic-bezier(0.25,0.8,0.25,1), box-shadow 260ms ease",
+              willChange: 'transform, filter, top',
               pointerEvents: isActive ? "auto" : "auto",
             }}
             onClick={() => { if (!isActive) setActiveIndex(idx); }}
@@ -381,7 +373,22 @@ function MasterCardStack({ cards, setCards, onAdd, onEdit, onDelete }) {
               onAdd={handleAdd}
               onEdit={handleEdit}
               onDelete={handleDelete}
+              canAdd={cards.length < MAX_CARDS && idx === activeIndex}
+        overlayOpacity={isActive ? 0.26 : 0.12 + depth * 0.04}
             />
+    {!isActive && (
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  borderRadius: 18,
+          background: `linear-gradient(180deg, rgba(10,12,28,${overlayTopA}) 0%, rgba(10,12,28,0) 35%, rgba(10,12,28,${overlayBottomA}) 100%)`,
+          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)',
+          border: `1px solid rgba(255,255,255,${Math.max(0.02, 0.08 - depth * 0.02)})`,
+                  pointerEvents: 'none'
+                }}
+              />
+            )}
           </div>
         );
       })}

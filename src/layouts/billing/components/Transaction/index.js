@@ -9,12 +9,12 @@ import VuiBox from "components/VuiBox";
 import VuiTypography from "components/VuiTypography";
 import VuiButton from "components/VuiButton";
 
-function Transaction({ color, icon, name, description, value }) {
+function Transaction({ color, icon, name, description, value, showConnector = false, isLast = false }) {
   return (
-    <VuiBox key={name} component="li" py={1} pr={2} mb={1}>
+    <VuiBox key={name} component="li" py={1.25} pr={2} mb={1}>
       <VuiBox display="flex" justifyContent="space-between" alignItems="center">
         <VuiBox display="flex" alignItems="center">
-          <VuiBox mr={2}>
+          <VuiBox mr={2} position="relative">
             <VuiButton
               variant="outlined"
               color={color}
@@ -25,6 +25,21 @@ function Transaction({ color, icon, name, description, value }) {
             >
               <Icon sx={{ fontWeight: "bold" }}>{icon}</Icon>
             </VuiButton>
+            {showConnector && !isLast && (
+              <VuiBox
+                sx={{
+                  position: 'absolute',
+                  left: '50%',
+                  top: 36,
+                  bottom: -10,
+                  transform: 'translateX(-50%)',
+                  width: '2px',
+                  background: 'linear-gradient(180deg, rgba(106,106,252,0.35) 0%, rgba(111,124,247,0.08) 100%)',
+                  borderRadius: 1,
+                  pointerEvents: 'none',
+                }}
+              />
+            )}
           </VuiBox>
           <VuiBox display="flex" flexDirection="column">
             <VuiTypography variant="button" color="white" fontWeight="medium" gutterBottom>
@@ -70,6 +85,8 @@ Transaction.propTypes = {
   name: PropTypes.string.isRequired,
   description: PropTypes.string.isRequired,
   value: PropTypes.string.isRequired,
+  showConnector: PropTypes.bool,
+  isLast: PropTypes.bool,
 };
 
 export default Transaction;

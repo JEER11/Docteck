@@ -3,6 +3,13 @@ import Card from "@mui/material/Card";
 import Grid from "@mui/material/Grid";
 import Icon from "@mui/material/Icon";
 import Tooltip from "@mui/material/Tooltip";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogActions from "@mui/material/DialogActions";
+import TextField from "@mui/material/TextField";
+import Button from "@mui/material/Button";
+import MenuItem from "@mui/material/MenuItem";
 
 // Vision UI Dashboard React components
 import VuiBox from "components/VuiBox";
@@ -19,7 +26,6 @@ import colors from "assets/theme/base/colors";
 import Mastercard from "examples/Icons/Mastercard";
 import Visa from "examples/Icons/Visa";
 import React, { useState } from "react";
-import ReactDOM from "react-dom";
 import { useBilling } from "context/BillingContext";
 
 function PaymentMethod() {
@@ -63,45 +69,57 @@ function PaymentMethod() {
     handleClose();
   };
 
-  // List of common medicine and prescription names (no mg, no insurance)
-  const medicineNames = [
-    "Atorvastatin", "Lisinopril", "Metformin", "Levothyroxine", "Amlodipine", "Simvastatin", "Omeprazole", "Losartan", "Gabapentin", "Hydrochlorothiazide", "Sertraline", "Furosemide", "Metoprolol", "Pantoprazole", "Escitalopram", "Rosuvastatin", "Tamsulosin", "Alprazolam", "Citalopram", "Ciprofloxacin", "Duloxetine", "Fluoxetine", "Atenolol", "Clopidogrel", "Doxycycline", "Enalapril", "Glipizide", "Insulin Glargine", "Lamotrigine", "Lansoprazole", "Levetiracetam", "Levocetirizine", "Loratadine", "Meloxicam", "Montelukast", "Naproxen", "Olmesartan", "Paroxetine", "Pioglitazone", "Pravastatin", "Prednisone", "Pregabalin", "Propranolol", "Quetiapine", "Ranitidine", "Rivaroxaban", "Sitagliptin", "Spironolactone", "Trazodone", "Valsartan", "Venlafaxine", "Warfarin", "Zolpidem", "Amoxicillin", "Azithromycin", "Baclofen", "Bisoprolol", "Budesonide", "Carvedilol", "Cetirizine", "Chlorthalidone", "Clonazepam", "Clonidine", "Colchicine", "Desvenlafaxine", "Diazepam", "Digoxin", "Diphenhydramine", "Divalproex", "Donepezil", "Dulcolax", "Empagliflozin", "Esomeprazole", "Famotidine", "Finasteride", "Fluticasone", "Folic Acid", "Gliclazide", "Glyburide", "Hydralazine", "Hydroxyzine", "Indapamide", "Irbesartan", "Isosorbide", "Ketorolac", "Labetalol", "Lactulose", "Lidocaine", "Linagliptin", "Liraglutide", "Magnesium Oxide", "Memantine", "Methotrexate", "Methylprednisolone", "Mirtazapine", "Mometasone", "Nebivolol", "Nitrofurantoin", "Olanzapine", "Ondansetron", "Oxcarbazepine", "Phenytoin", "Pramipexole", "Rabeprazole", "Ramipril", "Risperidone", "Saxagliptin", "Sildenafil", "Sotalol", "Terazosin", "Topiramate", "Tramadol", "Valacyclovir", "Valsartan", "Vildagliptin", "Insulin Lispro", "Insulin Aspart", "Insulin Detemir", "Insulin Degludec", "Insulin NPH", "Insulin Regular", "Insulin Glulisine", "Insulin Isophane", "Insulin Zinc", "Insulin Lente", "Insulin Ultralente", "Insulin Semilente", "Insulin Protamine", "Insulin Pork", "Insulin Beef", "Insulin Human", "Insulin Analog", "Insulin Mixture", "Insulin Combination", "Insulin Solution", "Insulin Suspension", "Insulin Injection", "Insulin Cartridge", "Insulin Pen", "Insulin Pump", "Insulin Syringe", "Insulin Vial", "Insulin Device", "Insulin Therapy", "Insulin Treatment", "Insulin Prescription"
-  ];
+  // Match Pharmacy dialog input style
+  const fieldSx = {
+    width: "100%",
+    ml: 0,
+    background: "#181a2f",
+    borderRadius: 1.5,
+    "& .MuiOutlinedInput-notchedOutline": { border: "1px solid #23244a" },
+    "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "#2f3570" },
+    "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "#6a6afc" },
+    "& .MuiInputBase-input": { color: "#e7e9f3", fontSize: 14, py: 1, background: "transparent" },
+  };
 
-  // Modal content as a separate component for portal
-  const InsuranceModal = (
-    <div style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh", background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 99999 }}>
-      <div style={{ background: "rgba(34,34,34,0.85)", color: "#fff", padding: 32, borderRadius: 16, minWidth: 340, boxShadow: "0 8px 32px 0 rgba(0,0,0,0.5)", border: "2px solid #fff", position: "relative", backdropFilter: "blur(4px)" }}>
-        <button onClick={handleClose} style={{ position: "absolute", top: 12, right: 12, background: "transparent", border: "none", color: "#fff", fontSize: 22, cursor: "pointer" }} aria-label="Close">×</button>
-        <VuiTypography variant="h6" color="white" mb={2} style={{ textAlign: "center" }}>{editIndex !== null ? "Edit Card" : "Add Card"}</VuiTypography>
-        <input
-          name="name"
-          placeholder="Card Name"
-          value={newCard.name}
-          onChange={handleChange}
-          list="medicine-names"
-          style={{ width: "100%", marginBottom: 12, padding: 10, borderRadius: 8, border: "1px solid #fff", background: "rgba(51,51,51,0.8)", color: "#fff" }}
-        />
-        <datalist id="medicine-names">
-          {medicineNames.map((name, i) => (
-            <option value={name} key={i} />
-          ))}
-        </datalist>
-        <input name="cardId" placeholder="Card Number" value={newCard.cardId} onChange={handleChange} style={{ width: "100%", marginBottom: 12, padding: 10, borderRadius: 8, border: "1px solid #fff", background: "rgba(51,51,51,0.8)", color: "#fff" }} />
-        <input name="validThru" placeholder="Valid Thru (MM/YY)" value={newCard.validThru} onChange={handleChange} style={{ width: "100%", marginBottom: 12, padding: 10, borderRadius: 8, border: "1px solid #fff", background: "rgba(51,51,51,0.8)", color: "#fff" }} />
-        <input name="cvv" placeholder="CVV" value={newCard.cvv} onChange={handleChange} style={{ width: "100%", marginBottom: 12, padding: 10, borderRadius: 8, border: "1px solid #fff", background: "rgba(51,51,51,0.8)", color: "#fff" }} />
-        <select name="type" value={newCard.type} onChange={handleChange} style={{ width: "100%", marginBottom: 16, padding: 10, borderRadius: 8, border: "1px solid #fff", background: "rgba(51,51,51,0.8)", color: "#fff" }}>
-          <option value="Mastercard">Mastercard</option>
-          <option value="Visa">Visa</option>
-        </select>
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
-          <VuiButton variant="outlined" color="secondary" onClick={handleClose}>Cancel</VuiButton>
-          <VuiButton variant="contained" color="info" onClick={handleAddOrEdit} disabled={!newCard.cardId || !newCard.name || !newCard.validThru || !newCard.cvv}>
-            {editIndex !== null ? "Save" : "Add"}
-          </VuiButton>
-        </div>
-      </div>
-    </div>
+  const AddEditDialog = (
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      maxWidth="sm"
+      fullWidth
+      PaperProps={{
+        sx: {
+          background: "rgba(34, 40, 74, 0.65)",
+          boxShadow: 24,
+          borderRadius: 4,
+          color: "white",
+          backdropFilter: "blur(10px)",
+          p: 4,
+          minWidth: 400,
+          maxWidth: 600,
+        },
+      }}
+    >
+      <DialogTitle sx={{ color: "white", fontWeight: 700, fontSize: 22, pb: 2 }}>
+        {editIndex !== null ? "Edit Card" : "Add Card"}
+      </DialogTitle>
+      <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 1.5, mt: 1, background: "transparent", color: "white", px: 2, minWidth: 400 }}>
+        <TextField label="Card Number" name="cardId" value={newCard.cardId} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: "#bfc6e0" } }} sx={{ ...fieldSx, mt: 1, mb: 1 }} />
+        <TextField label="Card Name" name="name" value={newCard.name} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: "#bfc6e0" } }} sx={{ ...fieldSx, mb: 1 }} />
+        <TextField label="Valid Thru (MM/YY)" name="validThru" value={newCard.validThru} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: "#bfc6e0" } }} sx={{ ...fieldSx, mb: 1 }} />
+        <TextField label="CVV" name="cvv" value={newCard.cvv} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: "#bfc6e0" } }} sx={{ ...fieldSx, mb: 1 }} />
+        <TextField label="Type" name="type" value={newCard.type} onChange={handleChange} select fullWidth InputLabelProps={{ shrink: true, style: { color: "#bfc6e0" } }} sx={{ ...fieldSx, mb: 1 }}>
+          <MenuItem value="Mastercard">Mastercard</MenuItem>
+          <MenuItem value="Visa">Visa</MenuItem>
+        </TextField>
+      </DialogContent>
+      <DialogActions sx={{ background: "transparent", px: 2, pb: 2, display: "flex", justifyContent: "flex-end", alignItems: "center" }}>
+        <Button onClick={handleClose} sx={{ color: "#bfc6e0" }}>Cancel</Button>
+        <Button onClick={handleAddOrEdit} variant="contained" color="info" disabled={!newCard.cardId || !newCard.name || !newCard.validThru || !newCard.cvv} sx={{ borderRadius: 2, px: 3, fontWeight: 600 }}>
+          {editIndex !== null ? "Save" : "Add"}
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 
   return (
@@ -145,32 +163,8 @@ function PaymentMethod() {
           ))}
         </Grid>
       </VuiBox>
-      {/* Add Card Dialog */}
-      {open && (typeof document !== "undefined" && document.body
-        ? ReactDOM.createPortal(
-            <div style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh", background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 99999 }}>
-              <div style={{ background: "rgba(34,34,34,0.85)", color: "#fff", padding: 32, borderRadius: 16, minWidth: 340, boxShadow: "0 8px 32px 0 rgba(0,0,0,0.5)", border: "2px solid #fff", position: "relative", backdropFilter: "blur(4px)" }}>
-                <button onClick={handleClose} style={{ position: "absolute", top: 12, right: 12, background: "transparent", border: "none", color: "#fff", fontSize: 22, cursor: "pointer" }} aria-label="Close">×</button>
-                <VuiTypography variant="h6" color="white" mb={2} style={{ textAlign: "center" }}>Add Card</VuiTypography>
-                <input name="cardId" placeholder="Card Number" value={newCard.cardId} onChange={handleChange} style={{ width: "100%", marginBottom: 12, padding: 10, borderRadius: 8, border: "1px solid #fff", background: "rgba(51,51,51,0.8)", color: "#fff" }} />
-                <input name="name" placeholder="Card Name" value={newCard.name} onChange={handleChange} style={{ width: "100%", marginBottom: 12, padding: 10, borderRadius: 8, border: "1px solid #fff", background: "rgba(51,51,51,0.8)", color: "#fff" }} />
-                <input name="validThru" placeholder="Valid Thru (MM/YY)" value={newCard.validThru || ''} onChange={handleChange} style={{ width: "100%", marginBottom: 12, padding: 10, borderRadius: 8, border: "1px solid #fff", background: "rgba(51,51,51,0.8)", color: "#fff" }} />
-                <input name="cvv" placeholder="CVV" value={newCard.cvv || ''} onChange={handleChange} style={{ width: "100%", marginBottom: 12, padding: 10, borderRadius: 8, border: "1px solid #fff", background: "rgba(51,51,51,0.8)", color: "#fff" }} />
-                <select name="type" value={newCard.type} onChange={handleChange} style={{ width: "100%", marginBottom: 16, padding: 10, borderRadius: 8, border: "1px solid #fff", background: "rgba(51,51,51,0.8)", color: "#fff" }}>
-                  <option value="Mastercard">Mastercard</option>
-                  <option value="Visa">Visa</option>
-                </select>
-                <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
-                  <VuiButton variant="outlined" color="secondary" onClick={handleClose}>Cancel</VuiButton>
-                  <VuiButton variant="contained" color="info" onClick={() => { addCard({ ...newCard }); handleClose(); }} disabled={!newCard.cardId || !newCard.name || !newCard.validThru || !newCard.cvv}>
-                    Add
-                  </VuiButton>
-                </div>
-              </div>
-            </div>,
-            document.body
-          )
-        : null)}
+  {/* Add/Edit Card Dialog - matches Pharmacy dialog styling */}
+  {AddEditDialog}
     </Card>
   );
 }

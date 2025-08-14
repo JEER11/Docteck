@@ -1,12 +1,13 @@
 // @mui material components
 import Grid from "@mui/material/Grid";
+import React, { useState } from "react";
 
 // Vision UI Dashboard React components
 import VuiBox from "components/VuiBox";
 import VuiTypography from "components/VuiTypography";
 
 // Vision UI Dashboard React components
-import MasterCard from "examples/Cards/MasterCard";
+import { MasterCardStack } from "examples/Cards/MasterCard";
 // Vision UI Dashboard React example components
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
@@ -20,6 +21,9 @@ import CreditBalance from "./components/CreditBalance";
 import BillingBackground from "./BillingBackground";
 
 function Billing() {
+  const [insuranceCards, setInsuranceCards] = useState([
+    { insuranceName: "Insurance Card", memberName: "Member Name", memberId: "ID123456", monthlyBill: "0.00" }
+  ]);
   return (
     <>
       <BillingBackground />
@@ -31,7 +35,7 @@ function Billing() {
               <Grid item xs={12} lg={7} xl={8}>
                 <Grid container spacing={3}>
                   <Grid item xs={12} xl={6}>
-                    <MasterCard number={7812213908237916} valid="05/24" cvv="09X" />
+                    <MasterCardStack cards={insuranceCards} setCards={setInsuranceCards} />
                   </Grid>
                   <Grid item xs={12} md={12} xl={6}>
                     <CreditBalance />
