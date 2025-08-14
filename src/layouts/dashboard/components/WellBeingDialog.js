@@ -21,6 +21,18 @@ export default function WellBeingDialog({ open, onClose, onSubmit }) {
     onClose();
   };
 
+  // Match Caring Hub Appointments dialog UI
+  const fieldSx = {
+    width: '100%',
+    ml: 0,
+    background: '#181a2f',
+    borderRadius: 1.5,
+    '& .MuiOutlinedInput-notchedOutline': { border: '1px solid #23244a' },
+    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#2f3570' },
+    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#6a6afc' },
+    '& .MuiInputBase-input': { color: '#e7e9f3', fontSize: 14, py: 1, background: 'transparent' },
+  };
+
   return (
     <Dialog 
       open={open} 
@@ -29,52 +41,67 @@ export default function WellBeingDialog({ open, onClose, onSubmit }) {
       fullWidth
       PaperProps={{
         sx: {
-          background: 'rgba(34,35,75,0.85)',
-          backdropFilter: 'blur(4px)',
-          borderRadius: 3,
-          p: 3,
+          background: 'rgba(34, 40, 74, 0.65)',
+          boxShadow: 24,
+          borderRadius: 4,
+          color: 'white',
+          backdropFilter: 'blur(10px)',
+          p: 4,
           minWidth: 400,
+          maxWidth: 600,
         }
       }}
     >
-      <DialogTitle sx={{ color: 'white', fontWeight: 'bold', fontSize: 22, pb: 1.5, mb: 1 }}>Log Your Well Being</DialogTitle>
-      <DialogContent>
-        <VuiBox display="flex" flexDirection="column" gap={2}>
+      <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 22, pb: 2, background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        Log Your Well Being
+      </DialogTitle>
+      <DialogContent 
+        sx={{ 
+          display: 'flex', 
+          flexDirection: 'column', 
+          gap: 1.5, 
+          mt: 1, 
+          background: 'transparent',
+          color: 'white',
+          px: 2,
+          minWidth: 400,
+        }}
+      >
+        <VuiBox display="flex" flexDirection="column" gap={1}>
           <TextField
-            label={<span style={{ color: 'white', fontSize: 15 }}>Emotion</span>}
+            label="Emotion"
             value={emotion}
             onChange={e => setEmotion(e.target.value)}
             fullWidth
             autoFocus
-            InputLabelProps={{ shrink: true }}
-            inputProps={{ style: { color: 'white', fontSize: 15, background: 'rgba(255,255,255,0.08)', borderRadius: 4, padding: 10 } }}
-            sx={{ mb: 2, mt: 2 }} // add top margin
+            InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
+            sx={{ ...fieldSx, mt: 2, mb: 0.5, minHeight: 48 }}
           />
           <TextField
-            label={<span style={{ color: 'white', fontSize: 15 }}>How strong is this feeling? (1-10)</span>}
+            label="How strong is this feeling? (1-10)"
             type="number"
             value={intensity}
             onChange={e => setIntensity(Math.max(1, Math.min(10, Number(e.target.value))))}
-            inputProps={{ min: 1, max: 10, style: { color: 'white', fontSize: 15, background: 'rgba(255,255,255,0.08)', borderRadius: 4, padding: 10 } }}
-            InputLabelProps={{ shrink: true }}
+            inputProps={{ min: 1, max: 10 }}
+            InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
             fullWidth
-            sx={{ mb: 1 }}
+            sx={{ ...fieldSx, mb: 0.5 }}
           />
           <TextField
-            label={<span style={{ color: 'white', fontSize: 15 }}>Notes (optional)</span>}
+            label="Notes (optional)"
             value={note}
             onChange={e => setNote(e.target.value)}
             fullWidth
             multiline
             minRows={2}
-            InputLabelProps={{ shrink: true }}
-            inputProps={{ style: { color: 'white', fontSize: 15, background: 'rgba(255,255,255,0.08)', borderRadius: 4, padding: 10 } }}
+            InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
+            sx={{ ...fieldSx, mb: 0.5 }}
           />
         </VuiBox>
       </DialogContent>
-      <DialogActions sx={{ px: 3, pb: 2, pt: 1 }}>
-        <Button onClick={onClose} sx={{ color: '#aaa', fontSize: 15 }}>Cancel</Button>
-        <Button onClick={handleSubmit} variant='contained' color='primary' sx={{ fontSize: 15, px: 4, background: 'rgba(33,150,243,0.6)', boxShadow: 'none', '&:hover': { background: 'rgba(33,150,243,0.8)' } }}>
+      <DialogActions sx={{ background: 'transparent', px: 2, pb: 2, display: 'flex', justifyContent: 'flex-end' }}>
+        <Button onClick={onClose} sx={{ color: '#bfc6e0', mr: 1 }}>Cancel</Button>
+        <Button onClick={handleSubmit} variant='contained' color='info' sx={{ borderRadius: 2, px: 3, fontWeight: 600 }}>
           Add
         </Button>
       </DialogActions>
