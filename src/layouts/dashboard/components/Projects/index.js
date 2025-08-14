@@ -4,9 +4,13 @@ import { BsCheckCircleFill } from "react-icons/bs";
 // @mui material components
 import Card from "@mui/material/Card";
 import IconButton from "@mui/material/IconButton";
-import Menu from "@mui/material/Menu";
-import MenuItem from "@mui/material/MenuItem";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogActions from "@mui/material/DialogActions";
+import TextField from "@mui/material/TextField";
+import Button from "@mui/material/Button";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Tooltip from "@mui/material/Tooltip";
 
@@ -56,9 +60,11 @@ function GradientCircularProgress({ value, size = 42, stroke = 4, id = "gcp" }) 
 }
 
 function Projects() {
-  const { projects } = useProjects();
-  const [menuAnchor, setMenuAnchor] = useState(null);
+  const { projects, updateProject, removeProject } = useProjects();
   const [menuProjectId, setMenuProjectId] = useState(null);
+  // Edit dialog state (match Caring Hub HUB dialog UI)
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [form, setForm] = useState({ hospital: "", doctors: "", bill: "", status: "Working", completion: 0 });
   // local ref to detect when the table overflows horizontally (scrollbar shows)
   const tableRegionRef = useRef(null);
   const [compact, setCompact] = useState(false);
@@ -222,23 +228,42 @@ function Projects() {
       )
     ),
     actions: (
-      <IconButton color="primary" onClick={e => { setMenuAnchor(e.currentTarget); setMenuProjectId(project.id); }} size="small">
+      <IconButton
+        color="primary"
+        onClick={() => {
+          setMenuProjectId(project.id);
+          setForm({
+            hospital: project.hospital || "",
+            doctors: Array.isArray(project.doctors) ? project.doctors.join(", ") : (project.doctors || ""),
+            bill: project.bill || "",
+            status: project.status || "Working",
+            completion: Number(project.completion) || 0,
+          });
+          setDialogOpen(true);
+        }}
+        size="small"
+        aria-label="Edit HUB"
+      >
         <MoreVertIcon />
       </IconButton>
     ),
   }));
 
-  // Menu for actions (edit/delete) - just for visual, no actual edit/delete in dashboard
-  const renderMenu = (
-    <Menu
-      anchorEl={menuAnchor}
-      open={Boolean(menuAnchor)}
-      onClose={() => setMenuAnchor(null)}
-    >
-      <MenuItem disabled>Edit</MenuItem>
-      <MenuItem disabled>Delete</MenuItem>
-    </Menu>
-  );
+  // Dialog handlers
+  const handleDialogClose = () => setDialogOpen(false);
+  const handleChange = (e) => setForm(f => ({ ...f, [e.target.name]: e.target.value }));
+  const handleSave = () => {
+    if (!menuProjectId) return setDialogOpen(false);
+    const payload = {
+      hospital: form.hospital,
+      doctors: form.doctors.split(",").map(d => d.trim()).filter(Boolean),
+      bill: form.bill,
+      status: form.status,
+      completion: Number(form.completion) || 0,
+    };
+    updateProject(menuProjectId, payload);
+    setDialogOpen(false);
+  };
 
   return (
     <Card
@@ -335,9 +360,95 @@ function Projects() {
           }}
         >
           <Table columns={columns} rows={rows} />
-          {renderMenu}
         </VuiBox>
       </VuiBox>
+      {/* Edit HUB dialog (matches Caring Hub UI) */}
+      <Dialog open={dialogOpen} onClose={handleDialogClose} maxWidth="xs" fullWidth
+        PaperProps={{
+          sx: {
+            background: 'rgba(34, 40, 74, 0.65)',
+            boxShadow: 24,
+            borderRadius: 4,
+            border: '1px solid rgba(111, 126, 201, 0.25)',
+            color: 'white',
+            backdropFilter: 'blur(10px)',
+            p: 4,
+            minWidth: 400,
+            maxWidth: 600,
+          }
+        }}
+      >
+        <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 22, pb: 2, background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          Edit
+        </DialogTitle>
+        <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 1, background: 'transparent', color: 'white', px: 2, minWidth: 400 }}>
+          <VuiBox display="flex" flexDirection="column" gap={1}>
+            <TextField label="Hospital" name="hospital" value={form.hospital} onChange={handleChange} fullWidth
+              InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
+              sx={{
+                width: '100%', ml: 0, background: '#181a2f', borderRadius: 1.5,
+                '& .MuiOutlinedInput-notchedOutline': { border: '1px solid #23244a' },
+                '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#2f3570' },
+                '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#6a6afc' },
+                '& .MuiInputBase-input': { color: '#e7e9f3', fontSize: 14, py: 1, background: 'transparent' },
+                mt: 2, mb: 0.5, minHeight: 48
+              }}
+            />
+            <TextField label="Doctors (comma separated)" name="doctors" value={form.doctors} onChange={handleChange} fullWidth
+              InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
+              sx={{
+                width: '100%', ml: 0, background: '#181a2f', borderRadius: 1.5,
+                '& .MuiOutlinedInput-notchedOutline': { border: '1px solid #23244a' },
+                '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#2f3570' },
+                '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#6a6afc' },
+                '& .MuiInputBase-input': { color: '#e7e9f3', fontSize: 14, py: 1, background: 'transparent' },
+                mb: 0.5
+              }}
+            />
+            <TextField label="Bill" name="bill" value={form.bill} onChange={handleChange} fullWidth
+              InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
+              sx={{
+                width: '100%', ml: 0, background: '#181a2f', borderRadius: 1.5,
+                '& .MuiOutlinedInput-notchedOutline': { border: '1px solid #23244a' },
+                '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#2f3570' },
+                '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#6a6afc' },
+                '& .MuiInputBase-input': { color: '#e7e9f3', fontSize: 14, py: 1, background: 'transparent' },
+                mb: 0.5
+              }}
+            />
+            <TextField label="Status" name="status" value={form.status} onChange={handleChange} fullWidth
+              InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
+              sx={{
+                width: '100%', ml: 0, background: '#181a2f', borderRadius: 1.5,
+                '& .MuiOutlinedInput-notchedOutline': { border: '1px solid #23244a' },
+                '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#2f3570' },
+                '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#6a6afc' },
+                '& .MuiInputBase-input': { color: '#e7e9f3', fontSize: 14, py: 1, background: 'transparent' },
+                mb: 0.5
+              }}
+            />
+            <TextField label="Completion" name="completion" value={form.completion} onChange={handleChange} fullWidth type="number"
+              InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
+              sx={{
+                width: '100%', ml: 0, background: '#181a2f', borderRadius: 1.5,
+                '& .MuiOutlinedInput-notchedOutline': { border: '1px solid #23244a' },
+                '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#2f3570' },
+                '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#6a6afc' },
+                '& .MuiInputBase-input': { color: '#e7e9f3', fontSize: 14, py: 1, background: 'transparent' },
+              }}
+            />
+          </VuiBox>
+        </DialogContent>
+        <DialogActions sx={{ px: 2, pt: 2, pb: 2, display: 'flex', justifyContent: 'space-between' }}>
+          <Button onClick={() => { if (menuProjectId) removeProject(menuProjectId); setDialogOpen(false); }} color="error" sx={{ color: '#ff8080' }}>
+            Delete
+          </Button>
+          <VuiBox>
+            <Button onClick={handleDialogClose} sx={{ mr: 1, color: '#bfc6e0' }}>Cancel</Button>
+            <Button onClick={handleSave} variant="contained" color="primary" sx={{ background: 'rgba(44, 50, 90, 0.85)', boxShadow: 'none' }}>Save</Button>
+          </VuiBox>
+        </DialogActions>
+      </Dialog>
     </Card>
   );
 }
