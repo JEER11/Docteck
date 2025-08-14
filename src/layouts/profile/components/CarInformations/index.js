@@ -73,7 +73,9 @@ const CarInformations = ({ popupVariant = 'legacy' }) => {
 	// removed legacy handleAdd/handleRemove that depended on deleted state
 	const handleBoxOpen = (box) => {
 		setOpenBox(box);
-	setEditorOpen(false);
+		// Default to open the editor for list-based popups to match the Settings UX
+		const openEditor = ['conditions', 'allergies', 'medications', 'emergencyContacts'].includes(box);
+		setEditorOpen(openEditor);
 		switch (box) {
 			case 'emergencyContacts':
 				setEditList([...emergencyContacts]); // legacy support
