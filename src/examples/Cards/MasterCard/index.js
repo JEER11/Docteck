@@ -329,7 +329,7 @@ function MasterCardStack({ cards, setCards, onAdd, onEdit, onDelete }) {
 
   // Show all cards stacked, each peeking out a bit more
   const CARD_HEIGHT = 220; // base height approximation
-  const PEEK_OFFSET = 14;  // balanced peek amount
+  const PEEK_OFFSET = 18;  // slightly larger peek for clearer bottom separation
   const MAX_PEEKS = 3;     // show up to 3 peeks (cards 2,3,4)
   return (
     <div style={{ position: "relative", width: "100%", minHeight: CARD_HEIGHT + PEEK_OFFSET * Math.min(Math.max(cards.length - 1, 0), MAX_PEEKS) }}>
@@ -345,7 +345,10 @@ function MasterCardStack({ cards, setCards, onAdd, onEdit, onDelete }) {
           : ['0 8px 18px rgba(5,8,28,0.55)', '0 7px 16px rgba(5,8,28,0.6)', '0 6px 14px rgba(5,8,28,0.62)'][depth-1] || '0 6px 14px rgba(5,8,28,0.6)';
   // Depth-scaled dark gradient (darker the lower the card)
   const overlayTopA = 0.10 + depth * 0.06;    // 0.10, 0.16, 0.22, 0.28
-  const overlayBottomA = 0.24 + depth * 0.12; // 0.24, 0.36, 0.48, 0.60
+  const overlayBottomA = 0.28 + depth * 0.14; // 0.28, 0.42, 0.56, 0.70
+  // Bottom separator band to emphasize visible peeks
+  const bottomBandTopA = 0.20 + depth * 0.10;     // 0.20, 0.30, 0.40, 0.50
+  const bottomBandBottomA = 0.40 + depth * 0.14;  // 0.40, 0.54, 0.68, 0.82
         return (
           <div
             key={idx}
@@ -385,6 +388,22 @@ function MasterCardStack({ cards, setCards, onAdd, onEdit, onDelete }) {
           background: `linear-gradient(180deg, rgba(10,12,28,${overlayTopA}) 0%, rgba(10,12,28,0) 35%, rgba(10,12,28,${overlayBottomA}) 100%)`,
           boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)',
           border: `1px solid rgba(255,255,255,${Math.max(0.02, 0.08 - depth * 0.02)})`,
+                  pointerEvents: 'none'
+                }}
+              />
+            )}
+    {!isActive && (
+              <div
+                style={{
+                  position: 'absolute',
+                  left: 8,
+                  right: 8,
+                  bottom: 0,
+                  height: 14,
+                  borderBottomLeftRadius: 16,
+                  borderBottomRightRadius: 16,
+                  background: `linear-gradient(180deg, rgba(5,8,28,0) 0%, rgba(5,8,28,${bottomBandTopA}) 70%, rgba(5,8,28,${bottomBandBottomA}) 100%)`,
+                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)',
                   pointerEvents: 'none'
                 }}
               />
