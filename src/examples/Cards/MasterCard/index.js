@@ -344,9 +344,10 @@ function MasterCardStack({ cards, setCards, onAdd, onEdit, onDelete }) {
       // Soft guard; UI hides add button anyway
       return;
     }
-  const newCards = [...cards, form];
-  setCards(newCards);
-  // Keep current active card on top; do not reorder
+    const newCards = [...cards, form];
+    setCards(newCards);
+    // Show the new card on top
+    setActiveIndex(newCards.length - 1);
     if (onAdd) onAdd(form);
   };
 
@@ -399,7 +400,7 @@ function MasterCardStack({ cards, setCards, onAdd, onEdit, onDelete }) {
               zIndex: isActive ? cards.length + 1 : idx,
       filter: isActive ? undefined : `brightness(${dim}) saturate(${sat})`,
   opacity: isActive ? 1 : 0.96 - depth * 0.05,
-              cursor: isActive ? "default" : "default",
+              cursor: isActive ? "default" : "pointer",
               transform: `scale(${scale})`,
               transformOrigin: 'top center',
               boxShadow,
@@ -408,8 +409,15 @@ function MasterCardStack({ cards, setCards, onAdd, onEdit, onDelete }) {
               willChange: 'transform, filter, top',
               pointerEvents: isActive ? "auto" : "auto",
             }}
-            // Disable click-to-reorder; keep stack order fixed
-            onClick={() => { /* no-op */ }}
+            // Click to bring the card to the top (active)
+            onClick={() => {
+              if (isActive) return;
+              const selected = cards[idx];
+              const rest = cards.filter((_, i2) => i2 !== idx);
+              const reordered = [...rest, selected];
+              setCards(reordered);
+              setActiveIndex(reordered.length - 1);
+            }}
           >
             <MasterCard
               {...card}
