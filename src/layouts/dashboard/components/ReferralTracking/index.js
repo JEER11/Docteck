@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Card, Stack, IconButton, MenuItem, Select, Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField } from '@mui/material';
 import VuiBox from 'components/VuiBox';
 import VuiTypography from 'components/VuiTypography';
@@ -59,7 +59,70 @@ function ReferralTracking() {
 		'& .MuiInputBase-input': { color: '#e7e9f3', fontSize: 14, py: 1, background: 'transparent' },
 	};
 
+	// Draggable support via 3-dots handle
+	const STORAGE_KEY = 'todos-track-pos';
+	const rootRef = useRef(null);
+	const [floating, setFloating] = useState(false);
+	const [dragging, setDragging] = useState(false);
+	const [pos, setPos] = useState({ x: 0, y: 0 });
+	const [boxSize, setBoxSize] = useState(null);
+
+	useEffect(() => {
+		try {
+			const saved = localStorage.getItem(STORAGE_KEY);
+			if (saved) {
+				const { x, y, w, h } = JSON.parse(saved);
+				setPos({ x, y });
+				setBoxSize({ w, h });
+				setFloating(true);
+			}
+		} catch {}
+	}, []);
+
+	const clamp = (val, min, max) => Math.max(min, Math.min(max, val));
+
+	const beginDrag = (e) => {
+		e.preventDefault();
+		const el = rootRef.current;
+		if (!el) return;
+		const rect = el.getBoundingClientRect();
+		setBoxSize({ w: rect.width, h: rect.height });
+		setFloating(true);
+		setDragging(true);
+		const dx = e.clientX - rect.left;
+		const dy = e.clientY - rect.top;
+
+		const onMove = (ev) => {
+			const x = clamp(ev.clientX - dx, 8, window.innerWidth - (rect.width + 8));
+			const y = clamp(ev.clientY - dy, 8, window.innerHeight - (rect.height + 8));
+			setPos({ x, y });
+		};
+		const onUp = () => {
+			setDragging(false);
+			window.removeEventListener('mousemove', onMove);
+			window.removeEventListener('mouseup', onUp);
+			try {
+				const payload = { x: pos.x, y: pos.y, w: rect.width, h: rect.height };
+				localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+			} catch {}
+		};
+		window.addEventListener('mousemove', onMove);
+		window.addEventListener('mouseup', onUp);
+	};
+
 	return (
+		<VuiBox ref={rootRef}
+			sx={{
+				position: floating ? 'fixed' : 'relative',
+				top: floating ? pos.y : 'auto',
+				left: floating ? pos.x : 'auto',
+				width: floating && boxSize ? boxSize.w : 'auto',
+				zIndex: floating ? 1400 : 'auto',
+				cursor: dragging ? 'grabbing' : 'default',
+				userSelect: dragging ? 'none' : 'auto',
+				transition: dragging ? 'none' : 'top 120ms ease, left 120ms ease',
+			}}
+		>
 		<Card
 			sx={{
 				// Fix height so the card never grows with content; allow inner area to scroll instead
@@ -121,7 +184,8 @@ function ReferralTracking() {
 						justifyContent='center'
 						alignItems='center'
 						bgColor='#22234B'
-						sx={{ width: '37px', height: '37px', cursor: 'pointer', borderRadius: '12px', ml: 1 }}
+						sx={{ width: '37px', height: '37px', cursor: 'grab', borderRadius: '12px', ml: 1, userSelect: 'none' }}
+						onMouseDown={beginDrag}
 					>
 						<FaEllipsisH color={info.main} size='18px' />
 					</VuiBox>
@@ -239,7 +303,8 @@ function ReferralTracking() {
 					</DialogActions>
 				</Dialog>
 			</VuiBox>
-		</Card>
+	</Card>
+	</VuiBox>
 	);
 }
 
