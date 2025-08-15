@@ -99,46 +99,59 @@ function Projects() {
     return (first + second).toUpperCase();
   };
 
-  // Detect overflow to toggle compact mode
+  // Smooth compact-mode toggle using width thresholds + hysteresis to avoid flicker
   useEffect(() => {
-    const el = tableRegionRef.current;
-    if (!el) return;
-    const container = el.querySelector('.MuiTableContainer-root') || el;
+    const host = tableRegionRef.current;
+    if (!host) return;
+    const container = host.querySelector('.MuiTableContainer-root') || host;
 
-    const checkOverflow = () => {
+    // Enter/exit thresholds (px). Between them we keep current state.
+    const ENTER_COMPACT = 680; // go compact below this width
+    const EXIT_COMPACT = 740;  // go normal above this width
+
+    let rafId = null;
+    const checkWidth = () => {
       if (!container) return;
-      const hasOverflow = container.scrollWidth > container.clientWidth + 1; // tolerance
-      setCompact(hasOverflow);
+      const w = container.clientWidth;
+      setCompact(prev => {
+        if (!prev && w < ENTER_COMPACT) return true;
+        if (prev && w > EXIT_COMPACT) return false;
+        return prev;
+      });
     };
 
-    // Initial check after a tick to ensure layout is done
-    const id = requestAnimationFrame(checkOverflow);
+    const schedule = () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(checkWidth);
+    };
 
-    // Watch size changes
+    // Initial pass after layout settles
+    schedule();
+
     let ro;
-    if (typeof ResizeObserver !== "undefined") {
-      ro = new ResizeObserver(checkOverflow);
+    if (typeof ResizeObserver !== 'undefined') {
+      ro = new ResizeObserver(schedule);
       ro.observe(container);
     } else {
-      window.addEventListener("resize", checkOverflow);
+      window.addEventListener('resize', schedule);
     }
 
     return () => {
-      cancelAnimationFrame(id);
+      if (rafId) cancelAnimationFrame(rafId);
       if (ro) ro.disconnect();
-      else window.removeEventListener("resize", checkOverflow);
+      else window.removeEventListener('resize', schedule);
     };
   }, []);
 
   // Helper to render avatars (doctors)
   const renderAvatars = (doctors) =>
     doctors.map((name, idx) => (
-      <VuiBox key={name} sx={{ display: 'inline-flex', ml: idx === 0 ? 0 : '-10px' }}>
+      <VuiBox key={name} sx={{ display: 'inline-flex', ml: idx === 0 ? 0 : '-12px' }}>
         <Tooltip title={name} placement="top" arrow>
           <VuiAvatar
             src={null}
             alt={name}
-            size="xs"
+            size="sm"
             sx={{
               border: ({ borders: { borderWidth }, palette: { dark } }) =>
                 `${borderWidth[2]} solid ${dark.focus}`,
@@ -292,7 +305,7 @@ function Projects() {
         </VuiBox>
       </VuiBox>
       {/* Content area: make table region scroll and place horizontal scrollbar at the very bottom */}
-      <VuiBox sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+  <VuiBox sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', transition: 'all 200ms ease' }}>
         <VuiBox
           ref={tableRegionRef}
           sx={{
@@ -307,9 +320,11 @@ function Projects() {
               minHeight: 0,
               overflowX: 'auto',
               overflowY: 'hidden',
+              // smooth width changes while switching compact/normal
+              transition: 'min-width 200ms ease, width 200ms ease',
             },
-            '& .MuiTableContainer-root table': { minWidth: compact ? 380 : 650 },
-            '& table': { minWidth: compact ? 380 : 650 },
+            '& .MuiTableContainer-root table': { minWidth: compact ? 420 : 720, transition: 'min-width 200ms ease' },
+            '& table': { minWidth: compact ? 420 : 720, transition: 'min-width 200ms ease' },
             // Horizontal scrollbar styling
             '& .MuiTableContainer-root::-webkit-scrollbar': { height: 8, background: 'transparent' },
             '& .MuiTableContainer-root::-webkit-scrollbar-thumb': { background: 'rgba(255,255,255,0.13)', borderRadius: 6 },
@@ -319,11 +334,13 @@ function Projects() {
             "& th": {
               borderBottom: ({ borders: { borderWidth }, palette: { grey } }) =>
                 `${borderWidth[1]} solid ${grey[700]}`,
+              transition: 'padding 150ms ease, width 150ms ease',
             },
             "& .MuiTableRow-root:not(:last-child)": {
               "& td": {
                 borderBottom: ({ borders: { borderWidth }, palette: { grey } }) =>
                   `${borderWidth[1]} solid ${grey[700]}`,
+                transition: 'padding 150ms ease, width 150ms ease',
               },
             },
             // visually tighten first column spacing when compact
@@ -332,8 +349,8 @@ function Projects() {
               '& th:first-of-type > div': { whiteSpace: 'nowrap' },
               // Tighten Doctor column right padding
               '& th:nth-of-type(2), & td:nth-of-type(2)': {
-                paddingRight: '8px !important',
-                minWidth: 72,
+                paddingRight: '6px !important',
+                minWidth: 96,
               },
               // Bill column: center and nudge slightly right with balanced padding
               '& th:nth-of-type(3), & td:nth-of-type(3)': {
