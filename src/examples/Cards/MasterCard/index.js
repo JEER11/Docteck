@@ -336,16 +336,16 @@ function MasterCardStack({ cards, setCards, onAdd, onEdit, onDelete }) {
   {cards.map((card, idx) => {
     const isActive = idx === activeIndex;
         const depth = Math.min(idx, MAX_PEEKS); // 0..3
-  // Darken progressively by depth so each lower card is distinguishable
-  const dim = isActive ? 1 : [1, 0.94, 0.88, 0.82][depth] || 0.82;
-  const sat = isActive ? 1 : [1, 0.95, 0.90, 0.86][depth] || 0.86;
+  // Darken progressively by depth so each lower card is distinguishable (more contrast)
+  const dim = isActive ? 1 : [1, 0.92, 0.84, 0.76][depth] || 0.76;
+  const sat = isActive ? 1 : [1, 0.94, 0.88, 0.82][depth] || 0.82;
         const scale = isActive ? 1 : [1, 0.997, 0.994, 0.991][depth] || 0.991;
         const boxShadow = isActive
           ? '0 10px 24px rgba(15,22,60,0.35)'
           : ['0 8px 18px rgba(5,8,28,0.55)', '0 7px 16px rgba(5,8,28,0.6)', '0 6px 14px rgba(5,8,28,0.62)'][depth-1] || '0 6px 14px rgba(5,8,28,0.6)';
   // Depth-scaled dark gradient (darker the lower the card)
-  const overlayTopA = 0.06 + depth * 0.04;    // 0.06, 0.10, 0.14, 0.18
-  const overlayBottomA = 0.18 + depth * 0.10; // 0.18, 0.28, 0.38, 0.48
+  const overlayTopA = 0.10 + depth * 0.06;    // 0.10, 0.16, 0.22, 0.28
+  const overlayBottomA = 0.24 + depth * 0.12; // 0.24, 0.36, 0.48, 0.60
         return (
           <div
             key={idx}
@@ -356,7 +356,7 @@ function MasterCardStack({ cards, setCards, onAdd, onEdit, onDelete }) {
               width: "100%",
               zIndex: isActive ? cards.length + 1 : idx,
       filter: isActive ? undefined : `brightness(${dim}) saturate(${sat})`,
-  opacity: isActive ? 1 : 0.95 - depth * 0.05,
+  opacity: isActive ? 1 : 0.96 - depth * 0.05,
               cursor: isActive ? "default" : "pointer",
               transform: `scale(${scale})`,
               transformOrigin: 'top center',
@@ -374,7 +374,7 @@ function MasterCardStack({ cards, setCards, onAdd, onEdit, onDelete }) {
               onEdit={handleEdit}
               onDelete={handleDelete}
               canAdd={cards.length < MAX_CARDS && idx === activeIndex}
-        overlayOpacity={isActive ? 0.26 : 0.12 + depth * 0.04}
+              overlayOpacity={isActive ? 0.26 : 0.14 + depth * 0.06}
             />
     {!isActive && (
               <div
