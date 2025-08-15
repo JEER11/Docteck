@@ -8,6 +8,11 @@ import DialogActions from "@mui/material/DialogActions";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import Jelly1 from "assets/images/Jelly1.jpg";
+import Jelly2 from "assets/images/Jelly2.jpg";
+import JellyBack from "assets/images/Jellybackg.jpg";
+import Watercard from "assets/images/watercard.png";
+import Sunset from "assets/images/sunset.png";
+import AssistanceBack from "assets/images/AssistanceBack.jpeg";
 // Vision UI Dashboard React components
 import VuiBox from "components/VuiBox";
 import VuiTypography from "components/VuiTypography";
@@ -15,24 +20,33 @@ import PropTypes from "prop-types";
 import { FiEdit2, FiPlus } from "react-icons/fi";
 import React, { useState } from "react";
 
-function MasterCard({ insuranceName, memberName, memberId, monthlyBill, onAdd, onEdit, onDelete, canAdd = true, overlayOpacity = 0.35 }) {
+function MasterCard({ insuranceName, memberName, memberId, monthlyBill, onAdd, onEdit, onDelete, canAdd = true, overlayOpacity = 0.35, backgroundSrc }) {
   const [openAdd, setOpenAdd] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
   const [form, setForm] = useState({
     insuranceName: "",
     memberName: "",
     memberId: "",
-    monthlyBill: ""
+    monthlyBill: "",
+    backgroundSrc: Jelly1
   });
+  const BG_OPTIONS = [
+    { label: "Jelly 1", src: Jelly1 },
+    { label: "Jelly 2", src: Jelly2 },
+    { label: "Water", src: Watercard },
+    { label: "Sunset", src: Sunset },
+    { label: "Assistance", src: AssistanceBack },
+    { label: "Jelly Back", src: JellyBack },
+  ];
 
   const handleAddClick = (e) => {
     e.stopPropagation();
-    setForm({ insuranceName: "", memberName: "", memberId: "", monthlyBill: "" });
+  setForm({ insuranceName: "", memberName: "", memberId: "", monthlyBill: "", backgroundSrc: Jelly1 });
     setOpenAdd(true);
   };
   const handleEditClick = (e) => {
     e.stopPropagation();
-    setForm({ insuranceName, memberName, memberId, monthlyBill });
+  setForm({ insuranceName, memberName, memberId, monthlyBill, backgroundSrc: backgroundSrc || Jelly1 });
     setOpenEdit(true);
   };
   const handleClose = (e) => {
@@ -97,7 +111,7 @@ function MasterCard({ insuranceName, memberName, memberId, monthlyBill, onAdd, o
     <>
       <Card sx={{
         position: "relative",
-        background: `url('${Jelly1}')`,
+        background: `url('${backgroundSrc || Jelly1}')`,
         backgroundSize: "cover",
         backgroundRepeat: "no-repeat",
         backgroundPosition: "center",
@@ -234,6 +248,17 @@ function MasterCard({ insuranceName, memberName, memberId, monthlyBill, onAdd, o
           <TextField label="Member Name" name="memberName" value={form.memberName} onChange={handleFormChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 1 }} />
           <TextField label="Member ID" name="memberId" value={form.memberId} onChange={handleFormChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 1 }} />
           <TextField label="Monthly Bill ($)" name="monthlyBill" value={form.monthlyBill} onChange={handleFormChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 1 }} />
+          {/* Background chooser */}
+          <VuiTypography variant="button" color="white" sx={{ opacity: 0.8, mt: 1 }}>Background</VuiTypography>
+          <VuiBox sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+            {BG_OPTIONS.map((opt, i) => (
+              <VuiBox key={i} onClick={() => setForm((f)=>({...f, backgroundSrc: opt.src}))} sx={{
+                width: 64, height: 40, borderRadius: 1, overflow: 'hidden', cursor: 'pointer',
+                backgroundImage: `url(${opt.src})`, backgroundSize: 'cover', backgroundPosition: 'center',
+                outline: form.backgroundSrc === opt.src ? '2px solid #6a6afc' : '1px solid rgba(255,255,255,0.2)'
+              }} />
+            ))}
+          </VuiBox>
         </DialogContent>
         <DialogActions sx={{ background: 'transparent', px: 2, pb: 2, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
           <Button onClick={handleClose} sx={{ color: '#bfc6e0' }}>Cancel</Button>
@@ -257,6 +282,17 @@ function MasterCard({ insuranceName, memberName, memberId, monthlyBill, onAdd, o
           <TextField label="Member Name" name="memberName" value={form.memberName} onChange={handleFormChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 1 }} />
           <TextField label="Member ID" name="memberId" value={form.memberId} onChange={handleFormChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 1 }} />
           <TextField label="Monthly Bill ($)" name="monthlyBill" value={form.monthlyBill} onChange={handleFormChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 1 }} />
+          {/* Background chooser */}
+          <VuiTypography variant="button" color="white" sx={{ opacity: 0.8, mt: 1 }}>Background</VuiTypography>
+          <VuiBox sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+            {BG_OPTIONS.map((opt, i) => (
+              <VuiBox key={i} onClick={() => setForm((f)=>({...f, backgroundSrc: opt.src}))} sx={{
+                width: 64, height: 40, borderRadius: 1, overflow: 'hidden', cursor: 'pointer',
+                backgroundImage: `url(${opt.src})`, backgroundSize: 'cover', backgroundPosition: 'center',
+                outline: form.backgroundSrc === opt.src ? '2px solid #6a6afc' : '1px solid rgba(255,255,255,0.2)'
+              }} />
+            ))}
+          </VuiBox>
         </DialogContent>
         <DialogActions sx={{ background: 'transparent', px: 2, pb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Button onClick={handleDelete} color="error" variant="outlined" sx={{ borderColor: '#e57373', color: '#e57373', fontWeight: 600 }}>Delete</Button>
@@ -281,6 +317,7 @@ MasterCard.defaultProps = {
   onDelete: () => {},
   canAdd: true,
   overlayOpacity: 0.35,
+  backgroundSrc: Jelly1,
 };
 
 // Typechecking props for the MasterCard
@@ -294,6 +331,7 @@ MasterCard.propTypes = {
   onDelete: PropTypes.func,
   canAdd: PropTypes.bool,
   overlayOpacity: PropTypes.number,
+  backgroundSrc: PropTypes.string,
 };
 
 function MasterCardStack({ cards, setCards, onAdd, onEdit, onDelete }) {
@@ -306,9 +344,9 @@ function MasterCardStack({ cards, setCards, onAdd, onEdit, onDelete }) {
       // Soft guard; UI hides add button anyway
       return;
     }
-    const newCards = [...cards, form];
-    setCards(newCards);
-    setActiveIndex(newCards.length - 1); // Show the new card on top
+  const newCards = [...cards, form];
+  setCards(newCards);
+  // Keep current active card on top; do not reorder
     if (onAdd) onAdd(form);
   };
 
@@ -329,7 +367,7 @@ function MasterCardStack({ cards, setCards, onAdd, onEdit, onDelete }) {
 
   // Show all cards stacked, each peeking out a bit more
   const CARD_HEIGHT = 220; // base height approximation
-  const PEEK_OFFSET = 18;  // slightly larger peek for clearer bottom separation
+  const PEEK_OFFSET = 22;  // larger peek for clearer bottom separation
   const MAX_PEEKS = 3;     // show up to 3 peeks (cards 2,3,4)
   return (
     <div style={{ position: "relative", width: "100%", minHeight: CARD_HEIGHT + PEEK_OFFSET * Math.min(Math.max(cards.length - 1, 0), MAX_PEEKS) }}>
@@ -349,6 +387,7 @@ function MasterCardStack({ cards, setCards, onAdd, onEdit, onDelete }) {
   // Bottom separator band to emphasize visible peeks
   const bottomBandTopA = 0.20 + depth * 0.10;     // 0.20, 0.30, 0.40, 0.50
   const bottomBandBottomA = 0.40 + depth * 0.14;  // 0.40, 0.54, 0.68, 0.82
+  const bottomBandH = 18; // band height in px
         return (
           <div
             key={idx}
@@ -360,7 +399,7 @@ function MasterCardStack({ cards, setCards, onAdd, onEdit, onDelete }) {
               zIndex: isActive ? cards.length + 1 : idx,
       filter: isActive ? undefined : `brightness(${dim}) saturate(${sat})`,
   opacity: isActive ? 1 : 0.96 - depth * 0.05,
-              cursor: isActive ? "default" : "pointer",
+              cursor: isActive ? "default" : "default",
               transform: `scale(${scale})`,
               transformOrigin: 'top center',
               boxShadow,
@@ -369,7 +408,8 @@ function MasterCardStack({ cards, setCards, onAdd, onEdit, onDelete }) {
               willChange: 'transform, filter, top',
               pointerEvents: isActive ? "auto" : "auto",
             }}
-            onClick={() => { if (!isActive) setActiveIndex(idx); }}
+            // Disable click-to-reorder; keep stack order fixed
+            onClick={() => { /* no-op */ }}
           >
             <MasterCard
               {...card}
@@ -378,6 +418,7 @@ function MasterCardStack({ cards, setCards, onAdd, onEdit, onDelete }) {
               onDelete={handleDelete}
               canAdd={cards.length < MAX_CARDS && idx === activeIndex}
               overlayOpacity={isActive ? 0.26 : 0.14 + depth * 0.06}
+              backgroundSrc={card.backgroundSrc}
             />
     {!isActive && (
               <div
@@ -399,11 +440,27 @@ function MasterCardStack({ cards, setCards, onAdd, onEdit, onDelete }) {
                   left: 8,
                   right: 8,
                   bottom: 0,
-                  height: 14,
+                  height: bottomBandH,
                   borderBottomLeftRadius: 16,
                   borderBottomRightRadius: 16,
                   background: `linear-gradient(180deg, rgba(5,8,28,0) 0%, rgba(5,8,28,${bottomBandTopA}) 70%, rgba(5,8,28,${bottomBandBottomA}) 100%)`,
                   boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)',
+                  pointerEvents: 'none'
+                }}
+              />
+            )}
+    {!isActive && (
+              <div
+                style={{
+                  position: 'absolute',
+                  left: 10,
+                  right: 10,
+                  bottom: bottomBandH - 2,
+                  height: 2,
+                  borderRadius: 2,
+                  background: 'linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.22) 15%, rgba(255,255,255,0.26) 50%, rgba(255,255,255,0.22) 85%, rgba(255,255,255,0) 100%)',
+                  mixBlendMode: 'screen',
+                  opacity: 0.9 - depth * 0.2,
                   pointerEvents: 'none'
                 }}
               />
