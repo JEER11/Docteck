@@ -35,6 +35,7 @@ import { IoBuild, IoDocumentText, IoGlobe, IoWallet } from "react-icons/io5";
 import DoctorAssistant from "components/DoctorAssistant";
 import ChatHistoryBox from "layouts/rtl/components/ChatHistoryBox";
 import TodoTracker from "components/TodoTracker";
+import getApiBase from "lib/apiBase";
 
 function Assistance() {
   const { gradients } = colors;
@@ -61,7 +62,10 @@ function Assistance() {
 
   // File upload state and handlers
   const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [analysis, setAnalysis] = useState([]); // {name,type,result,loading,error}
+  const [analyzing, setAnalyzing] = useState(false);
   const fileInputRef = useRef(null);
+  const API_URL = getApiBase();
 
   // New Chat handler
   const handleNewChat = () => {
@@ -87,9 +91,64 @@ function Assistance() {
     localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(newHistory));
   };
 
-  const handleFiles = (files) => {
+  const handleFiles = async (files) => {
     const fileArr = Array.from(files);
     setUploadedFiles((prev) => [...prev, ...fileArr]);
+    // Kick off analysis for each new file
+    setAnalyzing(true);
+    const newRows = fileArr.map(f => ({ name: f.name, type: f.type, loading: true }));
+    setAnalysis(prev => [...prev, ...newRows]);
+    for (let i = 0; i < fileArr.length; i++) {
+      const f = fileArr[i];
+      try {
+        const form = new FormData();
+        form.append('file', f, f.name);
+        const res = await fetch(`${API_URL}/api/analyze-file`, { method: 'POST', body: form });
+        const data = await res.json();
+        setAnalysis(prev => {
+          // update the first pending row for this file
+          const idx = prev.findIndex(r => r.loading && r.name === f.name);
+          const next = [...prev];
+          const resultText = buildResultSummary(f.name, data);
+          next[idx] = { name: f.name, type: data.type || f.type, loading: false, result: resultText, raw: data };
+          return next;
+        });
+      } catch (e) {
+        setAnalysis(prev => {
+          const idx = prev.findIndex(r => r.loading && r.name === f.name);
+          const next = [...prev];
+          next[idx] = { name: f.name, type: f.type, loading: false, error: 'Analysis failed' };
+          return next;
+        });
+      }
+    }
+    setAnalyzing(false);
+  };
+
+  const buildResultSummary = (name, data) => {
+    if (!data) return `${name}: No result.`;
+    if (data.type === 'image') {
+      const parts = [];
+      if (data.caption) parts.push(`Image description: ${data.caption}`);
+      if (data.ocr && data.ocr.trim()) parts.push(`Detected text (OCR):\n${data.ocr.trim().slice(0, 2000)}`);
+      return `${name} (image)\n${parts.join('\n\n')}`;
+    }
+    if (data.type === 'audio' || data.type === 'video') {
+      const kind = data.type;
+      const t = (data.transcript || '').trim();
+      return `${name} (${kind}) transcription:\n${t || 'No speech detected or unavailable.'}`;
+    }
+    if (data.type === 'text') {
+      const content = (data.content || '').slice(0, 4000);
+      return `${name} (text) preview:\n${content}`;
+    }
+    return `${name}: ${data.info || 'Unsupported file type.'}`;
+  };
+
+  const pushAnalysisToChat = () => {
+    if (!analysis.length) return;
+    const combined = analysis.map(a => a.result || `${a.name}: ${a.error || 'No result'}`).join('\n\n---\n\n');
+    setMessages(prev => [...prev, { sender: 'user', text: 'Please analyze the attached files.', ts: Date.now() }, { sender: 'ai', text: `Here are the extracted details:\n\n${combined}`, ts: Date.now() }]);
   };
 
   const handleDrop = (e) => {
@@ -228,24 +287,34 @@ function Assistance() {
                   </VuiTypography>
                   <Stack direction="row" flexWrap="wrap" spacing={2}>
                     {uploadedFiles.map((file, idx) => (
-                      <Box key={idx} sx={{ m: 1, p: 1, border: '1px solid #444', borderRadius: 2, background: '#22284a', minWidth: 100, maxWidth: 120, textAlign: 'center' }}>
+                      <Box key={idx} sx={{ m: 1, p: 1, border: '1px solid #444', borderRadius: 2, background: '#22284a', minWidth: 160, maxWidth: 220, textAlign: 'center' }}>
                         {file.type.startsWith('image') ? (
                           <img
                             src={URL.createObjectURL(file)}
                             alt={file.name}
-                            style={{ width: '100%', height: 60, objectFit: 'cover', borderRadius: 4, marginBottom: 4 }}
+                            style={{ width: '100%', height: 90, objectFit: 'cover', borderRadius: 4, marginBottom: 4 }}
                           />
                         ) : (
-                          <Box sx={{ height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#aaa' }}>
+                          <Box sx={{ height: 90, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#aaa' }}>
                             <span role="img" aria-label="file">📄</span>
                           </Box>
                         )}
                         <VuiTypography variant="caption" color="white" sx={{ wordBreak: 'break-all' }}>
                           {file.name}
                         </VuiTypography>
+                        {/* Inline result preview */}
+                        {analysis[idx] && (
+                          <VuiTypography variant="caption" color="text" sx={{ display: 'block', mt: 0.5, textAlign: 'left', whiteSpace: 'pre-wrap', maxHeight: 150, overflowY: 'auto' }}>
+                            {analysis[idx].loading ? 'Analyzing…' : (analysis[idx].error ? analysis[idx].error : (analysis[idx].result || ''))}
+                          </VuiTypography>
+                        )}
                       </Box>
                     ))}
                   </Stack>
+                  <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
+                    <button disabled={!analysis.length || analyzing} onClick={pushAnalysisToChat} style={{ background: 'rgba(25, 118, 210, 0.12)', color: '#bdbdbd', border: 'none', borderRadius: 6, padding: '6px 12px', fontWeight: 600, fontSize: 14, cursor: !analysis.length || analyzing ? 'not-allowed' : 'pointer' }}>Send analysis to chat</button>
+                    {analyzing && <span style={{ fontSize: 12, color: '#aaa' }}>Analyzing files…</span>}
+                  </Box>
                 </Box>
               )}
             </Card>

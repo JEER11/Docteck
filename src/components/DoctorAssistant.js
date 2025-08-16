@@ -118,6 +118,7 @@ function DoctorAssistant({ messages: controlledMessages, setMessages: setControl
                 fontSize: compact ? "0.9rem" : "0.95rem",
                 boxShadow: 'none',
                 wordBreak: 'break-word',
+                whiteSpace: 'pre-wrap',
               }}>
                 {msg.text}
               </Paper>
