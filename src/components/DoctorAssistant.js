@@ -47,10 +47,15 @@ function DoctorAssistant({ messages: controlledMessages, setMessages: setControl
     setInput("");
     setLoading(true);
     try {
-  const response = await fetch(`${API_URL}/api/groq-assistant`, {
+      // Prepare a trimmed chat history for the smart assistant
+      const history = [...messages, userMessage].slice(-15).map(m => ({
+        role: m.sender === 'user' ? 'user' : 'assistant',
+        content: m.text
+      }));
+      const response = await fetch(`${API_URL}/api/assistant-smart`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: input }),
+        body: JSON.stringify({ messages: history }),
       });
       const data = await response.json();
       let aiText = data.reply || "Sorry, I couldn't process that.";
