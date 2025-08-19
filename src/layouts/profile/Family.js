@@ -36,8 +36,15 @@ import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
 import SaveRoundedIcon from "@mui/icons-material/SaveRounded";
+import SearchIcon from "@mui/icons-material/Search";
+import PhoneInTalkOutlinedIcon from "@mui/icons-material/PhoneInTalkOutlined";
+import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
+import getApiBase from "../../lib/apiBase";
+import { useAppointments } from "../../context/AppointmentContext";
 
 export default function Family() {
+  const API = getApiBase();
+  const { addProvider } = useAppointments() || { addProvider: async () => null };
   // State for modals and editing
   const [openModal, setOpenModal] = useState(null); // 'parents', 'spouse', 'children', or null
   const [editIndex, setEditIndex] = useState(null);
@@ -171,6 +178,29 @@ export default function Family() {
   useEffect(() => {
     if (openPopup) setFamilyTab(0);
   }, [openPopup]);
+
+  // Real provider search state (NPI)
+  const [provQuery, setProvQuery] = useState("");
+  const [provLoc, setProvLoc] = useState({ city: "", state: "", zip: "" });
+  const [provLoading, setProvLoading] = useState(false);
+  const [provResults, setProvResults] = useState([]);
+
+  const runProviderSearch = async () => {
+    setProvLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (provQuery) params.set('q', provQuery);
+      if (provLoc.city) params.set('city', provLoc.city);
+      if (provLoc.state) params.set('state', provLoc.state);
+      if (provLoc.zip) params.set('zip', provLoc.zip);
+      const r = await fetch(`${API}/api/providers/real-search?${params.toString()}`);
+      const j = await r.json();
+      setProvResults(Array.isArray(j.providers) ? j.providers : []);
+    } catch (_) {
+      setProvResults([]);
+    }
+    setProvLoading(false);
+  };
 
   // Lightweight per-member preferences/state for UI controls
   const [prefs, setPrefs] = useState({}); // key: `${section}-${index}` -> { doctor, pharmacy, primary, emergency, insurer }
@@ -474,17 +504,59 @@ export default function Family() {
                     </VuiTypography>
                     <VuiBox mb={2} sx={sectionCardSx}>
                       <Grid container spacing={1.5} alignItems="center">
-                        <Grid item xs={12} sm={9}>
-                          <TextField size="small" variant="outlined" placeholder="Search Doctor or Specialty" fullWidth sx={inputSx} />
+                        <Grid item xs={12} sm={5} md={6}>
+                          <TextField size="small" variant="outlined" placeholder="Doctor name or Specialty (e.g., cardiology)" value={provQuery} onChange={(e)=>setProvQuery(e.target.value)} fullWidth sx={inputSx} InputProps={{ startAdornment: (<InputAdornment position="start"><SearchIcon sx={{ color: '#aeb3d5' }} /></InputAdornment>) }} />
                         </Grid>
-                        <Grid item xs={12} sm={3} sx={{ display: 'flex', justifyContent: { xs: 'flex-start', sm: 'flex-end' } }}>
-                          <VuiButton size="small" color="info" sx={smallActionBtnSx}>Search</VuiButton>
+                        <Grid item xs={6} sm={3} md={2.5}>
+                          <TextField size="small" variant="outlined" placeholder="City" value={provLoc.city} onChange={(e)=>setProvLoc(v=>({...v, city:e.target.value}))} fullWidth sx={inputSx} />
+                        </Grid>
+                        <Grid item xs={3} sm={2} md={1.5}>
+                          <TextField size="small" variant="outlined" placeholder="State" value={provLoc.state} onChange={(e)=>setProvLoc(v=>({...v, state:e.target.value}))} fullWidth sx={inputSx} />
+                        </Grid>
+                        <Grid item xs={3} sm={2} md={2}>
+                          <TextField size="small" variant="outlined" placeholder="ZIP" value={provLoc.zip} onChange={(e)=>setProvLoc(v=>({...v, zip:e.target.value}))} fullWidth sx={inputSx} />
+                        </Grid>
+                        <Grid item xs={12} sm={12} md={12} sx={{ display: 'flex', justifyContent: { xs: 'flex-start', md: 'flex-end' } }}>
+                          <VuiButton size="small" color="info" sx={smallActionBtnSx} onClick={runProviderSearch} disabled={provLoading}>{provLoading? 'Searching…' : 'Search'}</VuiButton>
                         </Grid>
                       </Grid>
                     </VuiBox>
                     <VuiBox sx={sectionCardSx}>
                       <VuiTypography color="white" fontWeight="bold" mb={1} sx={{ fontSize: 18 }}>Results</VuiTypography>
-                      <VuiTypography color="text" sx={{ fontSize: 15 }}>No providers found</VuiTypography>
+                      {(!provResults || provResults.length === 0) ? (
+                        <VuiTypography color="text" sx={{ fontSize: 15 }}>No providers found</VuiTypography>
+                      ) : (
+                        <VuiBox>
+                          {provResults.slice(0,20).map((p, idx) => (
+                            <VuiBox key={p.id || idx} sx={{ ...memberRowBoxSx, mb: 1 }}>
+                              <Grid container spacing={1.25} alignItems="center">
+                                <Grid item xs={12} md={5}>
+                                  <VuiTypography color="white" sx={{ fontSize: 14, fontWeight: 700 }}>{p.name}</VuiTypography>
+                                  <VuiTypography color="text" sx={{ fontSize: 13 }}>{p.specialty || p.taxonomy || '—'}</VuiTypography>
+                                </Grid>
+                                <Grid item xs={12} md={4}>
+                                  <Stack direction="row" spacing={1} alignItems="center">
+                                    <PlaceOutlinedIcon sx={{ fontSize: 16, color: '#aeb3d5' }} />
+                                    <VuiTypography color="text" sx={{ fontSize: 13 }}>{p.location || [p.city,p.state].filter(Boolean).join(', ')}</VuiTypography>
+                                  </Stack>
+                                  {p.phone && (
+                                    <Stack direction="row" spacing={1} alignItems="center">
+                                      <PhoneInTalkOutlinedIcon sx={{ fontSize: 16, color: '#aeb3d5' }} />
+                                      <VuiTypography color="text" sx={{ fontSize: 13 }}>{p.phone}</VuiTypography>
+                                    </Stack>
+                                  )}
+                                </Grid>
+                                <Grid item xs={12} md={3}>
+                                  <Stack direction="row" spacing={1} justifyContent={{ xs: 'flex-start', md: 'flex-end' }}>
+                                    <VuiButton size="small" color="info" sx={smallActionBtnSx} onClick={async ()=>{ const saved = await addProvider(p); }}>{'Save'}</VuiButton>
+                                    <VuiButton size="small" color="primary" sx={smallActionBtnSx}>Schedule</VuiButton>
+                                  </Stack>
+                                </Grid>
+                              </Grid>
+                            </VuiBox>
+                          ))}
+                        </VuiBox>
+                      )}
                     </VuiBox>
                   </>
                 )}

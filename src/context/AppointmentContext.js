@@ -72,6 +72,26 @@ export function AppointmentProvider({ children }) {
     return [];
   };
 
+  // Save a provider (e.g., from external search) and update local providers list
+  const addProvider = async (provider) => {
+    try {
+      const res = await fetch(`${API}/api/providers`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(provider)
+      });
+      const data = await res.json();
+      if (data?.ok && data.provider) {
+        setProviders(prev => {
+          const exists = prev.some(p => (p.id && p.id === data.provider.id) || (p.npi && data.provider.npi && String(p.npi) === String(data.provider.npi)));
+          return exists ? prev : [...prev, data.provider];
+        });
+        return data.provider;
+      }
+    } catch (_) {}
+    return null;
+  };
+
   const getNextAppointment = () => {
     const now = new Date();
     return appointments
@@ -88,7 +108,7 @@ export function AppointmentProvider({ children }) {
   };
 
   return (
-    <AppointmentContext.Provider value={{ appointments, addAppointment, assignProvider, removeAppointment, providers, suggestSlots, getNextAppointment, selectedDate, setSelectedDate, getAppointmentsForDate }}>
+    <AppointmentContext.Provider value={{ appointments, addAppointment, assignProvider, removeAppointment, providers, suggestSlots, addProvider, getNextAppointment, selectedDate, setSelectedDate, getAppointmentsForDate }}>
       {children}
     </AppointmentContext.Provider>
   );

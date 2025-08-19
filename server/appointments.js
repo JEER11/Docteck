@@ -2,6 +2,7 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const { google } = require('googleapis');
+const fetch = require('node-fetch');
 
 const router = express.Router();
 
@@ -75,6 +76,100 @@ router.get('/api/providers/search', (req, res) => {
   const providers = readJsonSafe(providersPath, []);
   const filtered = providers.filter(p => p.name.toLowerCase().includes(q) || (p.specialty||'').toLowerCase().includes(q));
   res.json({ ok: true, providers: filtered });
+});
+
+// Save a provider into local store (e.g., from external search)
+router.post('/api/providers', (req, res) => {
+  try {
+    const incoming = req.body || {};
+    const providers = readJsonSafe(providersPath, []);
+    // De-dupe by NPI if provided
+    if (incoming.npi) {
+      const existing = providers.find(p => String(p.npi) === String(incoming.npi));
+      if (existing) return res.json({ ok: true, provider: existing, saved: false });
+    }
+    const id = incoming.id || (incoming.npi ? `npi-${incoming.npi}` : 'p_' + Date.now().toString(36));
+    const record = {
+      id,
+      name: incoming.name || 'Provider',
+      specialty: incoming.specialty || incoming.taxonomy || '',
+      location: incoming.location || '',
+      phone: incoming.phone || '',
+      npi: incoming.npi || null,
+      source: incoming.source || 'local',
+      address: incoming.address || undefined,
+      city: incoming.city || undefined,
+      state: incoming.state || undefined,
+      postal_code: incoming.postal_code || undefined,
+    };
+    providers.push(record);
+    writeJsonSafe(providersPath, providers);
+    res.json({ ok: true, provider: record, saved: true });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: 'save_failed' });
+  }
+});
+
+// Real US provider search via NPI Registry (public API)
+// Docs: https://npiregistry.cms.hhs.gov/api/
+router.get('/api/providers/real-search', async (req, res) => {
+  try {
+    const { q = '', city = '', state = '', zip = '', taxonomy = '', limit = '20' } = req.query || {};
+    let first = '', last = '', taxonomyDesc = taxonomy;
+    const trimmed = String(q || '').trim();
+    if (trimmed.includes(' ')) {
+      const parts = trimmed.split(/\s+/);
+      first = parts[0];
+      last = parts.slice(1).join(' ');
+    } else if (trimmed) {
+      taxonomyDesc = trimmed; // treat single word as specialty
+    }
+    const params = new URLSearchParams();
+    params.set('version', '2.1');
+    params.set('limit', String(Math.min(Number(limit) || 20, 50)));
+    // Prefer individual providers
+    // params.set('enumeration_type', 'NPI-1'); // allow both types by default
+    if (first) params.set('first_name', first);
+    if (last) params.set('last_name', last);
+    if (taxonomyDesc) params.set('taxonomy_description', taxonomyDesc);
+    if (city) params.set('city', city);
+    if (state) params.set('state', state);
+    if (zip) params.set('postal_code', zip);
+    params.set('country_code', 'US');
+    const url = `https://npiregistry.cms.hhs.gov/api/?${params.toString()}`;
+    const resp = await fetch(url, { headers: { 'User-Agent': 'Docteck/1.0 (+https://docteck.local)' } });
+    if (!resp.ok) {
+      return res.status(502).json({ ok: false, error: 'upstream_error' });
+    }
+    const data = await resp.json();
+    const results = (data.results || []).map(r => {
+      const basic = r.basic || {};
+      const tax = Array.isArray(r.taxonomies) && r.taxonomies.length ? r.taxonomies[0] : {};
+      const addresses = Array.isArray(r.addresses) ? r.addresses : [];
+      const loc = addresses.find(a => a.address_purpose === 'LOCATION') || addresses[0] || {};
+      const name = [basic.first_name, basic.last_name].filter(Boolean).join(' ') || basic.organization_name || basic.name || '';
+      const address1 = [loc.address_1, loc.address_2].filter(Boolean).join(', ');
+      const location = [address1, [loc.city, loc.state].filter(Boolean).join(', '), loc.postal_code].filter(Boolean).join(' • ');
+      return {
+        id: `npi-${r.number}`,
+        npi: r.number,
+        name,
+        specialty: tax.desc || '',
+        taxonomy: tax.desc || '',
+        phone: loc.telephone_number || '',
+        address: address1 || undefined,
+        city: loc.city || undefined,
+        state: loc.state || undefined,
+        postal_code: loc.postal_code || undefined,
+        location,
+        source: 'npi',
+      };
+    });
+    res.json({ ok: true, providers: results, total: data.result_count || results.length, source: 'npi' });
+  } catch (e) {
+    console.error('real-search failed', e);
+    res.status(500).json({ ok: false, error: 'search_failed' });
+  }
 });
 
 // Suggest available slots for provider on/after a date

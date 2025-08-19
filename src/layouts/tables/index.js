@@ -40,11 +40,14 @@ import { dateFnsLocalizer } from "react-big-calendar";
 // Reuse billing widgets
 import Invoices from "layouts/billing/components/Invoices";
 import BillingInformation from "layouts/billing/components/BillingInformation";
+import SearchIcon from "@mui/icons-material/Search";
+import getApiBase from "../../lib/apiBase";
 
 function Tables() {
+  const API = getApiBase();
   const { columns, rows } = authorsTableData;
   const { projects, addProject, updateProject, removeProject } = useProjects();
-  const { appointments, addAppointment } = useAppointments();
+  const { appointments, addAppointment, addProvider } = useAppointments();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editId, setEditId] = useState(null);
   const [form, setForm] = useState({ hospital: "", doctors: "", bill: "", completion: 0 });
@@ -63,6 +66,31 @@ function Tables() {
     date: ""
   });
   const [editApptIdx, setEditApptIdx] = useState(null);
+
+  // Provider search (HUB box)
+  const [provQuery, setProvQuery] = useState("");
+  const [provCity, setProvCity] = useState("");
+  const [provState, setProvState] = useState("");
+  const [provZip, setProvZip] = useState("");
+  const [provLoading, setProvLoading] = useState(false);
+  const [provResults, setProvResults] = useState([]);
+  const [hubProvDialogOpen, setHubProvDialogOpen] = useState(false);
+  const runProviderSearch = async () => {
+    setProvLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (provQuery) params.set('q', provQuery);
+      if (provCity) params.set('city', provCity);
+      if (provState) params.set('state', provState);
+      if (provZip) params.set('zip', provZip);
+      const r = await fetch(`${API}/api/providers/real-search?${params.toString()}`);
+      const j = await r.json();
+      setProvResults(Array.isArray(j.providers) ? j.providers : []);
+    } catch (_) {
+      setProvResults([]);
+    }
+    setProvLoading(false);
+  };
 
   const handleOpenAdd = () => {
     setEditId(null);
@@ -395,14 +423,24 @@ function Tables() {
             <VuiTypography variant="lg" color="white">
               HUB
             </VuiTypography>
-            <Button 
-              variant="contained" 
-              color="primary" 
-              onClick={handleOpenAdd} 
-              sx={{ ml: 2, background: 'rgba(44, 50, 90, 0.65)', boxShadow: 'none', '&:hover': { background: 'rgba(44, 50, 90, 0.85)' } }}
-            >
-              Add Info
-            </Button>
+            <Box>
+              <Button 
+                variant="contained" 
+                color="info" 
+                onClick={() => setHubProvDialogOpen(true)}
+                sx={{ mr: 1.5, background: 'rgba(44, 50, 90, 0.65)', boxShadow: 'none', '&:hover': { background: 'rgba(44, 50, 90, 0.85)' } }}
+              >
+                Search Providers
+              </Button>
+              <Button 
+                variant="contained" 
+                color="primary" 
+                onClick={handleOpenAdd} 
+                sx={{ background: 'rgba(44, 50, 90, 0.65)', boxShadow: 'none', '&:hover': { background: 'rgba(44, 50, 90, 0.85)' } }}
+              >
+                Add Info
+              </Button>
+            </Box>
           </VuiBox>
           <VuiBox sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
             <VuiBox
@@ -587,6 +625,66 @@ function Tables() {
             <Button onClick={() => setApptDialogOpen(false)} sx={{ color: '#bfc6e0', mr: 1 }}>Cancel</Button>
             <Button onClick={handleApptSave} variant="contained" color="info" sx={{ borderRadius: 2, px: 3, fontWeight: 600 }}>{editApptIdx !== null ? "Save" : "Add"}</Button>
           </Box>
+        </DialogActions>
+      </Dialog>
+
+      {/* Provider Search Dialog for HUB */}
+      <Dialog
+  open={!!hubProvDialogOpen}
+  onClose={() => setHubProvDialogOpen(false)}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: {
+            background: 'rgba(34, 40, 74, 0.65)',
+            boxShadow: 24,
+            borderRadius: 4,
+            color: 'white',
+            backdropFilter: 'blur(10px)'
+          }
+        }}
+     >
+        <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 22, pb: 1.5 }}>Search Providers</DialogTitle>
+        <DialogContent sx={{ px: 2, pt: 1, pb: 2 }}>
+          <Grid container spacing={1.5} alignItems="center">
+            <Grid item xs={12} sm={6} md={6}>
+              <TextField size="small" label="Doctor or Specialty" value={provQuery} onChange={e=>setProvQuery(e.target.value)} fullWidth 
+                InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
+                InputProps={{ startAdornment: (<Box component="span" sx={{ color: '#aeb3d5', mr: 1 }}><SearchIcon fontSize="small" /></Box>) }}
+                sx={fieldSx}
+              />
+            </Grid>
+            <Grid item xs={6} sm={3} md={2}>
+              <TextField size="small" label="City" value={provCity} onChange={e=>setProvCity(e.target.value)} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={fieldSx} />
+            </Grid>
+            <Grid item xs={3} sm={2} md={1.5}>
+              <TextField size="small" label="State" value={provState} onChange={e=>setProvState(e.target.value)} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={fieldSx} />
+            </Grid>
+            <Grid item xs={3} sm={2} md={1.5}>
+              <TextField size="small" label="ZIP" value={provZip} onChange={e=>setProvZip(e.target.value)} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={fieldSx} />
+            </Grid>
+            <Grid item xs={12} sm={12} md={12}>
+              <Button variant="contained" color="info" onClick={runProviderSearch} disabled={provLoading} sx={{ borderRadius: 2, fontWeight: 600 }}>
+                {provLoading ? 'Searching…' : 'Search'}
+              </Button>
+            </Grid>
+          </Grid>
+          {provResults?.length > 0 && (
+            <Box sx={{ mt: 2, maxHeight: 260, overflowY: 'auto' }}>
+              {provResults.slice(0,20).map((p) => (
+                <Box key={p.id} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', py: 0.75 }}>
+                  <Box>
+                    <VuiTypography variant="button" color="white" fontWeight="medium">{p.name}</VuiTypography>
+                    <VuiTypography variant="caption" color="text"> {p.specialty || p.taxonomy || ''} • {(p.city && p.state) ? `${p.city}, ${p.state}` : p.location || ''}</VuiTypography>
+                  </Box>
+                  <Button size="small" color="info" variant="outlined" onClick={async ()=>{ await addProvider(p); }} sx={{ borderRadius: 2 }}>Save</Button>
+                </Box>
+              ))}
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ px: 2, pb: 2 }}>
+          <Button onClick={() => setHubProvDialogOpen(false)} sx={{ color: '#bfc6e0' }}>Close</Button>
         </DialogActions>
       </Dialog>
     </DashboardLayout>
