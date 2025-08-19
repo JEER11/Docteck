@@ -610,7 +610,7 @@ app.post('/api/assistant-smart', async (req, res) => {
           description: 'Send an email to the configured doctor address with subject and message',
           parameters: { type: 'object', properties: { subject: { type: 'string' }, message: { type: 'string' } }, required: ['subject','message'] }
         }
-      }
+      },
       {
         type: 'function',
         function: {
@@ -679,6 +679,9 @@ app.use(fileAnalysisRouter);
 
 const calendarRouter = require('./calendar');
 app.use(calendarRouter);
+
+const appointmentsRouter = require('./appointments');
+app.use(appointmentsRouter);
 
 app.listen(port, () => {
   console.log(`Doctor Assistant backend running on port ${port}`);

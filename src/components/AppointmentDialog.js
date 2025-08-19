@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -12,10 +12,12 @@ import {
   Box,
 } from "@mui/material";
 
-const doctors = ["Dr. Smith", "Dr. Johnson", "Dr. Lee"];
+import { useAppointments } from "../context/AppointmentContext";
+const doctorsFallback = ["Dr. Smith", "Dr. Johnson", "Dr. Lee"];
 const reasons = ["Consultation", "Follow-up", "Prescription", "Other"];
 
 export default function AppointmentDialog({ open, onClose, onSubmit }) {
+  const { providers, suggestSlots } = useAppointments() || { providers: [], suggestSlots: async () => [] };
   const [tab, setTab] = useState(0);
   const [form, setForm] = useState({
     title: "",
@@ -27,6 +29,20 @@ export default function AppointmentDialog({ open, onClose, onSubmit }) {
     reason: "",
     details: ""
   });
+  const [slots, setSlots] = useState([]);
+
+  useEffect(() => {
+    // Suggest slots when doctor and date are set
+    (async () => {
+      const prov = (providers || []).find(p => p.name === form.doctor);
+      if (prov && form.date) {
+        const s = await suggestSlots(prov.id, form.date);
+        setSlots(s);
+      } else {
+        setSlots([]);
+      }
+    })();
+  }, [form.doctor, form.date, providers, suggestSlots]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -35,7 +51,8 @@ export default function AppointmentDialog({ open, onClose, onSubmit }) {
   const handleTab = (_, v) => setTab(v);
 
   const handleSubmit = () => {
-    onSubmit(form);
+    const providerId = (providers || []).find(p => p.name === form.doctor)?.id || null;
+    onSubmit({ ...form, providerId });
     setForm({
       title: "",
       date: "",
@@ -90,10 +107,15 @@ export default function AppointmentDialog({ open, onClose, onSubmit }) {
             </Box>
             <TextField label="Doctor" name="doctor" value={form.doctor} onChange={handleChange} select fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 0.5, color: 'white', '& .MuiSelect-select': { color: '#e7e9f3', py: 1, background: 'transparent' } }}>
               <MenuItem value=""><em>Select Doctor</em></MenuItem>
-              {doctors.map((d) => (
+              {(providers?.length ? providers.map(p => p.name) : doctorsFallback).map((d) => (
                 <MenuItem value={d} key={d}>{d}</MenuItem>
               ))}
             </TextField>
+            {!!slots.length && (
+              <Box sx={{ fontSize: 12, color: '#bfc6e0', mb: 0.5 }}>
+                Suggested: {slots.slice(0,4).map(s => new Date(s.start).toLocaleString()).join('  •  ')}
+              </Box>
+            )}
             <TextField label="Location" name="location" value={form.location} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 0.5 }} />
             <TextField label="Reason" name="reason" value={form.reason} onChange={handleChange} select fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 0.5, color: 'white', '& .MuiSelect-select': { color: '#e7e9f3', py: 1, background: 'transparent' } }}>
               <MenuItem value=""><em>Select Reason</em></MenuItem>
@@ -109,7 +131,7 @@ export default function AppointmentDialog({ open, onClose, onSubmit }) {
             <TextField label="Time" name="from" type="time" value={form.from} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 0.5 }} />
             <TextField label="Doctor" name="doctor" value={form.doctor} onChange={handleChange} select fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 0.5, color: 'white', '& .MuiSelect-select': { color: '#e7e9f3', py: 1, background: 'transparent' } }}>
               <MenuItem value=""><em>Select Doctor</em></MenuItem>
-              {doctors.map((d) => (
+              {(providers?.length ? providers.map(p => p.name) : doctorsFallback).map((d) => (
                 <MenuItem value={d} key={d}>{d}</MenuItem>
               ))}
             </TextField>

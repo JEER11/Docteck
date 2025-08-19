@@ -55,6 +55,7 @@ function AppointmentCalendar() {
       end,
       allDay: false,
       doctor: form.doctor,
+      providerId: form.providerId || null,
       location: form.location,
       reason: form.reason,
       details: form.details
