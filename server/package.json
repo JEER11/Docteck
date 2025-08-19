@@ -19,7 +19,8 @@
     "nodemailer": "^6.9.13",
     "openai": "^4.38.2",
     "tesseract.js": "^4.0.2",
-    "vision-ui-dashboard-react": "file:.."
+    "vision-ui-dashboard-react": "file:..",
+    "wikijs": "^6.4.1"
   },
   "scripts": {
     "start": "node index.js"

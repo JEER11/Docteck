@@ -447,10 +447,23 @@ const cheerio = require('cheerio');
 const dayjs = require('dayjs');
 const chrono = require('chrono-node');
 const { google } = require('googleapis');
+const wiki = require('wikijs').default;
 const calendarTokenPath = path.join(__dirname, 'uploads', 'calendar-tokens.json');
 
 function readJsonSafe(p) { try { if (!fs.existsSync(p)) return {}; return JSON.parse(fs.readFileSync(p, 'utf-8')); } catch (_) { return {}; } }
 function getUid(req) { return (req.headers['x-user-id'] || req.query.uid || 'demo-user'); }
+// Simple in-memory short-term memory per user
+const shortMemory = new Map(); // uid -> [{role, content, ts}]
+function remember(uid, role, content) {
+  const arr = shortMemory.get(uid) || [];
+  arr.push({ role, content, ts: Date.now() });
+  // keep last 20 turns
+  while (arr.length > 40) arr.shift();
+  shortMemory.set(uid, arr);
+}
+function recall(uid) {
+  return shortMemory.get(uid) || [];
+}
 
 async function webSearch(query) {
   const url = 'https://duckduckgo.com/html/?q=' + encodeURIComponent(query);
@@ -464,6 +477,16 @@ async function webSearch(query) {
     if (title && link) results.push({ title, url: link, snippet });
   });
   return results;
+}
+
+async function wikiSummary(query) {
+  try {
+    const page = await wiki({ apiUrl: 'https://en.wikipedia.org/w/api.php' }).page(query);
+    const summary = await page.summary();
+    return summary.slice(0, 1200);
+  } catch (_) {
+    return '';
+  }
 }
 
 async function webFetchAndSummarize(url, openaiClient) {
@@ -588,12 +611,22 @@ app.post('/api/assistant-smart', async (req, res) => {
           parameters: { type: 'object', properties: { subject: { type: 'string' }, message: { type: 'string' } }, required: ['subject','message'] }
         }
       }
+      {
+        type: 'function',
+        function: {
+          name: 'wiki_summary',
+          description: 'Get a concise summary from Wikipedia for general knowledge questions',
+          parameters: { type: 'object', properties: { query: { type: 'string' } }, required: ['query'] }
+        }
+      }
     ];
     const sys = {
       role: 'system',
-      content: 'You are a concise, action-oriented medical assistant. When users ask to schedule or add appointments, call create_event with a clear title and time. Offer to connect Google Calendar if not connected. For general questions, reply briefly. Use web_search/web_fetch sparingly for current info. For contacting a doctor, call contact_doctor. Keep replies to 2-4 sentences.'
+      content: 'You are a concise, action-oriented medical assistant with broad general knowledge. You specialize in medical topics but can answer other queries succinctly. Maintain short-term memory across turns. When users ask to schedule appointments, call create_event. If they ask general “what is X”, use wiki_summary. Use web_search/web_fetch for current info. For contacting a doctor, call contact_doctor. Keep replies to 2-4 sentences.'
     };
-    const first = await openai.chat.completions.create({ model: 'gpt-4o-mini', messages: [sys, ...messages], tools, tool_choice: 'auto', temperature: 0.4, max_tokens: 250 });
+    // Merge short memory with latest messages
+    const memory = recall(uid).slice(-10);
+    const first = await openai.chat.completions.create({ model: 'gpt-4o-mini', messages: [sys, ...memory, ...messages], tools, tool_choice: 'auto', temperature: 0.4, max_tokens: 250 });
     const msg = first.choices[0].message;
     if (msg.tool_calls && msg.tool_calls.length > 0) {
       const call = msg.tool_calls[0];
@@ -604,6 +637,7 @@ app.post('/api/assistant-smart', async (req, res) => {
       else if (name === 'web_fetch') toolResult = await webFetchAndSummarize(args.url || '', openai);
       else if (name === 'create_event') toolResult = await createCalendarEvent(uid, args);
       else if (name === 'list_upcoming') toolResult = await listUpcoming(uid);
+      else if (name === 'wiki_summary') toolResult = await wikiSummary(args.query || '');
       else if (name === 'contact_doctor') {
         try {
           const transporter = await getTransport();
@@ -625,9 +659,15 @@ app.post('/api/assistant-smart', async (req, res) => {
         temperature: 0.4,
         max_tokens: 250,
       });
-      return res.json({ reply: follow.choices[0].message.content, tool: { name, result: toolResult } });
+      const replyText = follow.choices[0].message.content;
+      remember(uid, 'user', messages[messages.length - 1]?.content || '');
+      remember(uid, 'assistant', replyText);
+      return res.json({ reply: replyText, tool: { name, result: toolResult } });
     }
-    return res.json({ reply: msg.content });
+    const replyText = msg.content;
+    remember(uid, 'user', messages[messages.length - 1]?.content || '');
+    remember(uid, 'assistant', replyText);
+    return res.json({ reply: replyText });
   } catch (e) {
     console.error('assistant-smart error', e);
     return res.status(500).json({ error: 'assistant_error' });
