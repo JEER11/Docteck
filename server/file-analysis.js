@@ -5,6 +5,19 @@ const path = require('path');
 const { OpenAI } = require('openai');
 const Tesseract = require('tesseract.js');
 const ffmpeg = require('fluent-ffmpeg');
+// Use packaged ffmpeg/ffprobe binaries for portability
+try {
+  const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg');
+  if (ffmpegInstaller && ffmpegInstaller.path) {
+    ffmpeg.setFfmpegPath(ffmpegInstaller.path);
+  }
+} catch (_) { /* optional */ }
+try {
+  const ffprobeInstaller = require('@ffprobe-installer/ffprobe');
+  if (ffprobeInstaller && ffprobeInstaller.path) {
+    ffmpeg.setFfprobePath(ffprobeInstaller.path);
+  }
+} catch (_) { /* optional */ }
 const { exec } = require('child_process');
 require('dotenv').config();
 
