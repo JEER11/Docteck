@@ -33,111 +33,11 @@ function ReferralTracking() {
 		'& .MuiInputBase-input': { color: '#e7e9f3', fontSize: 14, py: 1, background: 'transparent' },
 	};
 
-	// Draggable with persistence (page-anchored)
-	const STORAGE_KEY = 'todos-track-pos';
-		const rootRef = useRef(null);
-		const placeholderRef = useRef(null);
+	// Render the card as a normal, static element in the layout (no floating/draggable behavior)
+	const rootRef = useRef(null);
 	const [floating, setFloating] = useState(false);
 	const [dragging, setDragging] = useState(false);
-	const [pos, setPos] = useState({ x: 0, y: 0 }); // viewport coords
-	const posRef = useRef(pos);
-	const [absPos, setAbsPos] = useState(null);     // page coords
-	const [boxSize, setBoxSize] = useState(null);
-	const snapThreshold = 80; // px tolerance for snapping to placeholder edges
-
-	useEffect(() => { posRef.current = pos; }, [pos]);
-
-		// Restore saved absolute position on mount and align with baseline if slightly off
-	useEffect(() => {
-		try {
-			const saved = localStorage.getItem(STORAGE_KEY);
-			if (saved) {
-				const { ax, ay, w, h } = JSON.parse(saved);
-				const maxX = Math.max(8, (document.documentElement.scrollWidth || window.innerWidth) - (w || 0) - 8);
-				const maxY = Math.max(8, (document.documentElement.scrollHeight || window.innerHeight) - (h || 0) - 8);
-				let finalAX = Math.max(8, Math.min(ax || 8, maxX));
-				let finalAY = Math.max(8, Math.min(ay || 8, maxY));
-				// Snap to placeholder top/left for even spacing with Weather
-				const phRect = placeholderRef.current?.getBoundingClientRect();
-				if (phRect) {
-					const baselineTop = phRect.top + window.scrollY;
-					const baselineLeft = phRect.left + window.scrollX;
-					const dy = finalAY - baselineTop;
-					if (dy > 4 && dy < snapThreshold) finalAY = baselineTop;
-					if (Math.abs(finalAX - baselineLeft) < snapThreshold) finalAX = baselineLeft;
-				}
-				setAbsPos({ x: finalAX, y: finalAY });
-				setBoxSize({ w, h });
-				setPos({ x: finalAX - window.scrollX, y: finalAY - window.scrollY });
-				setFloating(true);
-			}
-		} catch {}
-
-		const onResize = () => {
-			if (!boxSize || !absPos) return;
-			const maxX = Math.max(8, (document.documentElement.scrollWidth || window.innerWidth) - boxSize.w - 8);
-			const maxY = Math.max(8, (document.documentElement.scrollHeight || window.innerHeight) - boxSize.h - 8);
-			setAbsPos(p => {
-				const nx = Math.max(8, Math.min(p.x, maxX));
-				const ny = Math.max(8, Math.min(p.y, maxY));
-				setPos({ x: nx - window.scrollX, y: ny - window.scrollY });
-				return { x: nx, y: ny };
-			});
-		};
-		window.addEventListener('resize', onResize);
-		return () => window.removeEventListener('resize', onResize);
-	}, [boxSize, absPos]);
-
-	// Sync position on scroll
-	useEffect(() => {
-		const onScroll = () => {
-			if (!floating || !absPos) return;
-			setPos({ x: absPos.x - window.scrollX, y: absPos.y - window.scrollY });
-		};
-		window.addEventListener('scroll', onScroll, { passive: true });
-		return () => window.removeEventListener('scroll', onScroll);
-	}, [floating, absPos]);
-
-	const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
-
-	const beginDrag = (e) => {
-		e.preventDefault();
-		const el = rootRef.current;
-		if (!el) return;
-		const rect = el.getBoundingClientRect();
-		setBoxSize({ w: rect.width, h: rect.height });
-		setFloating(true);
-		setDragging(true);
-		const dx = e.clientX - rect.left;
-		const dy = e.clientY - rect.top;
-		const onMove = (ev) => {
-			const x = clamp(ev.clientX - dx, 8, window.innerWidth - rect.width - 8);
-			const y = clamp(ev.clientY - dy, 8, window.innerHeight - rect.height - 8);
-			setPos({ x, y });
-		};
-		const onUp = () => {
-			setDragging(false);
-			window.removeEventListener('mousemove', onMove);
-			window.removeEventListener('mouseup', onUp);
-			const latest = posRef.current;
-			let ax = clamp(latest.x + window.scrollX, 8, (document.documentElement.scrollWidth || window.innerWidth) - rect.width - 8);
-			let ay = clamp(latest.y + window.scrollY, 8, (document.documentElement.scrollHeight || window.innerHeight) - rect.height - 8);
-			// Snap to placeholder's left/top for consistent spacing with adjacent cards
-			const phRect = placeholderRef.current?.getBoundingClientRect();
-			if (phRect) {
-				const baselineLeft = phRect.left + window.scrollX;
-				if (Math.abs(ax - baselineLeft) < snapThreshold) ax = baselineLeft;
-				const baselineTop = phRect.top + window.scrollY;
-				if (ay > baselineTop && ay - baselineTop < snapThreshold) ay = baselineTop;
-			}
-			setAbsPos({ x: ax, y: ay });
-			setPos({ x: ax - window.scrollX, y: ay - window.scrollY });
-			setFloating(true);
-			localStorage.setItem(STORAGE_KEY, JSON.stringify({ ax, ay, w: rect.width, h: rect.height }));
-		};
-		window.addEventListener('mousemove', onMove);
-		window.addEventListener('mouseup', onUp);
-	};
+	const beginDrag = () => {};
 
 	const handleAddTodo = () => {
 		if (!newLabel.trim()) return;
@@ -150,28 +50,12 @@ function ReferralTracking() {
 
 		return (
 			<>
-				{/* Placeholder to preserve layout and provide a baseline for alignment */}
-				<VuiBox
-					ref={placeholderRef}
-					sx={{
-						height: floating ? (boxSize?.h || 340) : 0,
-						m: 0,
-						p: 0,
-						visibility: 'hidden'
-					}}
-				/>
 				<VuiBox ref={rootRef}
 			sx={{
-				position: floating ? 'fixed' : 'static',
-				top: floating ? pos.y : 'unset',
-				left: floating ? pos.x : 'unset',
-				width: floating && boxSize ? boxSize.w : 'auto',
-				zIndex: floating ? 1400 : 'auto',
-				cursor: dragging ? 'grabbing' : 'default',
-				userSelect: dragging ? 'none' : 'auto',
-				transition: dragging ? 'none' : 'top 120ms ease, left 120ms ease',
+				position: 'static',
+				width: 'auto'
 			}}
-		>
+			>
 			<Card
 				sx={{
 					height: { xs: 300, md: 340 },
@@ -199,9 +83,9 @@ function ReferralTracking() {
 						<IconButton size='small' aria-label='Add to do' onClick={() => setDialogOpen(true)} sx={{ ml: 1, color: info.main, background: 'rgba(165,138,255,0.08)', borderRadius: 2, p: 0.5, '&:hover': { background: 'rgba(165,138,255,0.18)' } }}>
 							<FaPlus size={16} />
 						</IconButton>
-						<VuiBox display='flex' justifyContent='center' alignItems='center' bgColor='#22234B' sx={{ width: '37px', height: '37px', cursor: 'grab', borderRadius: '12px', ml: 1, userSelect: 'none' }} onMouseDown={beginDrag}>
-							<FaEllipsisH color={info.main} size='18px' />
-						</VuiBox>
+						<VuiBox display='flex' justifyContent='center' alignItems='center' bgColor='#22234B' sx={{ width: '37px', height: '37px', cursor: 'default', borderRadius: '12px', ml: 1, userSelect: 'auto' }}>
+						<FaEllipsisH color={info.main} size='18px' />
+					</VuiBox>
 					</VuiBox>
 					<VuiBox
 						sx={{
