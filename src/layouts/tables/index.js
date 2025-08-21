@@ -644,7 +644,7 @@ function Tables() {
           }
         }}
      >
-        <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 22, pb: 1.5 }}>Search Providers</DialogTitle>
+        <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 22, pb: 1.5 }}>Search Provider</DialogTitle>
         <DialogContent sx={{ px: 2, pt: 1, pb: 2 }}>
           <Grid container spacing={1.5} alignItems="center">
             <Grid item xs={12} sm={6} md={6}>
