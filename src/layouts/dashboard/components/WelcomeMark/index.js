@@ -1,14 +1,38 @@
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 import { Card, Icon } from "@mui/material";
 import VuiBox from "components/VuiBox";
 import VuiTypography from "components/VuiTypography";
 import Jelly2 from "assets/images/Jelly2.jpg";
+import jellyVideo from 'assets/video/vecteezy_jellyfish.mov'
 
 const WelcomeMark = () => {
   const handleClick = () => {
     window.location.href = '/assistance';
   };
+  const [hovered, setHovered] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const videoRef = useRef(null);
+
+  useEffect(() => {
+    if (hovered) setMounted(true);
+  }, [hovered]);
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (hovered) {
+      // try to play when hovered
+      const p = v.play();
+      if (p && p.catch) p.catch(() => {
+        // autoplay might be blocked; keep muted to increase chance
+        v.muted = true;
+        v.play().catch(() => {});
+      });
+    } else {
+      v.pause();
+      try { v.currentTime = 0; } catch (e) {}
+    }
+  }, [hovered, mounted]);
   return (
     <Card
       sx={{
@@ -31,8 +55,35 @@ const WelcomeMark = () => {
           zIndex: 1,
         },
       }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
       <VuiBox height="100%" display="flex" flexDirection="column" justifyContent="space-between" sx={{ position: 'relative', zIndex: 2 }}>
+  {/* 3D hover overlay: lazy-load and fade */}
+        {mounted && (
+          <VuiBox
+            sx={{
+              position: 'absolute',
+              inset: 0,
+              zIndex: 3,
+              transition: 'opacity 300ms ease',
+              opacity: hovered ? 1 : 0,
+              pointerEvents: hovered ? 'auto' : 'none',
+              display: 'flex'
+            }}
+          >
+            <video
+              ref={videoRef}
+              src={jellyVideo}
+              muted
+              loop
+              playsInline
+              preload="metadata"
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+              aria-hidden
+            />
+          </VuiBox>
+        )}
         <VuiBox>
           <VuiTypography color="text" variant="button" fontWeight="regular" mb="12px">
             Welcome back,
@@ -45,7 +96,7 @@ const WelcomeMark = () => {
             <br /> Ask me anything.
           </VuiTypography>
         </VuiBox>
-        <VuiTypography
+  <VuiTypography
           variant="button"
           color="white"
           fontWeight="regular"
