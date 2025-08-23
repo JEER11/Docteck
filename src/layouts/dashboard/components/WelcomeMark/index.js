@@ -4,7 +4,8 @@ import { Card, Icon } from "@mui/material";
 import VuiBox from "components/VuiBox";
 import VuiTypography from "components/VuiTypography";
 import Jelly2 from "assets/images/Jelly2.jpg";
-import jellyVideo from 'assets/video/vecteezy_jellyfish.mov'
+// Note: large video asset removed from repo; keep video optional to avoid build errors
+const jellyVideo = null;
 
 const WelcomeMark = () => {
   const handleClick = () => {
@@ -60,7 +61,7 @@ const WelcomeMark = () => {
     >
       <VuiBox height="100%" display="flex" flexDirection="column" justifyContent="space-between" sx={{ position: 'relative', zIndex: 2 }}>
   {/* 3D hover overlay: lazy-load and fade */}
-        {mounted && (
+  {mounted && jellyVideo && (
           <VuiBox
             sx={{
               position: 'absolute',
