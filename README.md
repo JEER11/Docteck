@@ -75,3 +75,24 @@ For more information, see the original [Vision UI Dashboard React documentation]
 ---
 
 © 2025 JEER11. All rights reserved.
+
+## Running with Docker
+
+We provide a minimal Docker setup that runs the Node backend and the new Flask microservice together using Docker Compose.
+
+1. Build and start services:
+
+   ```powershell
+   docker-compose up --build
+   ```
+
+2. Services are available at:
+   - Node backend: http://localhost:3001
+   - Flask service: http://localhost:5000
+
+3. The Node backend forwards requests under `/api/flask/*` to the Flask service. For example:
+   - GET http://localhost:3001/api/flask/api/hello -> forwarded to Flask `/api/hello`
+
+Notes:
+- The compose setup mounts service folders read-only into containers for quick iteration; change as needed for development.
+- In production, prefer multi-stage builds and non-root users for security.

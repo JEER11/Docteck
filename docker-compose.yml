@@ -1,0 +1,39 @@
+version: '3.8'
+services:
+  node-backend:
+    build: ./server
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - FLASK_URL=http://flask-service:5000
+    volumes:
+      - ./server:/usr/src/app:ro
+    depends_on:
+      - flask-service
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3001/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  flask-service:
+    build: ./python_server
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+    volumes:
+      - ./python_server:/app:ro
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Optionally serve the built frontend via a simple nginx or the node-backend's static files.
+  # If you prefer to serve frontend separately, add a service that serves ./build or ./public.
+
+networks:
+  default:
+    driver: bridge

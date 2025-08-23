@@ -3,6 +3,7 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const { OpenAI } = require('openai');
 const fetch = require('node-fetch');
+const { createProxyMiddleware } = require('http-proxy-middleware');
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 
@@ -21,6 +22,52 @@ app.use('/api/stripe', stripePayRoutes);
 app.use('/uploads', express.static(require('path').join(__dirname, 'uploads')));
 // Serve static assets (like /calendar/oauth-success.html) from root public folder
 app.use(express.static(path.join(__dirname, '..', 'public')));
+
+// Proxy to the Flask service using http-proxy-middleware for proper streaming/header handling.
+// Requests to /api/flask/<path> will be forwarded to the Flask server configured by FLASK_URL.
+// Example: GET /api/flask/api/hello -> ${FLASK_URL}/api/hello
+const FLASK_URL = process.env.FLASK_URL || 'http://localhost:5000';
+app.use('/api/flask', createProxyMiddleware({
+  target: FLASK_URL,
+  changeOrigin: true,
+  pathRewrite: { '^/api/flask': '' },
+  onProxyReq(proxyReq, req, res) {
+    // If request body was parsed by express (JSON or urlencoded), re-attach it.
+    // For multipart/form-data (file uploads) we must NOT consume or reattach body here — allow streaming passthrough.
+    try {
+      const contentType = (req.headers['content-type'] || '').toLowerCase();
+      const shouldAttach = (contentType.includes('application/json') || contentType.includes('application/x-www-form-urlencoded')) && req.body && Object.keys(req.body).length;
+      if (shouldAttach) {
+        const bodyData = contentType.includes('application/x-www-form-urlencoded') ? new URLSearchParams(req.body).toString() : JSON.stringify(req.body);
+        // update content-length
+        proxyReq.setHeader('Content-Length', Buffer.byteLength(bodyData));
+        proxyReq.write(bodyData);
+        proxyReq.end();
+      }
+      // otherwise leave the request stream intact so proxy will stream it through (this supports multipart/form-data uploads)
+    } catch (err) {
+      // if anything goes wrong, log and continue — proxy will attempt to stream
+      console.error('onProxyReq error', err);
+    }
+  },
+  onError(err, req, res) {
+    console.error('Proxy error', err);
+    if (!res.headersSent) res.status(502).json({ ok: false, error: 'flask_proxy_error' });
+  }
+}));
+
+// Health endpoint for Node that also checks Flask readiness
+app.get('/health', async (req, res) => {
+  try {
+    const flaskHealthUrl = `${FLASK_URL.replace(/\/$/, '')}/health`;
+    const resp = await fetch(flaskHealthUrl, { method: 'GET' });
+    const flaskOk = resp.ok;
+    return res.json({ ok: true, flask: flaskOk });
+  } catch (e) {
+    console.error('Health check failed', e);
+    return res.status(503).json({ ok: false, flask: false });
+  }
+});
 
 // Support endpoints (Ask / Report) with file uploads
 const fs = require('fs');
