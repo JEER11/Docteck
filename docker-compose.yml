@@ -31,6 +31,20 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  celery-worker:
+    build: ./python_server
+    command: celery -A tasks.celery worker --loglevel=info
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - redis
+      - flask-service
+
   # Optionally serve the built frontend via a simple nginx or the node-backend's static files.
   # If you prefer to serve frontend separately, add a service that serves ./build or ./public.
 
