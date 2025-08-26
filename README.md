@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 # Docteck
 
@@ -31,68 +32,67 @@ Docteck is a modern web application designed to streamline appointment schedulin
 Set these environment variables in `server/.env` (create if missing):
 
 ```
-GOOGLE_CLIENT_ID=your_oauth_client_id
-GOOGLE_CLIENT_SECRET=your_oauth_client_secret
-GOOGLE_REDIRECT_URI=http://localhost:3001/api/auth/google/callback
+# Docteck-Classic-
+
+> React SPA served by Python Flask, with classic HTML pages available for reference.
+
+## Overview
+
+- Flask (`python_server/app.py`) serves the React build under `/app/*` and exposes JSON APIs under `/api/*`.
+- Classic HTML templates are available under `/classic/*` for comparison.
+- APIs can be “hidden/private” by setting `API_SECRET` (see Security).
+
+## Prerequisites
+
+- Node.js 18+
+- Python 3.10+
+
+## Quick start (Windows PowerShell)
+
+```powershell
+# 1) Install dependencies
+npm ci
+
+# 2) Python venv and deps
+python -m venv .venv
+& .\.venv\Scripts\Activate.ps1
+pip install -r python_server\requirements.txt
+
+# 3) Build the React app (served by Flask)
+npm run build
+
+# 4) Run Flask (serving the SPA on one port)
+$env:PORT=5050
+python .\python_server\app.py
+# Open http://127.0.0.1:5050/app/dashboard  (and /dashboard redirects there)
 ```
 
-Then start both server and client:
+## Security
 
+- Set `API_SECRET` in `.env` (root) to require the header `X-API-SECRET` on all `/api/*` requests.
+- Example test:
+```powershell
+# 401 without secret
+Invoke-WebRequest -UseBasicParsing http://127.0.0.1:5050/api/hello
+# 200 with secret
+Invoke-WebRequest -UseBasicParsing -Headers @{ 'X-API-SECRET'='your-strong-secret' } http://127.0.0.1:5050/api/hello
 ```
-npm run dev
+
+## Dev mode (optional)
+- React dev server on :3000 and Flask on :5000
+```powershell
+# Terminal 1
+npm start
+# Terminal 2
+& .\.venv\Scripts\Activate.ps1
+$env:PORT=5000
+python .\python_server\app.py
 ```
 
-Open Profile > Account settings > Connect Calendar, choose "Connect Google Calendar". A popup will ask you to sign in and authorize read-only access. On success, the app stores tokens locally (for demo) and shows "Calendar Connected".
-4. **Start the development server:**
-   ```sh
-   npm start
-   ```
-
-## Folder Structure
-
-- `src/` — Frontend React code
-- `server/` — Backend Node.js code (not included in public repo)
-- `public/` — Static assets and HTML
-- `uploads/` — User-uploaded files (ignored by git)
-
-## Credits
-
-- **Project Lead:** JEER11
-- **Special Thanks:** Tim, for significant contributions throughout the project design.
+## Environment
+- Copy `.env.example` to `.env` and set values (PORT, API_SECRET, Stripe, SMTP, etc.).
+- `.env` is ignored by git.
 
 ## License
-
-This project is licensed under the MIT License. See the [LICENSE.md](LICENSE.md) file for details.
-
----
-
-### Additional Credits
-
-This project was originally bootstrapped with [Vision UI Dashboard React](https://www.creative-tim.com/product/vision-ui-dashboard-react?ref=readme-vudreact) by Creative Tim and Simmmple. Some UI elements and structure are based on their open-source template.
-
-For more information, see the original [Vision UI Dashboard React documentation](https://www.creative-tim.com/learning-lab/react/overview/vision-ui-dashboard/?ref=readme-vudreact).
-
----
-
-© 2025 JEER11. All rights reserved.
-
-## Running with Docker
-
-We provide a minimal Docker setup that runs the Node backend and the new Flask microservice together using Docker Compose.
-
-1. Build and start services:
-
-   ```powershell
-   docker-compose up --build
-   ```
-
-2. Services are available at:
-   - Node backend: http://localhost:3001
-   - Flask service: http://localhost:5000
-
-3. The Node backend forwards requests under `/api/flask/*` to the Flask service. For example:
-   - GET http://localhost:3001/api/flask/api/hello -> forwarded to Flask `/api/hello`
-
-Notes:
+MIT
 - The compose setup mounts service folders read-only into containers for quick iteration; change as needed for development.
-- In production, prefer multi-stage builds and non-root users for security.
