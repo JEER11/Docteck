@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Profile · Docteck</title>
+  {% for href in react_css %}<link rel="stylesheet" href="{{ href }}"/>{% endfor %}
+  <link rel="stylesheet" href="/app/billing-background-fix.css"/>
+  <link rel="stylesheet" href="/static/classic.css"/>
+    <style>
+  .row { display:grid; grid-template-columns: repeat(12, 1fr); gap: 20px; }
+  .grid-2 { display:grid; grid-template-columns: 2fr 1fr; gap:20px; }
+  .list { display:grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .list .item { background:#0f172a; border:1px solid rgba(255,255,255,.06); border-radius:12px; padding:14px; text-align:center; color:#cbd5e1; }
+  .label { color:#9ca3af; font-size:12px; }
+  .value { font-weight:700; }
+  .section-title { font-weight:800; margin-bottom:10px; }
+  .row2 { display:grid; grid-template-columns: 1fr 1fr; gap:20px; }
+  .link { color:#93c5fd; cursor:pointer; }
+  .toggle { display:inline-block; width:34px; height:20px; background:#111827; border-radius:10px; position:relative; vertical-align:middle; }
+      .toggle input { display:none; }
+      .toggle span { position:absolute; top:2px; left:2px; width:16px; height:16px; background:#334155; border-radius:50%; transition: all .2s ease; }
+      .toggle input:checked + span { left:16px; background:#1a237e; }
+  .ai-btn { background:#1a237e; border:none; color:#fff; padding:10px 12px; border-radius:10px; cursor:pointer; }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="side">
+        <div style="height:56px"></div>
+        <a class="nav-item" href="/dashboard">Dashboard</a>
+        <a class="nav-item" href="/caring-hub">Caring Hub</a>
+        <a class="nav-item" href="/assistance">Assistance</a>
+        <a class="nav-item" href="/billing">Billing</a>
+        <div style="height:16px"></div>
+        <div style="opacity:.6; padding:6px 12px;">ACCOUNT PAGES</div>
+        <a class="nav-item" href="/profile">Profile</a>
+        <a class="nav-item" href="/app">Family</a>
+        <a class="nav-item" href="/app">Pets</a>
+        <a class="nav-item" href="/signin">Sign In</a>
+        <a class="nav-item" href="/signup">Sign Up</a>
+      </aside>
+      <main class="main">
+        <div class="topbar">
+          <div class="pill">/ Profile</div>
+          <div style="flex:1"></div>
+          <input id="search" class="search-input" style="max-width:320px" placeholder="Type here..." />
+          <a href="/signin" class="chip">Sign in</a>
+          <button class="chip">⚙</button>
+        </div>
+
+        <div class="card" style="display:flex; align-items:center; gap:16px;">
+          <div style="width:64px; height:64px; background:linear-gradient(45deg,#8b5cf6,#06b6d4); border-radius:12px;"></div>
+          <div style="flex:1">
+            <div id="p-name" style="font-weight:800">name</div>
+            <div id="p-email" style="opacity:.8">name@example.com</div>
+          </div>
+          <span class="chip chip-active">PERSONAL</span>
+          <a class="chip" href="/family">FAMILY</a>
+          <a class="chip" href="/pets">PETS</a>
+        </div>
+
+        <div class="grid-2" style="margin-top:20px;">
+          <div class="card">
+            <div class="section-title">Medical Profile</div>
+            <div class="list">
+              <div class="item"><div class="label">Emergency Contacts</div><div id="p-emergency" class="value">—</div></div>
+              <div class="item"><div class="label">Allergies</div><div id="p-allergies" class="value">—</div></div>
+              <div class="item"><div class="label">Conditions</div><div id="p-conditions" class="value">—</div></div>
+              <div class="item"><div class="label">Height</div><div id="p-height" class="value">—</div></div>
+              <div class="item"><div class="label">Weight</div><div id="p-weight" class="value">—</div></div>
+              <div class="item"><div class="label">Medications</div><div id="p-meds" class="value">—</div></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="section-title" style="display:flex; align-items:center; justify-content:space-between;">Profile <span class="link" id="edit-basic">✎</span></div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+              <div><div class="label">Full Name</div><div id="p-fullName" class="value">--</div></div>
+              <div><div class="label">Mobile</div><div id="p-mobile" class="value">--</div></div>
+              <div><div class="label">Email</div><div id="p-email2" class="value">--</div></div>
+              <div><div class="label">Location</div><div id="p-location" class="value">United States</div></div>
+              <div><div class="label">Date Of Birth</div><div id="p-dob" class="value">yyyy-mm-dd</div></div>
+              <div><div class="label">Sex</div><div id="p-sex" class="value">--</div></div>
+              <div><div class="label">Blood Type</div><div id="p-blood" class="value">--</div></div>
+              <div><div class="label">Wheelchair</div><div class="value"><label class="toggle"><input id="p-wheel" type="checkbox"/><span></span></label></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row2" style="margin-top:20px;">
+          <div class="card">
+            <div class="section-title">Account Settings</div>
+            <div style="color:#cbd5e1;">
+              <div>Change Password <span class="link">✎</span></div>
+              <div>Two Step Verification <label class="toggle" style="margin-left:8px;"><input id="p-twoStep" type="checkbox"/><span></span></label></div>
+              <div>Notifications <label class="toggle" style="margin-left:8px;"><input id="p-notif" type="checkbox" checked/><span></span></label></div>
+              <div>Connect Calendar <label class="toggle" style="margin-left:8px;"><input id="p-cal" type="checkbox"/><span></span></label></div>
+              <div>Deactivate Account <label class="toggle" style="margin-left:8px;"><input id="p-deact" type="checkbox"/><span></span></label></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="section-title">Settings</div>
+            <div style="color:#cbd5e1;">Center your health and wellness with personalized care and support.</div>
+            <div class="row2" style="margin-top:10px;">
+              <div>
+                <div class="section-title" style="font-size:14px;">Record</div>
+                <ul style="margin:0 0 0 18px; color:#cbd5e1;">
+                  <li>Visits</li>
+                  <li>Test Results</li>
+                  <li>End of Life Planning</li>
+                  <li>Medical and Family History</li>
+                  <li>Preventive Care</li>
+                </ul>
+                <div class="link" style="margin-top:8px;">VIEW ALL</div>
+              </div>
+              <div>
+                <div class="section-title" style="font-size:14px;">Communication</div>
+                <ul style="margin:0 0 0 18px; color:#cbd5e1;">
+                  <li>Messages</li>
+                  <li>Ask Questions</li>
+                  <li>Letters</li>
+                  <li>Community Resources</li>
+                  <li>Report Problems</li>
+                </ul>
+                <div class="link" style="margin-top:8px;">VIEW ALL</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer">© 2025, DOCTECK</div>
+      </main>
+    </div>
+
+    <script id="profile-config" type="application/json">{{ {'apiBase': api_base}|tojson | safe }}</script>
+    <script>
+      let API_BASE = '';
+      try { const cfg = document.getElementById('profile-config'); if (cfg) API_BASE = (JSON.parse(cfg.textContent||'{}').apiBase)||''; } catch(_){}
+
+      function fmtList(v){ if(!v) return '—'; if(Array.isArray(v)) return v.length? v.join(', '): '—'; return v+''; }
+      function setText(id, txt){ const el = document.getElementById(id); if(el) el.textContent = txt; }
+
+      async function loadProfile(){
+        try {
+          const res = await fetch((API_BASE||'') + '/api/profile');
+          const data = await res.json();
+          const p = data.profile || {};
+          setText('p-name', p.name || 'name');
+          setText('p-email', p.email || 'name@example.com');
+          setText('p-email2', p.email || '--');
+          setText('p-fullName', p.fullName || '--');
+          setText('p-mobile', p.mobile || '--');
+          setText('p-location', p.location || 'United States');
+          setText('p-dob', p.dateOfBirth || 'yyyy-mm-dd');
+          setText('p-sex', p.sex || '--');
+          setText('p-blood', p.bloodType || '--');
+          document.getElementById('p-wheel').checked = !!p.wheelchair;
+          const m = p.medical || {};
+          setText('p-emergency', fmtList(m.emergencyContacts));
+          setText('p-allergies', fmtList(m.allergies));
+          setText('p-conditions', fmtList(m.conditions));
+          setText('p-height', m.height || '—');
+          setText('p-weight', m.weight || '—');
+          setText('p-meds', fmtList(m.medications));
+          const s = p.settings || {};
+          document.getElementById('p-twoStep').checked = !!s.twoStep;
+          document.getElementById('p-notif').checked = s.notifications !== false;
+          document.getElementById('p-cal').checked = !!s.connectCalendar;
+          document.getElementById('p-deact').checked = !!s.deactivated;
+        } catch(e) { console.warn(e); }
+      }
+
+      async function savePatch(patch){
+        try {
+          await fetch((API_BASE||'') + '/api/profile', { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify(patch) });
+          await loadProfile();
+        } catch(e) { console.warn(e); }
+      }
+
+      document.getElementById('p-wheel').addEventListener('change', (e)=> savePatch({ wheelchair: e.target.checked }));
+      document.getElementById('p-twoStep').addEventListener('change', (e)=> savePatch({ settings:{ twoStep: e.target.checked } }));
+      document.getElementById('p-notif').addEventListener('change', (e)=> savePatch({ settings:{ notifications: e.target.checked } }));
+      document.getElementById('p-cal').addEventListener('change', (e)=> savePatch({ settings:{ connectCalendar: e.target.checked } }));
+      document.getElementById('p-deact').addEventListener('change', (e)=> savePatch({ settings:{ deactivated: e.target.checked } }));
+
+      document.getElementById('edit-basic').addEventListener('click', async ()=>{
+        const fullName = prompt('Full Name');
+        const mobile = prompt('Mobile');
+        const dob = prompt('Date of Birth (yyyy-mm-dd)');
+        const sex = prompt('Sex');
+        const blood = prompt('Blood Type');
+        await savePatch({ fullName, mobile, dateOfBirth: dob, sex, bloodType: blood });
+      });
+
+  document.getElementById('search').addEventListener('keydown', (e)=>{ if(e.key==='Enter') alert('Search: '+(e.target.value||'')); });
+
+      loadProfile();
+    </script>
+  </body>
+</html>

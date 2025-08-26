@@ -18,3 +18,11 @@ Thumbs.db
 .vscode/
 src/assets/video/vecteezy_jellyfish.mov
 src/assets/video/vecteezy_jellyfish.mov
+# Python ignores
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+python_server/.venv/
+.venv/

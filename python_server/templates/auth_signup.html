@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Sign Up · Docteck</title>
+    {% for href in react_css %}<link rel="stylesheet" href="{{ href }}"/>{% endfor %}
+    <link rel="stylesheet" href="/app/billing-background-fix.css"/>
+    <link rel="stylesheet" href="/static/auth_shared.css"/>
+  </head>
+  <body class="auth-shell">
+    <header style="position:fixed;left:0;right:0;top:0;padding:12px 16px;display:flex;gap:16px;align-items:center;z-index:10;">
+      <div style="background:#3b82f6;color:#fff;padding:6px 12px;border-radius:12px;font-weight:700;">DOCTECK</div>
+      <nav style="display:flex;gap:16px;">
+        <a href="/app">Dashboard</a>
+        <a href="/app/profile">Profile</a>
+        <a href="/signup">SignUp</a>
+        <a href="/signin">SignIn</a>
+      </nav>
+      <a href="#" style="margin-left:auto;background:#1f2937;color:#fff;padding:8px 14px;border-radius:12px;">Subscribe</a>
+    </header>
+    <div class="auth-left" aria-hidden="true"></div>
+    <div class="auth-right">
+      <div class="auth-title">Welcome</div>
+      <div class="auth-sub">We work together to take care of you, join us to regain a healthy body and mind.</div>
+      <div class="auth-card">
+        <div class="auth-alt">Register with</div>
+        <div class="auth-icons">
+          <button id="btn-facebook" title="Facebook">f</button>
+          <button id="btn-microsoft" title="Microsoft">▢</button>
+          <button id="btn-google" title="Google">G</button>
+          <button id="btn-yahoo" title="Yahoo">Y</button>
+          <button id="btn-phone" title="Phone">📱</button>
+        </div>
+        <div id="phone-panel" class="phone-panel" hidden>
+          <div class="auth-row"><input class="auth-input" id="phone" type="tel" placeholder="Your phone number e.g. +1 555 555 5555"/></div>
+          <div id="recaptcha-container" style="min-height:60px;"></div>
+          <div class="auth-row" style="display:flex;gap:8px;">
+            <button id="send-code" class="auth-btn" type="button" style="flex:1;">Send code</button>
+            <button id="close-phone" class="auth-btn" type="button" style="flex:1;background:#374151;">Close</button>
+          </div>
+          <div class="auth-row"><input class="auth-input" id="otp" inputmode="numeric" placeholder="6-digit code"/></div>
+          <div class="auth-row"><button id="verify-code" class="auth-btn" type="button">Verify & Sign in</button></div>
+        </div>
+        <div class="auth-alt">or</div>
+        <form id="signup-form">
+          <div class="auth-row"><input class="auth-input" id="name" placeholder="Your full name..." required/></div>
+          <div class="auth-row"><input class="auth-input" id="email" type="email" placeholder="Your email..." required/></div>
+          <div class="auth-row"><input class="auth-input" id="password" type="password" placeholder="Your password..." required/></div>
+          <div class="auth-row"><label><input type="checkbox" id="remember"/> Remember me</label></div>
+          <div class="auth-row"><button class="auth-btn" type="submit">SIGN UP</button></div>
+        </form>
+        <div class="small">Already have an account? <a href="/signin">Sign In</a></div>
+        <div class="small">© 2025, DOCTECK · <a href="#">License</a></div>
+      </div>
+    </div>
+  <script id="fb-config" type="application/json">{{ firebase_config | tojson | safe }}</script>
+    <script src="/static/auth_shared.js"></script>
+  </body>
+</html>

@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Caring Hub · Docteck</title>
+    {% for href in react_css %}<link rel="stylesheet" href="{{ href }}"/>{% endfor %}
+    <link rel="stylesheet" href="/app/billing-background-fix.css"/>
+    <style>
+      body { background: radial-gradient(1200px 800px at 20% 20%, #1b2256 0%, #0b1437 60%); min-height:100vh; color:#fff; }
+      .shell { display:grid; grid-template-columns: 240px 1fr; gap:20px; }
+      .side { padding: 20px 12px; }
+      .main { padding: 20px; }
+      .card { background: rgba(20, 25, 55, 0.7); border-radius: 16px; padding: 16px; backdrop-filter: blur(6px); }
+      .topbar { display:flex; align-items:center; gap:12px; margin-bottom: 16px; }
+      .pill { background:#111827; padding:8px 12px; border-radius:12px; color:#9ca3af; }
+      table { width:100%; border-collapse: collapse; color:#e5e7eb; }
+      th, td { text-align:left; padding:12px 10px; border-bottom: 1px solid rgba(255,255,255,.06); }
+      .btn { background:#1a237e; color:#fff; padding:8px 12px; border:none; border-radius:10px; cursor:pointer; }
+      .actions a { color:#93c5fd; text-decoration:none; margin-left: 12px; }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="side">
+        <div style="height:56px"></div>
+        <a class="nav-item" href="/dashboard">Dashboard</a>
+        <a class="nav-item" href="/caring-hub" style="color:#fff;">Caring Hub</a>
+        <a class="nav-item" href="/app/billing">Assistance</a>
+        <a class="nav-item" href="/app/billing">Billing</a>
+        <div style="height:16px"></div>
+        <div style="opacity:.6; padding:6px 12px;">ACCOUNT PAGES</div>
+        <a class="nav-item" href="/app/profile">Profile</a>
+        <a class="nav-item" href="/app">Family</a>
+        <a class="nav-item" href="/app">Pets</a>
+        <a class="nav-item" href="/signin">Sign In</a>
+        <a class="nav-item" href="/signup">Sign Up</a>
+      </aside>
+      <main class="main">
+        <div class="topbar">
+          <div class="pill">/ Caring Hub</div>
+          <div style="flex:1"></div>
+          <input class="ai-input" style="max-width:320px" placeholder="Type here..." />
+          <a href="/signin" class="chip">Sign in</a>
+          <button class="chip">⚙</button>
+        </div>
+
+        <div class="card" style="margin-bottom:20px;">
+          <div style="display:flex; align-items:center;">
+            <h3 style="margin:0; flex:1;">Appointments</h3>
+            <button class="btn" id="add-appointment">Add Appointment</button>
+          </div>
+          <div style="height:10px"></div>
+          <table>
+            <thead>
+              <tr><th>Doctor</th><th>Function</th><th>Status</th><th>Date</th><th>Action</th></tr>
+            </thead>
+            <tbody id="appt-tbody">
+              <!-- dynamic rows -->
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card" style="margin-bottom:20px;">
+          <div style="display:flex; align-items:center;">
+            <h3 style="margin:0; flex:1;">HUB</h3>
+            <div style="display:flex; gap:10px;">
+              <button class="btn" id="search-providers">Search Providers</button>
+              <button class="btn" id="add-info">Add Info</button>
+            </div>
+          </div>
+          <div style="height:10px"></div>
+          <table>
+            <thead>
+              <tr><th>Hospital</th><th>Doctors</th><th>Bill</th><th>Status</th><th>Completion</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Mount Sinai Hospital</td><td>Ryan Tompson, Romina Hadid</td><td>$</td><td>Working</td><td>60%</td><td class="actions"><a href="#">Edit</a></td></tr>
+              <tr><td>NYC Health + Hospitals</td><td>Alexander Smith</td><td>$</td><td>Working</td><td>10%</td><td class="actions"><a href="#">Edit</a></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+          <div class="card">
+            <div style="display:flex; align-items:center;">
+              <h3 style="margin:0; flex:1;">Pharmacy Information</h3>
+              <a href="#">View All</a>
+            </div>
+            <div style="height:10px"></div>
+            <div class="card" style="background:rgba(0,0,0,.25);">
+              <strong>CVS Pharmacy</strong>
+              <div>Address: 123 Main St., Springfield, IL</div>
+              <div>Email: contact@cvs.com</div>
+              <div>Phone: (217) 555-1234</div>
+              <div>Prescription pick-up: Atorvastatin 20mg</div>
+              <div style="margin-top:8px; display:flex; gap:12px;"><a href="#">DELETE</a> · <a href="#">EDIT</a></div>
+            </div>
+            <div style="height:10px"></div>
+            <div class="card" style="background:rgba(0,0,0,.25);">
+              <strong>Walgreens</strong>
+              <div>Address: 456 Oak Ave., Springfield, IL</div>
+              <div>Email: info@walgreens.com</div>
+              <div>Phone: (217) 555-5678</div>
+              <div>Prescription pick-up: Lisinopril 10mg</div>
+              <div style="margin-top:8px; display:flex; gap:12px;"><a href="#">DELETE</a> · <a href="#">EDIT</a></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div style="display:flex; align-items:center;">
+              <h3 style="margin:0; flex:1;">Prescriptions</h3>
+              <a href="#">View All</a>
+            </div>
+            <div style="height:10px"></div>
+            <ul style="margin:0 0 0 18px;">
+              <li>Amlodipine 5mg – $80 · <a href="#">Info</a></li>
+              <li>Metformin 500mg – $90 · <a href="#">Info</a></li>
+              <li>Atorvastatin 20mg – $70 · <a href="#">Info</a></li>
+              <li>Lisinopril 10mg – $60 · <a href="#">Info</a></li>
+              <li>Levothyroxine 50mcg – $85 · <a href="#">Info</a></li>
+            </ul>
+          </div>
+        </div>
+
+        <div style="color:#94a3b8; padding: 12px 20px;">© 2025, DOCTECK</div>
+      </main>
+    </div>
+
+    <script id="hub-config" type="application/json">{{ {'apiBase': api_base}|tojson | safe }}</script>
+    <script>
+      let API_BASE = '';
+      try { const cfg = document.getElementById('hub-config'); if (cfg) API_BASE = (JSON.parse(cfg.textContent||'{}').apiBase)||''; } catch(_){}
+      // Example: populate appointments from your API later
+      async function loadAppointments(){
+        try{
+          const res = await fetch((API_BASE||'') + '/api/appointments');
+          if (!res.ok) return;
+          const data = await res.json();
+          const tbody = document.getElementById('appt-tbody');
+          if (!tbody) return;
+          // Support both shapes:
+          // 1) { ok: true, appointments: [{ title, start, end, ...}] }
+          // 2) { items: [{ doctor, function, status, date }] }
+          let rows = [];
+          if (Array.isArray(data?.items)) {
+            rows = data.items.map(r => ({
+              doctor: r.doctor || r.title || 'Doctor',
+              function: r.function || r.type || '',
+              status: r.status || 'Active',
+              date: r.date || (r.start ? new Date(r.start).toLocaleString() : '')
+            }));
+          } else if (data?.ok && Array.isArray(data?.appointments)) {
+            rows = data.appointments.map(a => ({
+              doctor: (a.doctor && a.doctor.name) || a.title || 'Doctor',
+              function: a.type || a.hospital || '',
+              status: a.status || (a.active ? 'Active' : 'Inactive'),
+              date: a.start ? new Date(a.start).toLocaleString() : ''
+            }));
+          }
+          tbody.innerHTML = rows.map(r=>`<tr><td>${r.doctor||''}</td><td>${r.function||''}</td><td>${r.status||''}</td><td>${r.date||''}</td><td><a href="#">Edit</a></td></tr>`).join('');
+        }catch(e){}
+      }
+      loadAppointments();
+
+      // Minimal interactions
+      document.getElementById('add-appointment')?.addEventListener('click', async () => {
+        try{
+          const title = prompt('Appointment title');
+          if (!title) return;
+          const start = new Date().toISOString();
+          const end = new Date(Date.now()+30*60000).toISOString();
+          await fetch((API_BASE||'') + '/api/appointments', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ title, start, end }) });
+          loadAppointments();
+        }catch(e){}
+      });
+      document.getElementById('search-providers')?.addEventListener('click', async () => {
+        try{
+          const r = await fetch((API_BASE||'') + '/api/providers');
+          const j = await r.json();
+          alert(`${(j?.providers||[]).length} providers available`);
+        }catch(e){ alert('No providers'); }
+      });
+      document.getElementById('add-info')?.addEventListener('click', () => {
+        alert('Add info dialog coming soon');
+      });
+    </script>
+  </body>
+</html>

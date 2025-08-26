@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Profile · Pets · Docteck</title>
+  {% for href in react_css %}<link rel="stylesheet" href="{{ href }}"/>{% endfor %}
+  <link rel="stylesheet" href="/app/billing-background-fix.css"/>
+  <link rel="stylesheet" href="/static/classic.css"/>
+    <style>
+  .list { display:grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .list .item { background:#0f172a; border:1px solid rgba(255,255,255,.06); border-radius:12px; padding:14px; text-align:center; color:#cbd5e1; }
+  .section-title { font-weight:800; margin-bottom:10px; }
+  .cols3 { display:grid; grid-template-columns: repeat(3, 1fr); gap:20px; }
+  .link { color:#93c5fd; cursor:pointer; }
+  .footer { color:#94a3b8; padding: 12px 20px; }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="side">
+        <div style="height:56px"></div>
+        <a class="nav-item" href="/dashboard">Dashboard</a>
+        <a class="nav-item" href="/caring-hub">Caring Hub</a>
+        <a class="nav-item" href="/assistance">Assistance</a>
+        <a class="nav-item" href="/billing">Billing</a>
+        <div style="height:16px"></div>
+        <div style="opacity:.6; padding:6px 12px;">ACCOUNT PAGES</div>
+        <a class="nav-item" href="/profile">Profile</a>
+        <a class="nav-item" href="/family">Family</a>
+        <a class="nav-item" href="/pets">Pets</a>
+        <a class="nav-item" href="/signin">Sign In</a>
+        <a class="nav-item" href="/signup">Sign Up</a>
+      </aside>
+      <main class="main">
+        <div class="topbar">
+          <div class="pill">/ Profile / Pets</div>
+          <div style="flex:1"></div>
+          <input id="search" class="search-input" style="max-width:320px" placeholder="Type here..." />
+          <a href="/signin" class="chip">Sign in</a>
+          <button class="chip">⚙</button>
+        </div>
+
+        <div class="card" style="display:flex; align-items:center; gap:16px;">
+          <div style="width:64px; height:64px; background:linear-gradient(45deg,#8b5cf6,#06b6d4); border-radius:12px;"></div>
+          <div style="flex:1">
+            <div id="p-name" style="font-weight:800">name</div>
+            <div id="p-email" style="opacity:.8">name@example.com</div>
+          </div>
+          <a class="chip" href="/profile">PERSONAL</a>
+          <a class="chip" href="/family">FAMILY</a>
+          <span class="chip chip-active">PETS</span>
+        </div>
+
+        <div class="card" style="margin-top:20px;">
+          <div class="section-title">Medical Profile</div>
+          <div class="list">
+            <div class="item"><div class="section-title" style="font-size:12px; font-weight:600; color:#9ca3af;">Emergency Contacts</div><div id="p-emergency" style="font-weight:700;">—</div></div>
+            <div class="item"><div class="section-title" style="font-size:12px; font-weight:600; color:#9ca3af;">Allergies</div><div id="p-allergies" style="font-weight:700;">—</div></div>
+            <div class="item"><div class="section-title" style="font-size:12px; font-weight:600; color:#9ca3af;">Conditions</div><div id="p-conditions" style="font-weight:700;">—</div></div>
+            <div class="item"><div class="section-title" style="font-size:12px; font-weight:600; color:#9ca3af;">Height</div><div id="p-height" style="font-weight:700;">—</div></div>
+            <div class="item"><div class="section-title" style="font-size:12px; font-weight:600; color:#9ca3af;">Weight</div><div id="p-weight" style="font-weight:700;">—</div></div>
+            <div class="item"><div class="section-title" style="font-size:12px; font-weight:600; color:#9ca3af;">Medications</div><div id="p-meds" style="font-weight:700;">—</div></div>
+          </div>
+        </div>
+
+        <div class="cols3" style="margin-top:20px;">
+          <div class="card">
+            <div class="section-title">Pet Settings</div>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+              <div style="display:flex; justify-content:space-between; padding:10px 12px; background:#0f172a; border:1px solid rgba(255,255,255,.06); border-radius:12px;">Care Team <span>›</span></div>
+              <div style="display:flex; justify-content:space-between; padding:10px 12px; background:#0f172a; border:1px solid rgba(255,255,255,.06); border-radius:12px;">Visits <span>›</span></div>
+              <div style="display:flex; justify-content:space-between; padding:10px 12px; background:#0f172a; border:1px solid rgba(255,255,255,.06); border-radius:12px;">Test Results <span>›</span></div>
+              <div style="display:flex; justify-content:space-between; padding:10px 12px; background:#0f172a; border:1px solid rgba(255,255,255,.06); border-radius:12px;">Schedule Appointment <span>›</span></div>
+              <div style="display:flex; justify-content:space-between; padding:10px 12px; background:#0f172a; border:1px solid rgba(255,255,255,.06); border-radius:12px;">Search Provider <span>›</span></div>
+              <div style="display:flex; justify-content:space-between; padding:10px 12px; background:#0f172a; border:1px solid rgba(255,255,255,.06); border-radius:12px;">Insurance <span>›</span></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="section-title">Dogs</div>
+            <div id="pets-dogs" style="color:#cbd5e1"></div>
+            <div class="link" style="margin-top:8px;">VIEW ALL</div>
+          </div>
+          <div class="card">
+            <div class="section-title">Cats</div>
+            <div id="pets-cats" style="color:#cbd5e1"></div>
+            <div class="link" style="margin-top:8px;">VIEW ALL</div>
+          </div>
+          <div class="card">
+            <div class="section-title">Other Pets</div>
+            <div id="pets-other" style="color:#cbd5e1"></div>
+            <div class="link" style="margin-top:8px;">VIEW ALL</div>
+          </div>
+        </div>
+
+        <div class="footer">© 2025, DOCTECK</div>
+      </main>
+    </div>
+
+    <script id="pets-config" type="application/json">{{ {'apiBase': api_base}|tojson | safe }}</script>
+    <script>
+      let API_BASE = '';
+      try { const cfg = document.getElementById('pets-config'); if (cfg) API_BASE = (JSON.parse(cfg.textContent||'{}').apiBase)||''; } catch(_){}
+
+      function fmtPets(arr, key){
+        if(!Array.isArray(arr)||!arr.length) return '<div style="opacity:.6">—</div>';
+        return '<ul style="margin:8px 0 0 18px;">' + arr.map(p=>`<li>${p.name||'—'}${p[key]? ' ('+p[key]+')':''}</li>`).join('') + '</ul>';
+      }
+  function setHtml(id, html){ const el=document.getElementById(id); if(el) el.innerHTML = html; }
+
+      async function load(){
+        const res = await fetch((API_BASE||'') + '/api/profile');
+        const data = await res.json();
+        const p = data.profile || {};
+        document.getElementById('p-name').textContent = p.name || 'name';
+        document.getElementById('p-email').textContent = p.email || 'name@example.com';
+        const pets = p.pets || {};
+        setHtml('pets-dogs', fmtPets(pets.dogs, 'breed'));
+        setHtml('pets-cats', fmtPets(pets.cats, 'breed'));
+        setHtml('pets-other', fmtPets(pets.other, 'kind'));
+        const m = p.medical || {};
+        const f = (v)=> (Array.isArray(v)? (v.length? v.join(', '): '—') : (v||'—'));
+        document.getElementById('p-emergency').textContent = f(m.emergencyContacts);
+        document.getElementById('p-allergies').textContent = f(m.allergies);
+        document.getElementById('p-conditions').textContent = f(m.conditions);
+        document.getElementById('p-height').textContent = m.height||'—';
+        document.getElementById('p-weight').textContent = m.weight||'—';
+        document.getElementById('p-meds').textContent = f(m.medications);
+      }
+      // basic search hint interaction
+      document.getElementById('search').addEventListener('keydown', (e)=>{
+        if(e.key==='Enter') alert('Search: '+(e.target.value||''));
+      });
+      document.querySelectorAll('.link').forEach(a=> a.addEventListener('click',()=> alert('Coming soon')));
+      load();
+    </script>
+  </body>
+</html>

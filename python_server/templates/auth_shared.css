@@ -1,0 +1,16 @@
+/* Shared auth page tweaks to match Vision UI spacing/colors; main styles come from /app static css */
+:root { --space: 16px; }
+.auth-shell { display:flex; min-height: 100vh; background-color: #0B1437; color: #fff; }
+.auth-left { flex:1; background:url('/app/3d/blue_jellyfish.glb') no-repeat center/cover; }
+.auth-right { width: 560px; max-width: 100%; padding: 48px 32px; margin: 0 auto; }
+.auth-card { background: rgba(18, 31, 68, 0.6); border-radius: 16px; padding: 24px; }
+.auth-title { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+.auth-sub { color:#94a3b8; margin-bottom: 24px; }
+.auth-row { margin-bottom: 14px; }
+.auth-input { width:100%; padding:10px 14px; border-radius: 10px; border:1px solid rgba(255,255,255,.15); background: transparent; color:#fff; }
+.auth-btn { width:100%; padding:10px 14px; border-radius: 10px; background:#1A237E; color:#fff; border:none; cursor:pointer; }
+.auth-alt { text-align:center; color:#94a3b8; margin: 16px 0; }
+.auth-icons { display:flex; gap:14px; justify-content:center; }
+.auth-icons button { background:#111827; border:1px solid rgba(255,255,255,.1); color:#fff; width:40px; height:40px; border-radius:10px; cursor:pointer; }
+.small { font-size:12px; color:#94a3b8; text-align:center; margin-top: 16px; }
+.phone-panel { margin-top: 16px; }

@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Billing · Docteck</title>
+    {% for href in react_css %}<link rel="stylesheet" href="{{ href }}"/>{% endfor %}
+    <link rel="stylesheet" href="/app/billing-background-fix.css"/>
+    <style>
+      body { background: radial-gradient(1400px 900px at 40% 0%, #2a2e5a 60%, #1a1c3a 100%); min-height:100vh; color:#fff; }
+      .shell { display:grid; grid-template-columns: 240px 1fr; gap:20px; }
+      .side { padding: 20px 12px; }
+      .main { padding: 20px; }
+      .card { background: rgba(20, 25, 55, 0.7); border-radius: 16px; padding: 16px; backdrop-filter: blur(6px); }
+      .topbar { display:flex; align-items:center; gap:12px; margin-bottom: 16px; }
+      .pill { background:#111827; padding:8px 12px; border-radius:12px; color:#9ca3af; }
+      .grid { display:grid; gap:20px; }
+      .grid-cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+      .grid-cols-2 { grid-template-columns: 2fr 1fr; }
+      .chip { background: rgba(165,138,255,0.12); border-radius: 10px; padding: 6px 12px; color: #bdb3ff; text-decoration:none; }
+      .btn { background:#1a237e; color:#fff; padding:8px 12px; border:none; border-radius:10px; cursor:pointer; }
+      .list div { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+      .kv { display:flex; justify-content:space-between; gap:12px; }
+      .kv div { opacity:.85 }
+      .badge { font-weight:700; color:#59d39e; }
+      .presc-item { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; opacity:.93; }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="side">
+        <div style="height:56px"></div>
+        <a class="nav-item" href="/dashboard">Dashboard</a>
+        <a class="nav-item" href="/caring-hub">Caring Hub</a>
+        <a class="nav-item" href="/assistance">Assistance</a>
+        <a class="nav-item" style="color:#fff;" href="/billing">Billing</a>
+        <div style="height:16px"></div>
+        <div style="opacity:.6; padding:6px 12px;">ACCOUNT PAGES</div>
+        <a class="nav-item" href="/app/profile">Profile</a>
+        <a class="nav-item" href="/app">Family</a>
+        <a class="nav-item" href="/app">Pets</a>
+        <a class="nav-item" href="/signin">Sign In</a>
+        <a class="nav-item" href="/signup">Sign Up</a>
+      </aside>
+      <main class="main">
+        <!-- Topbar -->
+        <div class="topbar">
+          <div class="pill">/ Billing</div>
+          <div style="flex:1"></div>
+          <input class="assistant-input" style="max-width:360px; padding: 10px 12px; background: #0f132e; border: 1px solid #23244a; border-radius: 12px; color: #e7e9f3;" placeholder="Type here..." />
+          <a href="/signin" class="chip">Sign in</a>
+          <button class="chip">⚙</button>
+        </div>
+
+        <!-- Top metrics -->
+        <div class="grid grid-cols-3">
+          <div class="card" style="min-height:160px; background:url('/app/3d/blue_jellyfish.glb') center/cover, rgba(20,25,55,0.7); background-blend-mode:overlay;">
+            <div style="opacity:.8;">Insurance Card</div>
+            <h3 style="margin:0;">Member Name</h3>
+            <div class="kv"><div>ID</div><div>#ID23456</div></div>
+            <div class="kv"><div>Monthly Bill</div><div>$0.00/mo</div></div>
+          </div>
+          <div class="card" style="min-height:160px;">
+            <div style="opacity:.8;">Monthly Bill</div>
+            <div style="font-size:36px; font-weight:800;">$375.00</div>
+            <div style="opacity:.7; margin-top:8px;">Latest transaction</div>
+            <div style="display:flex; justify-content:space-between;">
+              <div>Blue Cross Insurance</div>
+              <div class="badge">-$120.00</div>
+            </div>
+          </div>
+          <div class="card" style="min-height:160px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <div>Prescriptions</div>
+              <a href="#">View all</a>
+            </div>
+            <div class="presc-item"><div>Amlodipine 5mg</div><div>$80</div></div>
+            <div class="presc-item"><div>Metformin 500mg</div><div>$90</div></div>
+            <div class="presc-item"><div>Atorvastatin 20mg</div><div>$70</div></div>
+            <div class="presc-item"><div>Lisinopril 10mg</div><div>$60</div></div>
+          </div>
+        </div>
+
+        <!-- Payment Methods -->
+        <div class="card" style="margin-top:20px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>Payment Methods</div>
+            <button class="btn" id="add-card">Add New Card</button>
+          </div>
+          <div style="height:8px"></div>
+          <div class="card" style="background:rgba(0,0,0,.25);">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div>Vision UI •••• •••• •••• 7916<br/><span style="opacity:.7;">EXP: 05/24 | CVV: ***</span></div>
+              <button class="btn" id="save-card">Save Card</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Lower grid: Pharmacy info + Recent payments -->
+        <div class="grid grid-cols-2" style="margin-top:20px; align-items:start;">
+          <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <div>Pharmacy Information</div>
+              <a href="#">View All</a>
+            </div>
+            <div class="card" style="background:rgba(0,0,0,.25);">
+              <strong>CVS Pharmacy</strong>
+              <div>Address: 123 Main St., Springfield, IL</div>
+              <div>Email: contact@cvs.com</div>
+              <div>Phone: (217) 555-1234</div>
+              <div>Prescription pick-up: Atorvastatin 20mg</div>
+              <div style="margin-top:8px; display:flex; gap:12px;"><a href="#">DELETE</a> · <a href="#">EDIT</a></div>
+            </div>
+            <div style="height:10px"></div>
+            <div class="card" style="background:rgba(0,0,0,.25);">
+              <strong>Walgreens</strong>
+              <div>Address: 456 Oak Ave., Springfield, IL</div>
+              <div>Email: info@walgreens.com</div>
+              <div>Phone: (217) 555-5678</div>
+              <div>Prescription pick-up: Lisinopril 10mg</div>
+              <div style="margin-top:8px; display:flex; gap:12px;"><a href="#">DELETE</a> · <a href="#">EDIT</a></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <div>Recent Payments</div>
+              <div style="opacity:.7;">7/2/2025</div>
+            </div>
+            <div class="list">
+              <div><div>Blue Cross Insurance</div><div class="badge">-$120.00</div></div>
+              <div><div>Walgreens</div><div style="color:#69b5ff;">-$30.00</div></div>
+              <div><div>CVS Pharmacy</div><div style="color:#ff8ea3;">-$45.00</div></div>
+              <div><div>Dr. Smith</div><div style="color:#59d39e;">-$80.00</div></div>
+              <div><div>Dr. Lee</div><div style="color:#59d39e;">-$100.00</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div style="color:#94a3b8; padding: 12px 20px;">© 2025, DOCTECK</div>
+      </main>
+    </div>
+
+    <script id="billing-config" type="application/json">{{ {'apiBase': api_base}|tojson | safe }}</script>
+    <script>
+      let API_BASE = '';
+      try { const cfg = document.getElementById('billing-config'); if (cfg) API_BASE = (JSON.parse(cfg.textContent||'{}').apiBase)||''; } catch(_){}
+
+      // Save card via Stripe minimal endpoint
+      document.getElementById('save-card')?.addEventListener('click', async () => {
+        try {
+          const paymentMethodId = prompt('Enter Payment Method ID (test)');
+          if (!paymentMethodId) return;
+          const res = await fetch((API_BASE||'') + '/api/stripe/save-card', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ paymentMethodId, userId: 'demo-user' }) });
+          const j = await res.json();
+          if (j?.success) alert('Card saved to customer ' + j.customerId); else alert('Save failed: ' + (j?.error||'unknown'));
+        } catch(e) { alert('Save failed'); }
+      });
+
+      // Add new card (UI only placeholder)
+      document.getElementById('add-card')?.addEventListener('click', () => {
+        alert('Open card entry form (placeholder). Integrate with Stripe Elements for production.');
+      });
+    </script>
+  </body>
+</html>

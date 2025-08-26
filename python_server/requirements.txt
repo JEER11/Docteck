@@ -8,3 +8,6 @@ celery>=5.2
 redis>=4.5
 openai>=0.27
 # Add other libs here as needed
+python-dotenv>=1.0
+stripe>=10.0
+requests>=2.31

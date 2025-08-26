@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Dashboard · Docteck</title>
+    {% for href in react_css %}<link rel="stylesheet" href="{{ href }}"/>{% endfor %}
+    <link rel="stylesheet" href="/app/billing-background-fix.css"/>
+    <style>
+      body { background: radial-gradient(1200px 800px at 20% 20%, #1b2256 0%, #0b1437 60%); min-height:100vh; color:#fff; }
+      .shell { display:grid; grid-template-columns: 240px 1fr; gap:20px; }
+      .side { padding: 20px 12px; }
+      .main { padding: 20px; }
+      .card { background: rgba(20, 25, 55, 0.7); border-radius: 16px; padding: 16px; backdrop-filter: blur(6px); }
+      .row { display:grid; grid-template-columns: repeat(12, 1fr); gap: 20px; }
+      .kpi { grid-column: span 3; }
+      .assistant { grid-column: span 6; }
+      .weather { grid-column: span 3; }
+      .todo { grid-column: span 3; }
+      .wellbeing { grid-column: span 4; }
+      .hub { grid-column: span 4; }
+      .calendar { grid-column: span 4; }
+      .nav-item { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:12px; color:#c7d2fe; text-decoration:none; }
+      .nav-item:hover { background: rgba(255,255,255,0.06); }
+      .topbar { display:flex; align-items:center; gap:12px; margin-bottom: 16px; }
+      .pill { background:#111827; padding:8px 12px; border-radius:12px; color:#9ca3af; }
+      .chip { background:#0f172a; padding:8px 10px; border-radius:10px; }
+      .ai-box { position:relative; }
+      .ai-input { width:100%; background:#0f172a; border:1px solid rgba(255,255,255,.1); padding:12px 16px; color:#fff; border-radius:12px; }
+      .ai-send { position:absolute; right:6px; top:50%; transform:translateY(-50%); background:#1a237e; border:none; color:#fff; padding:10px 12px; border-radius:10px; cursor:pointer; }
+      .footer { color:#94a3b8; padding: 12px 20px; }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="side">
+        <div style="height:56px"></div>
+        <a class="nav-item" href="/dashboard">Dashboard</a>
+        <a class="nav-item" href="/app">Caring Hub</a>
+        <a class="nav-item" href="/app/billing">Assistance</a>
+        <a class="nav-item" href="/app/billing">Billing</a>
+        <div style="height:16px"></div>
+        <div style="opacity:.6; padding:6px 12px;">ACCOUNT PAGES</div>
+        <a class="nav-item" href="/app/profile">Profile</a>
+        <a class="nav-item" href="/app">Family</a>
+        <a class="nav-item" href="/app">Pets</a>
+        <a class="nav-item" href="/signin">Sign In</a>
+        <a class="nav-item" href="/signup">Sign Up</a>
+      </aside>
+      <main class="main">
+        <div class="topbar">
+          <div class="pill">/ Dashboard</div>
+          <div style="flex:1"></div>
+          <input class="ai-input" style="max-width:320px" placeholder="Type here..." />
+          <a href="/signin" class="chip">Sign in</a>
+          <button class="chip">⚙</button>
+        </div>
+
+        <div class="row">
+          <div class="card kpi">Insurance Monthly Bill<br/><strong>$120</strong> <span class="chip">0 days</span></div>
+          <div class="card kpi">Due Bill<br/><strong>$120</strong> <span class="chip">Jul 2</span></div>
+          <div class="card kpi">Next Appointment<br/><strong>—</strong> <span class="chip">No Upcoming Appt.</span></div>
+          <div class="card kpi">Next Todo<br/><strong>Aspirin</strong> <span class="chip">2 days</span></div>
+
+          <div class="card assistant">
+            <div style="margin-bottom:12px;">Hello! I'm your Medical Assistant. Describe your symptoms and I'll help you.
+            </div>
+            <div class="ai-box">
+              <input class="ai-input" id="ai-msg" placeholder="Describe your symptoms..." />
+              <button class="ai-send" id="ai-send">➤</button>
+            </div>
+            <pre id="ai-reply" style="white-space:pre-wrap; margin-top:12px; color:#d1d5db;"></pre>
+          </div>
+
+          <div class="card weather">Weather<br/><div style="font-size:36px; font-weight:800;">22</div><div>Clouds</div></div>
+          <div class="card todo">To do’s Track
+            <ul style="margin:8px 0 0 18px;">
+              <li>Aspirin 100mg daily</li>
+              <li>Schedule blood test</li>
+            </ul>
+          </div>
+
+          <div class="card wellbeing">Well being
+            <div style="height:220px; border:1px solid rgba(255,255,255,.08); border-radius:12px; margin-top:10px;"></div>
+          </div>
+          <div class="card hub">HUB
+            <div style="height:220px; border:1px solid rgba(255,255,255,.08); border-radius:12px; margin-top:10px;"></div>
+          </div>
+          <div class="card calendar">Calendar
+            <div style="height:220px; border:1px solid rgba(255,255,255,.08); border-radius:12px; margin-top:10px;"></div>
+          </div>
+        </div>
+
+        <div class="footer">© 2025, DOCTECK</div>
+      </main>
+    </div>
+
+    <script id="dash-config" type="application/json">{{ {'apiBase': api_base}|tojson | safe }}</script>
+    <script>
+      let API_BASE = '';
+      try { const cfg = document.getElementById('dash-config'); if (cfg) API_BASE = (JSON.parse(cfg.textContent||'{}').apiBase)||''; } catch(_){}
+      async function callAssistant(message){
+        try {
+          const res = await fetch((API_BASE || '') + '/api/assistant-smart', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message })
+          });
+          if (!res.ok) throw new Error('Request failed');
+          const data = await res.json();
+          return data.reply || JSON.stringify(data);
+        } catch(e) { return 'Error: ' + (e.message || 'unknown'); }
+      }
+      document.getElementById('ai-send').addEventListener('click', async ()=>{
+        const inp = document.getElementById('ai-msg');
+        const out = document.getElementById('ai-reply');
+        out.textContent = '…';
+        out.textContent = await callAssistant(inp.value.trim());
+      });
+    </script>
+  </body>
+</html>

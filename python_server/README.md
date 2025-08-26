@@ -29,3 +29,5 @@ Endpoints:
 Notes:
 - CORS is enabled for /api/* (development convenience). Restrict origins in production.
 - Use a production WSGI server (gunicorn, waitress, etc.) when deploying.
+- React SPA is served under /app/* from the repository build/ directory.
+- Set API_SECRET in .env to require header X-API-SECRET on all /api/* requests.

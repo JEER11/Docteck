@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Assistance · Docteck</title>
+    {% for href in react_css %}<link rel="stylesheet" href="{{ href }}"/>{% endfor %}
+    <link rel="stylesheet" href="/app/billing-background-fix.css"/>
+    <style>
+      body { background: radial-gradient(1200px 800px at 20% 20%, #1b2256 0%, #0b1437 60%); min-height:100vh; color:#fff; }
+      .shell { display:grid; grid-template-columns: 240px 1fr; gap:20px; }
+      .side { padding: 20px 12px; }
+      .main { padding: 20px; }
+      .card { background: rgba(20, 25, 55, 0.7); border-radius: 16px; padding: 16px; backdrop-filter: blur(6px); }
+      .topbar { display:flex; align-items:center; gap:12px; margin-bottom: 16px; }
+      .pill { background:#111827; padding:8px 12px; border-radius:12px; color:#9ca3af; }
+      .grid { display:grid; gap:20px; }
+      .grid-cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+      .grid-cols-2 { grid-template-columns: 1fr 1fr; }
+      .chip { background: rgba(165,138,255,0.12); border-radius: 10px; padding: 6px 12px; color: #bdb3ff; text-decoration:none; }
+      .assistant-input { width: 100%; padding: 10px 12px; background: #0f132e; border: 1px solid #23244a; border-radius: 12px; color: #e7e9f3; }
+      .btn { background:#1a237e; color:#fff; padding:8px 12px; border:none; border-radius:10px; cursor:pointer; }
+      .drop { border:1px dashed rgba(255,255,255,0.2); border-radius: 12px; min-height: 160px; display:flex; align-items:center; justify-content:center; color:#aeb3d5; }
+      .todo { background: rgba(255,255,255,0.06); border-radius: 12px; padding: 12px; display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+      .todo input[type=text] { width:100%; background:#181a2f; border:1px solid #23244a; border-radius:10px; color:#e7e9f3; padding:8px 10px; }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="side">
+        <div style="height:56px"></div>
+        <a class="nav-item" href="/dashboard">Dashboard</a>
+        <a class="nav-item" href="/caring-hub">Caring Hub</a>
+        <a class="nav-item" style="color:#fff;" href="/assistance">Assistance</a>
+        <a class="nav-item" href="/app/billing">Billing</a>
+        <div style="height:16px"></div>
+        <div style="opacity:.6; padding:6px 12px;">ACCOUNT PAGES</div>
+        <a class="nav-item" href="/app/profile">Profile</a>
+        <a class="nav-item" href="/app">Family</a>
+        <a class="nav-item" href="/app">Pets</a>
+        <a class="nav-item" href="/signin">Sign In</a>
+        <a class="nav-item" href="/signup">Sign Up</a>
+      </aside>
+      <main class="main">
+        <!-- Topbar -->
+        <div class="topbar">
+          <div class="pill">/ Assistance</div>
+          <div style="flex:1"></div>
+          <input class="assistant-input" id="quick-input" style="max-width:360px" placeholder="Type here..." />
+          <a href="/signin" class="chip">Sign in</a>
+          <button class="chip">⚙</button>
+        </div>
+
+        <!-- First row: Welcome, Mini Calendar, Chat History -->
+        <div class="grid grid-cols-3">
+          <div class="card" style="min-height:220px; display:flex; align-items:end; background-image:url('/app/3d/blue_jellyfish.glb'); background-size:cover; background-position:center; background-blend-mode:overlay;">
+            <div>
+              <div style="opacity:.8">Welcome back,</div>
+              <h3 style="margin:4px 0 0;">Happy to see you again!<br/>Ask me anything.</h3>
+              <div style="height:8px"></div>
+              <button class="btn" id="new-chat-btn" style="background:rgba(25,118,210,0.12); color:#bdbdbd;">New chat</button>
+            </div>
+          </div>
+          <div class="card" style="min-height:220px; display:flex; flex-direction:column;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div>Daily Calendar</div>
+              <div>
+                <button class="btn" style="background:transparent; border:1px solid rgba(255,255,255,0.1);">◀</button>
+                <button class="btn" style="background:transparent; border:1px solid rgba(255,255,255,0.1);">▶</button>
+              </div>
+            </div>
+            <div style="height:8px"></div>
+            <div style="opacity:.8;">Appointments & Tasks</div>
+            <div id="mini-appointments" style="opacity:.7;">No appointments or tasks for this day.</div>
+          </div>
+          <div class="card" style="min-height:220px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div>Chat History</div>
+              <a href="#">View all</a>
+            </div>
+            <div style="height:8px"></div>
+            <div id="chat-history" style="opacity:.7;">No previous chats yet.</div>
+          </div>
+        </div>
+
+        <!-- Medical Assistant -->
+        <div class="card" style="margin-top:20px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div style="opacity:.7">Medical Assistant</div>
+              <div style="opacity:.5; font-size:13px;">Ask your AI Assistant anything about your appointments, prescriptions, or medical workflow.</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <label style="font-size:14px; opacity:.8; display:flex; align-items:center; gap:6px;"><input type="checkbox" id="compact"/> Compact</label>
+              <button class="btn" id="new-chat">New chat</button>
+            </div>
+          </div>
+          <div style="height:12px"></div>
+          <div id="assistant-messages" style="min-height:220px; border-radius:12px; background: rgba(0,0,0,0.25); padding:12px;">
+            Hello! I’m your Medical Assistant. Describe your symptoms and I’ll help you understand what you might have or suggest possible medication.
+          </div>
+          <div style="height:12px"></div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <input id="assistant-input" class="assistant-input" placeholder="Describe your symptoms..."/>
+            <button class="btn" id="assistant-send">➤</button>
+          </div>
+        </div>
+
+        <!-- Bottom row: Uploads + Todos -->
+        <div class="grid grid-cols-2" style="margin-top:20px; align-items:start;">
+          <div class="card">
+            <div style="opacity:.8; margin-bottom:8px;">Upload Files or Images <span style="opacity:.6; font-size:12px;">Drag-and-drop files here, or click to select files</span></div>
+            <div id="drop-zone" class="drop">Drop files here or click anywhere in this box</div>
+            <div id="uploads-list" style="opacity:.8; font-size:13px; margin-top:8px;"></div>
+          </div>
+          <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <div>To-do’s Track</div>
+              <div id="todo-count" style="opacity:.7;">0</div>
+            </div>
+            <div id="todo-list"></div>
+            <div style="display:flex; align-items:center; gap:10px; margin-top:8px;">
+              <input id="todo-input" type="text" placeholder="Write a new task and press Enter..."/>
+            </div>
+          </div>
+        </div>
+
+        <div style="color:#94a3b8; padding: 12px 20px;">© 2025, DOCTECK</div>
+      </main>
+    </div>
+
+    <script id="assist-config" type="application/json">{{ {'apiBase': api_base}|tojson | safe }}</script>
+    <script>
+      let API_BASE = '';
+      try { const cfg = document.getElementById('assist-config'); if (cfg) API_BASE = (JSON.parse(cfg.textContent||'{}').apiBase)||''; } catch(_){}
+
+      // Mini calendar appointments
+      async function loadMini(){
+        try{
+          const r = await fetch((API_BASE||'') + '/api/appointments');
+          if (!r.ok) return;
+          const j = await r.json();
+          const items = Array.isArray(j?.appointments) ? j.appointments : (j?.items||[]);
+          const out = items.slice(0,3).map(a=>`• ${(a.title||a.doctor||'Appointment')} — ${a.start? new Date(a.start).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : ''}`).join('<br/>');
+          document.getElementById('mini-appointments').innerHTML = out || 'No appointments or tasks for this day.';
+        }catch(e){}
+      }
+      loadMini();
+
+      // Assistant chat (demo, local only)
+      const msgs = document.getElementById('assistant-messages');
+      document.getElementById('assistant-send')?.addEventListener('click', () => {
+        const inp = document.getElementById('assistant-input');
+        const text = (inp?.value||'').trim();
+        if (!text) return;
+        const user = `<div style="opacity:.9; margin:6px 0;">You: ${text}</div>`;
+        msgs.insertAdjacentHTML('beforeend', user);
+        inp.value='';
+        setTimeout(()=>{
+          msgs.insertAdjacentHTML('beforeend', `<div style="opacity:.8; margin:6px 0;">Assistant: I’ll analyze your symptoms and provide suggestions shortly.</div>`);
+        }, 300);
+      });
+
+      // Uploads (stores locally; you can wire to /api/support/ask later)
+      const dz = document.getElementById('drop-zone');
+      const ul = document.getElementById('uploads-list');
+      function prevent(e){ e.preventDefault(); e.stopPropagation(); }
+      ['dragenter','dragover','dragleave','drop'].forEach(ev => dz.addEventListener(ev, prevent));
+      dz.addEventListener('drop', (e) => {
+        const files = Array.from(e.dataTransfer.files||[]);
+        if (files.length===0) return;
+        ul.innerHTML = files.map(f=>`<div>${f.name} (${Math.round(f.size/1024)} KB)</div>`).join('');
+      });
+      dz.addEventListener('click', async () => {
+        const picker = document.createElement('input'); picker.type='file'; picker.multiple=true; picker.onchange = () => {
+          const files = Array.from(picker.files||[]);
+          if (files.length===0) return;
+          ul.innerHTML = files.map(f=>`<div>${f.name} (${Math.round(f.size/1024)} KB)</div>`).join('');
+        }; picker.click();
+      });
+
+      // Todos (local only demo)
+      const todos = [ 'Aspirin 100mg daily', 'Schedule blood test' ];
+      const list = document.getElementById('todo-list');
+      const count = document.getElementById('todo-count');
+      function renderTodos(){
+        list.innerHTML = todos.map((t,i)=>`<div class="todo"><div>${t}</div><button class="btn" data-i="${i}">×</button></div>`).join('');
+        count.textContent = String(todos.length);
+        list.querySelectorAll('button').forEach(b => b.addEventListener('click', () => { const i=Number(b.getAttribute('data-i')); todos.splice(i,1); renderTodos(); }));
+      }
+      renderTodos();
+      document.getElementById('todo-input')?.addEventListener('keydown', (e) => {
+        if (e.key==='Enter') { const v = e.target.value.trim(); if (!v) return; todos.push(v); e.target.value=''; renderTodos(); }
+      });
+    </script>
+  </body>
+</html>

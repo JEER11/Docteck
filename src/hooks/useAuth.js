@@ -1,7 +1,7 @@
 // React hooks for authentication using Firebase
 import { useState, useEffect } from "react";
 import { auth, db, googleProvider, facebookProvider, microsoftProvider } from "../lib/firebase";
-import { OAuthProvider } from "firebase/auth";
+import { OAuthProvider, RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -80,6 +80,20 @@ export function useAuth() {
     return signInWithPopup(auth, yahooProvider);
   };
 
+  // Phone number sign in (requires a visible or invisible reCAPTCHA container in the UI)
+  // Usage example in UI:
+  //  const { signInWithPhone } = useAuth();
+  //  await signInWithPhone('+15551234567', 'recaptcha-container-id');
+  //  // then confirm with code: confirmation.confirm('123456')
+  const signInWithPhone = async (phoneNumber, reCaptchaContainerId = 'recaptcha-container') => {
+    if (!auth) throw new Error("Authentication is not available. Firebase is not configured.");
+    // Create verifier once per session; caller should provide a container div id in the page
+    const verifier = new RecaptchaVerifier(auth, reCaptchaContainerId, { size: 'invisible' });
+    const confirmation = await signInWithPhoneNumber(auth, phoneNumber, verifier);
+    // Return the confirmation result; UI should call confirmation.confirm(code)
+    return confirmation;
+  };
+
   // Sign out
   const signout = () => {
     if (!auth) return Promise.resolve();
@@ -95,6 +109,7 @@ export function useAuth() {
     signinWithFacebook,
     signinWithMicrosoft,
     signinWithYahoo,
+  signInWithPhone,
     signout,
   };
 }

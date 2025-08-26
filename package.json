@@ -69,7 +69,8 @@
 		"react-scripts": "^5.0.1"
 	},
 	"scripts": {
-		"dev": "concurrently \"npm run server\" \"npm start\"",
+		"dev": "concurrently \"npm run server\" \"cross-env PORT=3002 npm start\"",
+		"dev:3002": "cross-env PORT=3002 npm start",
 		"server": "node server/index.js",
 		"start": "react-scripts start",
 		"build": "cross-env PUBLIC_URL=/ react-scripts build",
