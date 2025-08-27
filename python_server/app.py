@@ -19,6 +19,14 @@ CORS(app, resources={r"/api/*": {"origins": "*", "allow_headers": ["Content-Type
 
 # Optional API secret to protect /api/* routes in non-public deployments
 API_SECRET = (os.environ.get('API_SECRET') or '').strip()
+# If enabled (default: on), unauthorized /api/* requests return 404 instead of 401
+API_STEALTH_404 = str(os.environ.get('API_STEALTH_404', '1')).lower() not in ('0','false','no')
+# Simple per-IP rate limiting for /api/* (requests per minute). 0 disables.
+try:
+    API_RATE_LIMIT_PER_MINUTE = int(os.environ.get('API_RATE_LIMIT_PER_MINUTE', '60'))
+except Exception:
+    API_RATE_LIMIT_PER_MINUTE = 60
+_RATE_BUCKETS = {}
 
 @app.before_request
 def _enforce_api_secret():
@@ -34,7 +42,56 @@ def _enforce_api_secret():
         q = request.args.get('api_secret', '')
         if header == API_SECRET or q == API_SECRET:
             return None
+        # Stealth 404 by default to avoid revealing API surface
+        if API_STEALTH_404:
+            return jsonify(message='Not found'), 404
         return jsonify(error='unauthorized'), 401
+    return None
+
+@app.before_request
+def _rate_limit_api():
+    # Apply only to API endpoints and only if limit > 0
+    if API_RATE_LIMIT_PER_MINUTE <= 0:
+        return None
+    p = request.path or ''
+    if not p.startswith('/api/'):
+        return None
+    if request.method == 'OPTIONS':
+        return None
+    try:
+        import time as _t
+        now = _t.time()
+        # Determine client IP (respect basic x-forwarded-for first value if present)
+        fwd = request.headers.get('X-Forwarded-For', '').split(',')[0].strip()
+        ip = fwd or (request.remote_addr or 'unknown')
+        bucket = _RATE_BUCKETS.get(ip)
+        if bucket is None:
+            bucket = []
+            _RATE_BUCKETS[ip] = bucket
+        # drop timestamps older than 60s
+        cutoff = now - 60.0
+        # in-place filter for performance
+        i = 0
+        for ts in bucket:
+            if ts >= cutoff:
+                break
+            i += 1
+        if i:
+            del bucket[:i]
+        if len(bucket) >= API_RATE_LIMIT_PER_MINUTE:
+            # Too many requests
+            resp = jsonify(error='rate_limited')
+            # Advise retry in ~1s/min-window
+            try:
+                first = bucket[0] if bucket else now
+                retry_after = max(1, int(round((first + 60.0) - now)))
+            except Exception:
+                retry_after = 30
+            return resp, 429, { 'Retry-After': str(retry_after) }
+        bucket.append(now)
+    except Exception:
+        # Fail-open on limiter errors
+        return None
     return None
 
 # Default uploads dir relative to repo root (../uploads)

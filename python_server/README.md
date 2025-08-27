@@ -31,3 +31,5 @@ Notes:
 - Use a production WSGI server (gunicorn, waitress, etc.) when deploying.
 - React SPA is served under /app/* from the repository build/ directory.
 - Set API_SECRET in .env to require header X-API-SECRET on all /api/* requests.
+- API_STEALTH_404=1 causes unauthorized API calls to return 404 instead of 401.
+- API_RATE_LIMIT_PER_MINUTE throttles per-IP requests to /api/* (0 disables).
