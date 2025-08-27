@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-
 # Docteck
 
 Docteck is a modern web application designed to streamline appointment scheduling, billing, and task management for healthcare professionals and their clients. Built with React for the frontend and Node.js for backend services, Docteck provides a seamless experience for managing calendars, handling payments, and tracking daily tasks—all in one place.
@@ -29,10 +27,17 @@ Docteck is a modern web application designed to streamline appointment schedulin
 
 ### Google Calendar connection (OAuth)
 
-Set these environment variables in `server/.env` (create if missing):
+Set these in the root `.env` (preferred). The Node server now loads root `.env` first, then `server/.env` for optional overrides.
 
 ```
-# Docteck-Classic-
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+# For local dev with Node backend on :3001:
+GOOGLE_REDIRECT_URI=http://localhost:3001/api/auth/google/callback
+```
+
+Also add the redirect URI in Google Cloud Console → Credentials → OAuth 2.0 Client IDs → Authorized redirect URIs.
+If you serve everything from Flask only, point to Flask’s host/port instead.
 
 > React SPA served by Python Flask, with classic HTML pages available for reference.
 
@@ -95,4 +100,3 @@ python .\python_server\app.py
 
 ## License
 MIT
-- The compose setup mounts service folders read-only into containers for quick iteration; change as needed for development.
