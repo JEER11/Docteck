@@ -3,6 +3,9 @@ const { google } = require('googleapis');
 const ical = require('node-ical');
 const fs = require('fs');
 const path = require('path');
+// Ensure env vars are loaded from root .env first, then server/.env as fallback
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 const router = express.Router();
 
 // Token persistence (simple JSON on disk for demo)
@@ -24,7 +27,9 @@ const oAuth2Client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_U
 
 // Step 1: Start Google OAuth
 router.get('/api/auth/google', (req, res) => {
-  if (!CLIENT_ID || !CLIENT_SECRET) return res.status(500).send('Google OAuth not configured');
+  if (!CLIENT_ID || !CLIENT_SECRET) {
+    return res.status(500).send('Google OAuth not configured (missing GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET)');
+  }
   const uid = getUid(req);
   const url = oAuth2Client.generateAuthUrl({
     access_type: 'offline',

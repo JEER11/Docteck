@@ -5,6 +5,10 @@ const { OpenAI } = require('openai');
 const fetch = require('node-fetch');
 const { createProxyMiddleware } = require('http-proxy-middleware');
 const path = require('path');
+// Load environment variables with sane precedence:
+// 1) Root .env (real creds typically live here)
+// 2) server/.env (optional per-service overrides; will NOT override existing vars)
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 
