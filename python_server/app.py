@@ -131,6 +131,10 @@ def echo():
 def health():
     return jsonify(status='ok'), 200
 
+@app.get('/health/firebase')
+def health_firebase():
+    return jsonify(firebase=firebase_env_config(), has_keys=bool(firebase_env_config().get('apiKey') and firebase_env_config().get('appId')))
+
 @app.get('/api/debug/routes')
 def debug_routes():
     rules = []
@@ -235,6 +239,24 @@ def signup_page():
     # Prefer SPA auth for identical UI
     return redirect('/app/authentication/sign-up', code=302)
 
+# Support direct SPA deep links without the /app prefix
+@app.route('/authentication')
+def spa_auth_root():
+    return redirect('/app/authentication', code=302)
+
+@app.route('/authentication/<path:subpath>')
+def spa_auth_paths(subpath):
+    return redirect(f'/app/authentication/{subpath}', code=302)
+
+# Common direct links people type
+@app.route('/authentication/sign-in')
+def spa_auth_signin():
+    return redirect('/app/authentication/sign-in', code=302)
+
+@app.route('/authentication/sign-up')
+def spa_auth_signup():
+    return redirect('/app/authentication/sign-up', code=302)
+
 # --------- Dashboard (classic) ---------
 def get_api_base():
     # Prefer explicit front-end API base if defined; else same-origin
@@ -329,6 +351,7 @@ def react_index():
         # Inject a small config and bridge loader before </body>
         inject = f"""
         <script id=\"flask-config\" type=\"application/json\">{json.dumps({'apiBase': get_api_base()})}</script>
+        <script>window.__FIREBASE_CONFIG__ = {json.dumps(firebase_env_config())};</script>
         <script src=\"/static/bridge.js\"></script>
         """
         if '</body>' in html:
@@ -352,6 +375,7 @@ def react_static(path):
             html = _rewrite_react_index_paths(html)
             inject = f"""
             <script id=\"flask-config\" type=\"application/json\">{json.dumps({'apiBase': get_api_base()})}</script>
+            <script>window.__FIREBASE_CONFIG__ = {json.dumps(firebase_env_config())};</script>
             <script src=\"/static/bridge.js\"></script>
             """
             if '</body>' in html:
@@ -974,6 +998,6 @@ if __name__ == '__main__':
     app.run(
         host='0.0.0.0',
         port=int(os.environ.get('PORT', '5000')),
-        debug=True,
-        use_reloader=False,
+    debug=True,
+    use_reloader=True,
     )

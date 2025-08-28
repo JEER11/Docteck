@@ -7,6 +7,7 @@ import {
   createUserWithEmailAndPassword,
   signOut,
   signInWithPopup,
+  signInWithRedirect,
   onAuthStateChanged,
 } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
@@ -25,7 +26,22 @@ export function useAuth() {
       if (firebaseUser) {
         if (db) {
           try {
-            const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
+            const ref = doc(db, "users", firebaseUser.uid);
+            const userDoc = await getDoc(ref);
+            if (!userDoc.exists()) {
+              // Seed a minimal profile document on first sign-in
+              try {
+                await setDoc(ref, {
+                  email: firebaseUser.email || '',
+                  displayName: firebaseUser.displayName || '',
+                  photoURL: firebaseUser.photoURL || '',
+                  phoneNumber: firebaseUser.phoneNumber || '',
+                  providers: (firebaseUser.providerData || []).map(p => ({ providerId: p.providerId, uid: p.uid })),
+                  createdAt: (new Date()).toISOString(),
+                  security: { email2faEnabled: false },
+                }, { merge: true });
+              } catch (_) { /* ignore */ }
+            }
             setUser({ ...firebaseUser, profile: userDoc.exists() ? userDoc.data() : null });
           } catch (_) {
             setUser(firebaseUser);
@@ -56,28 +72,56 @@ export function useAuth() {
   };
 
   // Google sign in
-  const signinWithGoogle = () => {
+  const signinWithGoogle = async () => {
     if (!auth) throw new Error("Authentication is not available. Firebase is not configured.");
-    return signInWithPopup(auth, googleProvider);
+    try {
+      return await signInWithPopup(auth, googleProvider);
+    } catch (err) {
+      if (err?.code === 'auth/popup-blocked') {
+        return signInWithRedirect(auth, googleProvider);
+      }
+      throw err;
+    }
   };
 
   // Facebook sign in
-  const signinWithFacebook = () => {
+  const signinWithFacebook = async () => {
     if (!auth) throw new Error("Authentication is not available. Firebase is not configured.");
-    return signInWithPopup(auth, facebookProvider);
+    try {
+      return await signInWithPopup(auth, facebookProvider);
+    } catch (err) {
+      if (err?.code === 'auth/popup-blocked') {
+        return signInWithRedirect(auth, facebookProvider);
+      }
+      throw err;
+    }
   };
 
   // Microsoft sign in
-  const signinWithMicrosoft = () => {
+  const signinWithMicrosoft = async () => {
     if (!auth) throw new Error("Authentication is not available. Firebase is not configured.");
-    return signInWithPopup(auth, microsoftProvider);
+    try {
+      return await signInWithPopup(auth, microsoftProvider);
+    } catch (err) {
+      if (err?.code === 'auth/popup-blocked') {
+        return signInWithRedirect(auth, microsoftProvider);
+      }
+      throw err;
+    }
   };
 
   // Yahoo sign in
   const yahooProvider = new OAuthProvider('yahoo.com');
-  const signinWithYahoo = () => {
+  const signinWithYahoo = async () => {
     if (!auth) throw new Error("Authentication is not available. Firebase is not configured.");
-    return signInWithPopup(auth, yahooProvider);
+    try {
+      return await signInWithPopup(auth, yahooProvider);
+    } catch (err) {
+      if (err?.code === 'auth/popup-blocked') {
+        return signInWithRedirect(auth, yahooProvider);
+      }
+      throw err;
+    }
   };
 
   // Phone number sign in (requires a visible or invisible reCAPTCHA container in the UI)

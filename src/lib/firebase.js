@@ -4,18 +4,17 @@ import { getAuth, GoogleAuthProvider, FacebookAuthProvider, OAuthProvider } from
 import { getFirestore } from "firebase/firestore";
 import { getAnalytics } from "firebase/analytics";
 
-// Read env vars (CRA requires REACT_APP_ prefix). Fall back to non-prefixed if present.
-const env = (key, fallbackKey) =>
-  process.env[`REACT_APP_${key}`] || process.env[key] || process.env[fallbackKey] || undefined;
-
+// Prefer runtime config injected by Flask (window.__FIREBASE_CONFIG__),
+// then fall back to env vars that CRA inlines at build time.
+const runtimeCfg = (typeof window !== 'undefined' && window.__FIREBASE_CONFIG__) || {};
 const firebaseConfig = {
-  apiKey: env("FIREBASE_API_KEY"),
-  authDomain: env("FIREBASE_AUTH_DOMAIN"),
-  projectId: env("FIREBASE_PROJECT_ID"),
-  storageBucket: env("FIREBASE_STORAGE_BUCKET"),
-  messagingSenderId: env("FIREBASE_MESSAGING_SENDER_ID"),
-  appId: env("FIREBASE_APP_ID"),
-  measurementId: env("FIREBASE_MEASUREMENT_ID"),
+  apiKey: runtimeCfg.apiKey || process.env.REACT_APP_FIREBASE_API_KEY || process.env.FIREBASE_API_KEY,
+  authDomain: runtimeCfg.authDomain || process.env.REACT_APP_FIREBASE_AUTH_DOMAIN || process.env.FIREBASE_AUTH_DOMAIN,
+  projectId: runtimeCfg.projectId || process.env.REACT_APP_FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID,
+  storageBucket: runtimeCfg.storageBucket || process.env.REACT_APP_FIREBASE_STORAGE_BUCKET || process.env.FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: runtimeCfg.messagingSenderId || process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID || process.env.FIREBASE_MESSAGING_SENDER_ID,
+  appId: runtimeCfg.appId || process.env.REACT_APP_FIREBASE_APP_ID || process.env.FIREBASE_APP_ID,
+  measurementId: runtimeCfg.measurementId || process.env.REACT_APP_FIREBASE_MEASUREMENT_ID || process.env.FIREBASE_MEASUREMENT_ID,
 };
 
 // Only initialize Firebase if we have the minimum required configuration.
@@ -54,5 +53,20 @@ export { app, analytics, auth, db };
 export const googleProvider = new GoogleAuthProvider();
 export const facebookProvider = new FacebookAuthProvider();
 export const microsoftProvider = new OAuthProvider('microsoft.com');
+
+// Provider tuning for better UX and tenant routing
+try {
+  googleProvider.setCustomParameters({ prompt: 'select_account' });
+} catch {}
+try {
+  // Force account picker and use the multi-tenant endpoint
+  microsoftProvider.setCustomParameters({ prompt: 'select_account', tenant: 'common' });
+} catch {}
+try {
+  // Ensure popup display (Facebook)
+  facebookProvider.setCustomParameters({ display: 'popup' });
+  // Be explicit about email scope
+  facebookProvider.addScope('email');
+} catch {}
 
 export default app;
