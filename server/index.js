@@ -15,7 +15,8 @@ require('dotenv').config({ path: path.join(__dirname, '.env') });
 const stripeRoutes = require('./stripeRoutes');
 const stripePayRoutes = require('./stripePayRoutes');
 const app = express();
-const port = process.env.PORT || 3001;
+// Use a Node-specific port var to avoid clashing with Flask's PORT from root .env
+const port = Number(process.env.SERVER_PORT || process.env.NODE_PORT || 3001);
 
 
 app.use(cors());
@@ -30,7 +31,8 @@ app.use(express.static(path.join(__dirname, '..', 'public')));
 // Proxy to the Flask service using http-proxy-middleware for proper streaming/header handling.
 // Requests to /api/flask/<path> will be forwarded to the Flask server configured by FLASK_URL.
 // Example: GET /api/flask/api/hello -> ${FLASK_URL}/api/hello
-const FLASK_URL = process.env.FLASK_URL || 'http://localhost:5000';
+// Default to Flask dev at 5050; can be overridden by FLASK_URL env var
+const FLASK_URL = process.env.FLASK_URL || 'http://127.0.0.1:5050';
 app.use('/api/flask', createProxyMiddleware({
   target: FLASK_URL,
   changeOrigin: true,
