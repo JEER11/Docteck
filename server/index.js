@@ -75,6 +75,25 @@ app.get('/health', async (req, res) => {
   }
 });
 
+// Env presence (no secrets) for troubleshooting
+app.get('/health/env', (req, res) => {
+  res.json({
+    ok: true,
+    google: {
+      id: Boolean(process.env.GOOGLE_CLIENT_ID),
+      secret: Boolean(process.env.GOOGLE_CLIENT_SECRET),
+      redirectUri: Boolean(process.env.GOOGLE_REDIRECT_URI),
+    },
+    ai: {
+      openai: Boolean(process.env.OPENAI_API_KEY),
+      groq: Boolean(process.env.GROQ_API_KEY),
+    },
+    stripe: Boolean(process.env.STRIPE_SECRET_KEY),
+    flaskUrl: process.env.FLASK_URL || null,
+    serverPort: process.env.SERVER_PORT || process.env.NODE_PORT || null,
+  });
+});
+
 // Support endpoints (Ask / Report) with file uploads
 const fs = require('fs');
 const multer = require('multer');
