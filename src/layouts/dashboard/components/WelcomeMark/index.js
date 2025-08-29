@@ -9,7 +9,8 @@ const jellyVideo = null;
 
 const WelcomeMark = () => {
   const handleClick = () => {
-    window.location.href = '/assistance';
+    // Go to Profile (personal) page to complete onboarding
+    window.location.href = '/profile';
   };
   const [hovered, setHovered] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -93,8 +94,7 @@ const WelcomeMark = () => {
             
           </VuiTypography>
           <VuiTypography color="text" variant="h6" fontWeight="regular" mb="auto">
-            Happy to see you again!
-            <br /> Ask me anything.
+            Happy to see you again! Complete profile.
           </VuiTypography>
         </VuiBox>
   <VuiTypography
