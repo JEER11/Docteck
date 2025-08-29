@@ -106,22 +106,22 @@ function SignUp() {
           </VuiTypography>
           <Stack mb="25px" justifyContent="center" alignItems="center" direction="row" spacing={2}>
             <GradientBorder borderRadius="xl">
-              <IconButton onClick={() => handleSocialSignin(signinWithFacebook)} disabled={loading}>
+              <IconButton onClick={() => handleSocialSignin(async () => { await signinWithFacebook(); history.push('/profile'); })} disabled={loading}>
                 <Icon as={FaFacebook} w="30px" h="30px" sx={({ palette: { white } }) => ({ color: white.focus })} />
               </IconButton>
             </GradientBorder>
             <GradientBorder borderRadius="xl">
-              <IconButton onClick={() => handleSocialSignin(signinWithMicrosoft)} disabled={loading}>
+              <IconButton onClick={() => handleSocialSignin(async () => { await signinWithMicrosoft(); history.push('/profile'); })} disabled={loading}>
                 <Icon as={FaMicrosoft} w="30px" h="30px" sx={({ palette: { white } }) => ({ color: white.focus })} />
               </IconButton>
             </GradientBorder>
             <GradientBorder borderRadius="xl">
-              <IconButton onClick={() => handleSocialSignin(signinWithGoogle)} disabled={loading}>
+              <IconButton onClick={() => handleSocialSignin(async () => { await signinWithGoogle(); history.push('/profile'); })} disabled={loading}>
                 <Icon as={FaGoogle} w="30px" h="30px" sx={({ palette: { white } }) => ({ color: white.focus })} />
               </IconButton>
             </GradientBorder>
             <GradientBorder borderRadius="xl">
-              <IconButton onClick={() => handleSocialSignin(signinWithYahoo)} disabled={loading}>
+              <IconButton onClick={() => handleSocialSignin(async () => { await signinWithYahoo(); history.push('/profile'); })} disabled={loading}>
                 <Icon as={FaYahoo} w="30px" h="30px" sx={({ palette: { white } }) => ({ color: white.focus })} />
               </IconButton>
             </GradientBorder>

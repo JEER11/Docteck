@@ -73,8 +73,8 @@ function SignIn() {
     setError("");
     try {
   await signin(email, password);
-  // After sign-in, go to profile page to complete mandatory info
-  history.push('/profile');
+  // After sign-in, go to dashboard
+  history.push('/dashboard');
       // Optional email 2FA gate
       if (auth?.currentUser && db) {
         try {
@@ -116,8 +116,8 @@ function SignIn() {
     setError("");
     try {
   await fn();
-  // After social sign-in, go to profile
-  history.push('/profile');
+  // After social sign-in, go to dashboard
+  history.push('/dashboard');
     } catch (err) {
       if (err.code === 'auth/popup-closed-by-user') {
         setError('Sign-in popup was closed before completing.');
