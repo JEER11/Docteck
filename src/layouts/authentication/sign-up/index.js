@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 // react-router-dom components
-import { Link } from "react-router-dom";
+import { Link, useHistory } from "react-router-dom";
 
 // @mui material components
 import Icon from "@mui/material/Icon";
@@ -35,6 +35,7 @@ import bgSignIn from "assets/images/Jellybackg.jpg";
 import { useAuth } from "hooks/useAuth";
 
 function SignUp() {
+  const history = useHistory();
   const [rememberMe, setRememberMe] = useState(true);
   const { signup, signinWithGoogle, signinWithFacebook, signinWithMicrosoft, signinWithYahoo, loading } = useAuth();
   const [name, setName] = useState("");
@@ -48,8 +49,9 @@ function SignUp() {
     e.preventDefault();
     setError("");
     try {
-      await signup(email, password, { name });
-      // Redirect or show success
+  await signup(email, password, { fullName: name });
+  // Go to profile to complete required info
+  history.push('/profile');
     } catch (err) {
       setError(err.message);
     }
