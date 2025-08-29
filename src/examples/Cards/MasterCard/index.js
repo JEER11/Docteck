@@ -18,9 +18,14 @@ import VuiBox from "components/VuiBox";
 import VuiTypography from "components/VuiTypography";
 import PropTypes from "prop-types";
 import { FiEdit2, FiPlus } from "react-icons/fi";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import PhotoCamera from "@mui/icons-material/PhotoCamera";
+import UploadIcon from "@mui/icons-material/CloudUpload";
+import { uploadUserFile, deleteUserFile } from "lib/storage";
+import { onInsuranceCards, addInsuranceCard, updateInsuranceCard, deleteInsuranceCard } from "lib/billingData";
+import { auth } from "lib/firebase";
 
-function MasterCard({ insuranceName, memberName, memberId, monthlyBill, onAdd, onEdit, onDelete, canAdd = true, overlayOpacity = 0.35, backgroundSrc }) {
+function MasterCard({ insuranceName, memberName, memberId, monthlyBill, onAdd, onEdit, onDelete, canAdd = true, overlayOpacity = 0.35, backgroundSrc, frontImageUrl, backImageUrl, id }) {
   const [openAdd, setOpenAdd] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
   const [form, setForm] = useState({
@@ -58,14 +63,15 @@ function MasterCard({ insuranceName, memberName, memberId, monthlyBill, onAdd, o
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
-  const handleAddSubmit = (e) => {
+  const handleAddSubmit = async (e) => {
     e.preventDefault();
-    if (onAdd) onAdd(form);
+    const payload = { ...form };
+    if (onAdd) await onAdd(payload);
     handleClose(e);
   };
-  const handleEditSubmit = (e) => {
+  const handleEditSubmit = async (e) => {
     e.preventDefault();
-    if (onEdit) onEdit(form);
+    if (onEdit) await onEdit(form);
     handleClose(e);
   };
   const handleDelete = (e) => {
@@ -145,6 +151,45 @@ function MasterCard({ insuranceName, memberName, memberId, monthlyBill, onAdd, o
               {insuranceName || "Insurance Card"}
             </VuiTypography>
             <VuiBox display="flex" alignItems="center" gap={1}>
+                {/* Upload buttons for front/back images */}
+                <VuiBox component="label" sx={{
+                    background: "rgba(255,255,255,0.12)", borderRadius: "50%", width: 32, height: 32,
+                    display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", mr: 1
+                  }} title="Upload front image">
+                  <input type="file" accept="image/*" hidden onChange={async (e)=>{
+                    const f = e.target.files?.[0];
+                    if (!f) return;
+                    if (!auth || !auth.currentUser) { e.target.value = ''; return; }
+                    try {
+                      const { url, path } = await uploadUserFile(f, "insurance");
+                      // Persist to Firestore if card is bound to a doc
+                      if (id) await updateInsuranceCard(id, { frontImageUrl: url, frontImagePath: path });
+                    } catch (err) {
+                      // no-op UI toast here if desired
+                    } finally {
+                      e.target.value = '';
+                    }
+                  }} />
+                  <PhotoCamera sx={{ color: '#fff' }} fontSize="small" />
+                </VuiBox>
+                <VuiBox component="label" sx={{
+                    background: "rgba(255,255,255,0.12)", borderRadius: "50%", width: 32, height: 32,
+                    display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", mr: 1
+                  }} title="Upload back image">
+                  <input type="file" accept="image/*" hidden onChange={async (e)=>{
+                    const f = e.target.files?.[0];
+                    if (!f) return;
+                    if (!auth || !auth.currentUser) { e.target.value = ''; return; }
+                    try {
+                      const { url, path } = await uploadUserFile(f, "insurance");
+                      if (id) await updateInsuranceCard(id, { backImageUrl: url, backImagePath: path });
+                    } catch (err) {
+                    } finally {
+                      e.target.value = '';
+                    }
+                  }} />
+                  <UploadIcon sx={{ color: '#fff' }} fontSize="small" />
+                </VuiBox>
               {canAdd && (
                 <VuiBox
                   component="button"
@@ -230,6 +275,13 @@ function MasterCard({ insuranceName, memberName, memberId, monthlyBill, onAdd, o
             </VuiBox>
           </VuiBox>
         </VuiBox>
+        {/* Show small thumbnails if images exist */}
+        {(frontImageUrl || backImageUrl) && (
+          <VuiBox sx={{ position: 'absolute', bottom: 8, right: 8, zIndex: 3, display: 'flex', gap: 1 }}>
+            {frontImageUrl && <img alt="Front" src={frontImageUrl} style={{ width: 40, height: 26, objectFit: 'cover', borderRadius: 4, border: '1px solid rgba(255,255,255,0.3)' }} />}
+            {backImageUrl && <img alt="Back" src={backImageUrl} style={{ width: 40, height: 26, objectFit: 'cover', borderRadius: 4, border: '1px solid rgba(255,255,255,0.3)' }} />}
+          </VuiBox>
+        )}
       </Card>
       {/* Popups for Add and Edit – now MUI Dialogs matching Pharmacy UI */}
       <Dialog
@@ -336,33 +388,63 @@ MasterCard.propTypes = {
 
 function MasterCardStack({ cards, setCards, onAdd, onEdit, onDelete }) {
   const [activeIndex, setActiveIndex] = useState(0);
+  // If setter not provided, load from Firestore live
+  const [liveCards, setLiveCards] = useState([]);
+  const usingLive = typeof setCards !== 'function';
+  useEffect(() => {
+    // If Firebase auth isn't configured or no user, avoid subscribing and show a placeholder card
+    if (!auth || !auth.currentUser) {
+      setLiveCards([
+        { id: "placeholder", insuranceName: "Insurance Card", memberName: "Member Name", memberId: "ID123456", monthlyBill: "0.00" }
+      ]);
+      return;
+    }
+    const unsub = onInsuranceCards({}, setLiveCards);
+    return () => unsub && unsub();
+  }, []);
+  const viewCards = usingLive ? liveCards : cards;
 
   // Handler to add a new card and show it under the current one
   const MAX_CARDS = 4;
-  const handleAdd = (form) => {
-    if (cards.length >= MAX_CARDS) {
+  const handleAdd = async (form) => {
+    const arr = viewCards;
+    if (arr.length >= MAX_CARDS) {
       // Soft guard; UI hides add button anyway
       return;
     }
-    const newCards = [...cards, form];
-    setCards(newCards);
-    // Show the new card on top
-    setActiveIndex(newCards.length - 1);
+    if (usingLive) {
+      try { await addInsuranceCard(form); } catch (_) { /* noop if not signed in */ }
+    } else {
+      const newCards = [...cards, form];
+      setCards(newCards);
+      // Show the new card on top
+      setActiveIndex(newCards.length - 1);
+    }
     if (onAdd) onAdd(form);
   };
 
   // Handler to edit the active card
-  const handleEdit = (form) => {
-    const newCards = cards.map((c, i) => (i === activeIndex ? { ...c, ...form } : c));
-    setCards(newCards);
+  const handleEdit = async (form) => {
+    if (usingLive) {
+      const target = viewCards[activeIndex];
+      if (target?.id) { try { await updateInsuranceCard(target.id, form); } catch (_) {} }
+    } else {
+      const newCards = cards.map((c, i) => (i === activeIndex ? { ...c, ...form } : c));
+      setCards(newCards);
+    }
     if (onEdit) onEdit(form);
   };
 
   // Handler to delete the active card
-  const handleDelete = (form) => {
-    const newCards = cards.filter((_, i) => i !== activeIndex);
-    setCards(newCards);
-    setActiveIndex((prev) => Math.max(0, prev - 1));
+  const handleDelete = async (form) => {
+    if (usingLive) {
+      const target = viewCards[activeIndex];
+      if (target?.id) { try { await deleteInsuranceCard(target.id); } catch (_) {} }
+    } else {
+      const newCards = cards.filter((_, i) => i !== activeIndex);
+      setCards(newCards);
+      setActiveIndex((prev) => Math.max(0, prev - 1));
+    }
     if (onDelete) onDelete(form);
   };
 
@@ -371,8 +453,8 @@ function MasterCardStack({ cards, setCards, onAdd, onEdit, onDelete }) {
   const PEEK_OFFSET = 22;  // larger peek for clearer bottom separation
   const MAX_PEEKS = 3;     // show up to 3 peeks (cards 2,3,4)
   return (
-    <div style={{ position: "relative", width: "100%", minHeight: CARD_HEIGHT + PEEK_OFFSET * Math.min(Math.max(cards.length - 1, 0), MAX_PEEKS) }}>
-  {cards.map((card, idx) => {
+    <div style={{ position: "relative", width: "100%", minHeight: CARD_HEIGHT + PEEK_OFFSET * Math.min(Math.max(viewCards.length - 1, 0), MAX_PEEKS) }}>
+  {viewCards.map((card, idx) => {
     const isActive = idx === activeIndex;
         const depth = Math.min(idx, MAX_PEEKS); // 0..3
   // Darken progressively by depth so each lower card is distinguishable (more contrast)
@@ -412,11 +494,15 @@ function MasterCardStack({ cards, setCards, onAdd, onEdit, onDelete }) {
             // Click to bring the card to the top (active)
             onClick={() => {
               if (isActive) return;
-              const selected = cards[idx];
-              const rest = cards.filter((_, i2) => i2 !== idx);
-              const reordered = [...rest, selected];
-              setCards(reordered);
-              setActiveIndex(reordered.length - 1);
+              if (usingLive) {
+                setActiveIndex(idx);
+              } else {
+                const selected = cards[idx];
+                const rest = cards.filter((_, i2) => i2 !== idx);
+                const reordered = [...rest, selected];
+                setCards(reordered);
+                setActiveIndex(reordered.length - 1);
+              }
             }}
           >
             <MasterCard
@@ -424,9 +510,12 @@ function MasterCardStack({ cards, setCards, onAdd, onEdit, onDelete }) {
               onAdd={handleAdd}
               onEdit={handleEdit}
               onDelete={handleDelete}
-              canAdd={cards.length < MAX_CARDS && idx === activeIndex}
+              canAdd={viewCards.length < MAX_CARDS && idx === activeIndex}
               overlayOpacity={isActive ? 0.26 : 0.14 + depth * 0.06}
               backgroundSrc={card.backgroundSrc}
+              id={card.id}
+              frontImageUrl={card.frontImageUrl}
+              backImageUrl={card.backImageUrl}
             />
     {!isActive && (
               <div

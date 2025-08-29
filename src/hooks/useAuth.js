@@ -68,7 +68,20 @@ export function useAuth() {
   const signup = async (email, password, profile = {}) => {
     if (!auth) throw new Error("Authentication is not available. Firebase is not configured.");
     const cred = await createUserWithEmailAndPassword(auth, email, password);
-    if (db) await setDoc(doc(db, "users", cred.user.uid), profile);
+    // Best-effort profile seed; don't block sign-up/navigation if this fails (e.g., strict rules)
+    if (db) {
+      try {
+        await setDoc(
+          doc(db, "users", cred.user.uid),
+          { email: cred.user.email || "", ...profile },
+          { merge: true }
+        );
+      } catch (e) {
+        // Non-fatal: user account is created; onAuthStateChanged will still run
+        // eslint-disable-next-line no-console
+        console.warn("Profile seed failed; continuing sign-up:", e?.message || e);
+      }
+    }
     return cred.user;
   };
 

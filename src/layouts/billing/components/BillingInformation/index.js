@@ -14,34 +14,19 @@ import VuiTypography from "components/VuiTypography";
 // Billing page components
 import Bill from "layouts/billing/components/Bill";
 import VuiButton from "components/VuiButton";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
+import { onPharmacies, addPharmacy, updatePharmacy, deletePharmacy } from "lib/caringHubData";
+import { auth } from "lib/firebase";
 
 function BillingInformation() {
-  // Example pharmacy data
-  const [pharmacies, setPharmacies] = useState([
-    {
-      name: "CVS Pharmacy",
-      address: "123 Main St, Springfield, IL",
-      email: "contact@cvs.com",
-      phone: "(217) 555-1234",
-      prescription: "Atorvastatin 20mg",
-    },
-    {
-      name: "Walgreens",
-      address: "456 Oak Ave, Springfield, IL",
-      email: "info@walgreens.com",
-      phone: "(217) 555-5678",
-      prescription: "Lisinopril 10mg",
-    },
-    {
-      name: "Rite Aid",
-      address: "789 Pine Rd, Springfield, IL",
-      email: "help@riteaid.com",
-      phone: "(217) 555-9012",
-      prescription: "Metformin 500mg",
-    },
-  ]);
+  // Persisted pharmacies list (per user)
+  const [pharmacies, setPharmacies] = useState([]);
+  useEffect(() => {
+    if (!auth) return; // Firebase not configured
+    const unsub = onPharmacies({}, setPharmacies);
+    return () => unsub && unsub();
+  }, []);
   const [open, setOpen] = useState(false);
   const [newPharmacy, setNewPharmacy] = useState({ name: "", address: "", email: "", phone: "", prescription: "" });
   const [editIdx, setEditIdx] = useState(null);
@@ -80,12 +65,9 @@ function BillingInformation() {
       [name]: value
     });
   };
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!newPharmacy.name || !newPharmacy.address || !newPharmacy.email || !newPharmacy.phone || !newPharmacy.prescription) return;
-    setPharmacies([
-      ...pharmacies,
-      { ...newPharmacy }
-    ]);
+    await addPharmacy({ ...newPharmacy });
     handleClose();
   };
 
@@ -104,9 +86,9 @@ function BillingInformation() {
       [name]: value
     });
   };
-  const handleEditSave = () => {
-    if (!editPharmacy.name || !editPharmacy.address || !editPharmacy.email || !editPharmacy.phone || !editPharmacy.prescription) return;
-    setPharmacies(pharmacies.map((ph, idx) => idx === editIdx ? { ...editPharmacy } : ph));
+  const handleEditSave = async () => {
+    if (!editPharmacy.id || !editPharmacy.name || !editPharmacy.address || !editPharmacy.email || !editPharmacy.phone || !editPharmacy.prescription) return;
+    await updatePharmacy(editPharmacy.id, { name: editPharmacy.name, address: editPharmacy.address, email: editPharmacy.email, phone: editPharmacy.phone, prescription: editPharmacy.prescription });
     handleEditClose();
   };
 
@@ -165,17 +147,17 @@ function BillingInformation() {
       <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 22, pb: 2 }}>All Pharmacies</DialogTitle>
       <DialogContent sx={{ pt: 1, background: 'transparent', color: 'white', px: 2, minWidth: 400 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {pharmacies.map((ph, idx) => (
+      {pharmacies.map((ph, idx) => (
             <Bill
-              key={ph.name + idx}
+        key={(ph.id || ph.name) + idx}
               name={ph.name}
               company={ph.address}
               email={ph.email}
               vat={ph.phone}
               prescription={ph.prescription}
               noGutter={idx === pharmacies.length - 1}
-              onEdit={() => handleEditOpen(idx)}
-              onDelete={() => setPharmacies(pharmacies.filter((_, i) => i !== idx))}
+        onEdit={() => handleEditOpen(idx)}
+        onDelete={() => deletePharmacy(ph.id)}
             />
           ))}
         </div>
@@ -241,17 +223,17 @@ function BillingInformation() {
       </VuiBox>
       <VuiBox style={{ maxHeight: 420, overflowY: pharmacies.length > MAX_VISIBLE ? 'auto' : 'visible', transition: 'max-height 0.2s', minHeight: 0 }}>
         <VuiBox component="ul" display="flex" flexDirection="column" p={0} m={0}>
-          {visiblePharmacies.map((ph, idx) => (
+      {visiblePharmacies.map((ph, idx) => (
             <Bill
-              key={ph.name}
+        key={ph.id || ph.name}
               name={ph.name}
               company={ph.address}
               email={ph.email}
               vat={ph.phone}
               prescription={ph.prescription}
               noGutter={idx === visiblePharmacies.length - 1}
-              onEdit={() => handleEditOpen(idx)}
-              onDelete={() => setPharmacies(pharmacies.filter((_, i) => i !== idx))}
+        onEdit={() => handleEditOpen(idx)}
+        onDelete={() => deletePharmacy(ph.id)}
             />
           ))}
         </VuiBox>

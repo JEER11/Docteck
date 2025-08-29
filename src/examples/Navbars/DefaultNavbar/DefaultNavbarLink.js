@@ -11,7 +11,7 @@ import Icon from "@mui/material/Icon";
 import VuiBox from "components/VuiBox";
 import VuiTypography from "components/VuiTypography";
 
-function DefaultNavbarLink({ icon, name, route }) {
+function DefaultNavbarLink({ icon, name, route, hideLabel = false }) {
   return (
     <>
       <VuiBox
@@ -31,15 +31,17 @@ function DefaultNavbarLink({ icon, name, route }) {
         >
           {icon}
         </Icon>
-        <VuiTypography
-          variant="button"
-          fontWeight="regular"
-          color="white"
-          textTransform="capitalize"
-          sx={{ width: "100%", lineHeight: 0 }}
-        >
-          &nbsp;{name}
-        </VuiTypography>
+        {!hideLabel && (
+          <VuiTypography
+            variant="button"
+            fontWeight="regular"
+            color="white"
+            textTransform="capitalize"
+            sx={{ width: "100%", lineHeight: 0 }}
+          >
+            &nbsp;{name}
+          </VuiTypography>
+        )}
       </VuiBox>
     </>
   );

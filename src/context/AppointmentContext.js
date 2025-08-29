@@ -1,5 +1,7 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import getApiBase from '../lib/apiBase';
+import { onAppointments as onAppts, addAppointment as addAppt, updateAppointment as updAppt, deleteAppointment as delAppt } from '../lib/appointmentsData';
+import { auth } from '../lib/firebase';
 
 const AppointmentContext = createContext();
 
@@ -9,7 +11,19 @@ export function AppointmentProvider({ children }) {
   const [providers, setProviders] = useState([]);
 
   useEffect(() => {
-    // Load initial data
+    // Prefer per-user Firestore persistence when auth is configured
+    if (auth && auth.currentUser) {
+      const unsub = onAppts({}, (items) => setAppointments(items));
+      // Still load providers from API if available
+      (async () => {
+        try {
+          const pr = await fetch(`${API}/api/providers`).then(r => r.json());
+          if (pr?.ok && Array.isArray(pr.providers)) setProviders(pr.providers);
+        } catch (_) {}
+      })();
+      return () => unsub && unsub();
+    }
+    // Fallback to existing API-based loading if no auth
     (async () => {
       try {
         const [ap, pr] = await Promise.all([
@@ -25,6 +39,21 @@ export function AppointmentProvider({ children }) {
   const [selectedDate, setSelectedDate] = useState(new Date());
 
   const addAppointment = async (appointment) => {
+  if (auth && auth.currentUser) {
+      try {
+        await addAppt({
+          title: appointment.title,
+          start: appointment.start,
+          end: appointment.end,
+          providerId: appointment.providerId || null,
+          location: appointment.location || '',
+          reason: appointment.reason || '',
+          details: appointment.details || ''
+        });
+        return;
+      } catch (_) {}
+    }
+    // Fallback to existing API
     try {
       const payload = {
         title: appointment.title,
@@ -42,12 +71,14 @@ export function AppointmentProvider({ children }) {
         setAppointments(prev => [...prev, { ...a, start: new Date(a.start), end: new Date(a.end) }]);
       }
     } catch (_) {
-      // fallback local add
       setAppointments(prev => [...prev, appointment]);
     }
   };
 
   const assignProvider = async (id, providerId) => {
+    if (auth && auth.currentUser) {
+      try { await updAppt({ id, patch: { providerId } }); return; } catch (_) {}
+    }
     try {
       const res = await fetch(`${API}/api/appointments/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ providerId }) });
       const data = await res.json();
@@ -59,6 +90,9 @@ export function AppointmentProvider({ children }) {
   };
 
   const removeAppointment = async (id) => {
+    if (auth && auth.currentUser) {
+      try { await delAppt({ id }); return; } catch (_) {}
+    }
     try { await fetch(`${API}/api/appointments/${id}`, { method: 'DELETE' }); } catch (_) {}
     setAppointments(prev => prev.filter(a => a.id !== id));
   };

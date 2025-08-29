@@ -21,7 +21,7 @@ const VuiInput = forwardRef(({ size, icon, error, success, disabled, ...rest }, 
   if (icon.component && icon.direction === "left") {
     template = (
       <VuiInputWithIconRoot ref={ref} ownerState={{ error, success, disabled, iconDirection: "left" }}>
-        <VuiInputIconBoxRoot ownerState={{ size }}>
+        <VuiInputIconBoxRoot ownerState={{ size, iconDirection: "left" }}>
           <VuiInputIconRoot fontSize="small" ownerState={{ size }}>
             {icon.component}
           </VuiInputIconRoot>
@@ -39,7 +39,7 @@ const VuiInput = forwardRef(({ size, icon, error, success, disabled, ...rest }, 
           {...rest}
           ownerState={{ size, error, success, iconDirection, direction, disabled }}
         />
-        <VuiInputIconBoxRoot ownerState={{ size }}>
+        <VuiInputIconBoxRoot ownerState={{ size, iconDirection: "right" }}>
           <VuiInputIconRoot fontSize="small" ownerState={{ size }}>
             {icon.component}
           </VuiInputIconRoot>

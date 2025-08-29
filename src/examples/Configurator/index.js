@@ -3,6 +3,7 @@
 //
 
 import { useState, useEffect } from "react";
+import { useHistory } from "react-router-dom";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
@@ -42,6 +43,7 @@ import {
   setFixedNavbar,
   setSidenavColor,
 } from "context";
+import { useAuth } from "hooks/useAuth";
 
 function Configurator() {
   // Dialog state for popups
@@ -49,9 +51,11 @@ function Configurator() {
   const [openPrivacy, setOpenPrivacy] = useState(false);
   const [openFeedback, setOpenFeedback] = useState(false);
   const { i18n } = useTranslation();
+  const history = useHistory();
   const [controller, dispatch] = useVisionUIController();
   const { openConfigurator, transparentSidenav, fixedNavbar, sidenavColor } = controller;
   const [disabled, setDisabled] = useState(false);
+  const { signout, user } = useAuth();
   const sidenavColors = ["primary", "info", "success", "warning", "error"];
   const [lang, setLang] = useState(i18n.language || "en");
   const languageOptions = [
@@ -295,6 +299,22 @@ function Configurator() {
             >
               Feedback
             </VuiButton>
+            {user && (
+              <VuiButton
+                color="error"
+                variant="contained"
+                fullWidth
+                onClick={async () => {
+                  try {
+                    await signout();
+                  } catch {}
+                  setOpenConfigurator(dispatch, false);
+                  history.push('/authentication/sign-in');
+                }}
+              >
+                Sign out
+              </VuiButton>
+            )}
           </VuiBox>
         </VuiBox>
       </VuiBox>

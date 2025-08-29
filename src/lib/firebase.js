@@ -50,6 +50,7 @@ if (hasConfig) {
 }
 
 export { app, analytics, auth, db };
+export const hasFirebaseConfig = hasConfig;
 export const googleProvider = new GoogleAuthProvider();
 export const facebookProvider = new FacebookAuthProvider();
 export const microsoftProvider = new OAuthProvider('microsoft.com');

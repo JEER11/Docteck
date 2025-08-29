@@ -1,6 +1,6 @@
 // @mui material components
 import Grid from "@mui/material/Grid";
-import React, { useState } from "react";
+import React from "react";
 
 // Vision UI Dashboard React components
 import VuiBox from "components/VuiBox";
@@ -21,9 +21,6 @@ import CreditBalance from "./components/CreditBalance";
 import BillingBackground from "./BillingBackground";
 
 function Billing() {
-  const [insuranceCards, setInsuranceCards] = useState([
-    { insuranceName: "Insurance Card", memberName: "Member Name", memberId: "ID123456", monthlyBill: "0.00" }
-  ]);
   return (
     <>
       <BillingBackground />
@@ -35,7 +32,7 @@ function Billing() {
               <Grid item xs={12} lg={7} xl={8}>
                 <Grid container spacing={3}>
                   <Grid item xs={12} xl={6}>
-                    <MasterCardStack cards={insuranceCards} setCards={setInsuranceCards} />
+                    <MasterCardStack />
                   </Grid>
                   <Grid item xs={12} md={12} xl={6}>
                     <CreditBalance />
