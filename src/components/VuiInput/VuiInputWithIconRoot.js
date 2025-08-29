@@ -27,9 +27,9 @@ export default styled("div")(({ theme, ownerState }) => {
     border: `${borderWidth[1]} solid`,
     borderRadius: borderRadius.lg,
     borderColor: borderColorValue,
-  // Add a touch of internal padding so the edge icon doesn't touch the rounded border
-  paddingRight: rightIcon ? pxToRem(6) : undefined,
-  paddingLeft: leftIcon ? pxToRem(6) : undefined,
+  // Keep wrapper padding fixed so width doesn't change on focus
+  paddingRight: rightIcon ? pxToRem(6) : pxToRem(6),
+  paddingLeft: leftIcon ? pxToRem(6) : pxToRem(6),
     "& .MuiIcon-root": {
       color: grey[500],
     },
@@ -37,27 +37,30 @@ export default styled("div")(({ theme, ownerState }) => {
     "& .MuiInputBase-input": {
       color: white.main,
       height: "100%",
-      paddingX: pxToRem(20),
+      // Tighter internal padding to bring placeholder closer to the left
+      paddingLeft: pxToRem(12),
+      paddingRight: pxToRem(12),
       backgroundColor: disabled ? grey[600] : inputColors.backgroundColor,
     },
     // Whole control turns to focus color; input itself stays flat
     "&:focus-within": {
       borderColor: inputColors.borderColor.focus,
-      boxShadow: `0 0 0 2px ${inputColors.boxShadow}`,
+      // Avoid extra shadow expansion that can visually shift layout
+      boxShadow: "none",
     },
 
     "& .MuiInputBase-root": {
       border: `unset`,
       borderRadius: borderRadius.lg,
-      // Keep the same rounded shape as fields without icons
-      borderTopLeftRadius: borderRadius.lg,
-      borderBottomLeftRadius: borderRadius.lg,
-      borderTopRightRadius: borderRadius.lg,
-      borderBottomRightRadius: borderRadius.lg,
+  // Keep the same rounded shape as fields without icons
+  borderTopLeftRadius: borderRadius.lg,
+  borderBottomLeftRadius: borderRadius.lg,
+  borderTopRightRadius: borderRadius.lg,
+  borderBottomRightRadius: borderRadius.lg,
       backgroundColor: `${disabled ? grey[600] : inputColors.backgroundColor} !important`,
-  // Add more padding on the side where the icon sits so the icon doesn't touch the rounded border
-  paddingRight: rightIcon ? pxToRem(68) : undefined,
-  paddingLeft: leftIcon ? pxToRem(68) : undefined,
+  // Keep internal padding constant and slightly reduced to align text closer to icon
+  paddingRight: rightIcon ? pxToRem(56) : pxToRem(10),
+  paddingLeft: leftIcon ? pxToRem(56) : pxToRem(10),
       "& ::placeholder": {
         color: `${white.main} !important`,
       },

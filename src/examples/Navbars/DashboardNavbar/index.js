@@ -115,15 +115,12 @@ function DashboardNavbar({ absolute, light, isMini }) {
               <VuiInput
                 placeholder={t('navbar.searchPlaceholder', { defaultValue: 'Type here...' })}
                 icon={{ component: "search", direction: "left" }}
-                sx={({ breakpoints }) => ({
-                  [breakpoints.down("sm")]: {
-                    maxWidth: "80px",
-                  },
-                  [breakpoints.only("sm")]: {
-                    maxWidth: "80px",
-                  },
+                sx={{
+                  width: "180px",
+                  minWidth: "180px",
+                  maxWidth: "180px",
                   backgroundColor: "info.main !important",
-                })}
+                }}
               />
             </VuiBox>
             <VuiBox color={light ? "white" : "inherit"}>

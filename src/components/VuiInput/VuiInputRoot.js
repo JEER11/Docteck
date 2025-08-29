@@ -161,8 +161,7 @@ export default styled(InputBase)(({ theme, ownerState }) => {
         "&.Mui-focused": {
           border: "none",
           boxShadow: "none",
-          paddingLeft: pxToRem(12),
-          paddingRight: pxToRem(12),
+          // Keep padding unchanged on focus to avoid width/position shift
           outline: 0,
         },
       }
