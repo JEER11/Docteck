@@ -113,6 +113,9 @@ import AccessTimeOutlinedIcon from "@mui/icons-material/AccessTimeOutlined";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import countries from "./countries.json"; // You will need to add a countries.json file with all country names
 import { useState, useRef, useEffect } from "react";
+import { useAuth } from "hooks/useAuth";
+import { auth, db } from "lib/firebase";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import getApiBase from "../../lib/apiBase";
 import VuiButton from "components/VuiButton";
 import MiniDayCalendar from "components/MiniDayCalendar";
@@ -187,28 +190,89 @@ function SettingsSection({ title, actions, onAction, onViewAll }) {
 }
 
 function Overview() {
+  const { user } = useAuth();
   const [editOpen, setEditOpen] = useState(false);
   const [careTeamOpen, setCareTeamOpen] = useState(false);
   const [recordOpen, setRecordOpen] = useState(false);
   const [communicationOpen, setCommunicationOpen] = useState(false);
   const [profile, setProfile] = useState({
     fullName: "--",
-    mobile: "--",   
+    firstName: "",
+    lastName: "",
+    mobile: "--",
     email: "--",
     location: "United States",
-    dateOfBirth: "yyyy-mm-dd",
-    sex: "--",
-    bloodType: "--",
-    wheelchair: "--",
+    dateOfBirth: "",
+    sex: "",
+    bloodType: "",
+    wheelchair: "",
   });
   const handleEditOpen = () => setEditOpen(true);
   const handleEditClose = () => setEditOpen(false);
   const handleProfileChange = (e) => {
     setProfile({ ...profile, [e.target.name]: e.target.value });
   };
-  const handleProfileSave = () => {
+  const handleProfileSave = async () => {
+    try {
+      if (db && auth?.currentUser) {
+        const uid = auth.currentUser.uid;
+        const ref = doc(db, 'users', uid);
+        const toSave = {
+          fullName: profile.fullName === '--' ? '' : profile.fullName,
+          firstName: profile.firstName || '',
+          lastName: profile.lastName || '',
+          phoneNumber: profile.mobile && profile.mobile !== '--' ? profile.mobile : '',
+          email: profile.email && profile.email !== '--' ? profile.email : (auth.currentUser.email || ''),
+          location: profile.location || '',
+          dateOfBirth: profile.dateOfBirth || '',
+          sex: profile.sex || '',
+          bloodType: profile.bloodType || '',
+          wheelchair: profile.wheelchair || '',
+          updatedAt: new Date().toISOString(),
+        };
+        await setDoc(ref, toSave, { merge: true });
+      }
+    } catch (e) { console.error(e); }
     setEditOpen(false);
   };
+  // Prefill from Firebase user / Firestore on load
+  useEffect(() => {
+    (async () => {
+      try {
+        const fbu = auth?.currentUser;
+        let fsDoc = null;
+        if (db && fbu?.uid) {
+          try {
+            const snap = await getDoc(doc(db, 'users', fbu.uid));
+            fsDoc = snap.exists() ? snap.data() : null;
+          } catch (_) {}
+        }
+        const displayName = fsDoc?.fullName || fsDoc?.displayName || fbu?.displayName || '';
+        const email = fsDoc?.email || fbu?.email || '';
+        const phone = fsDoc?.phoneNumber || fbu?.phoneNumber || '';
+        const parts = (displayName || '').trim().split(/\s+/).filter(Boolean);
+        const firstName = fsDoc?.firstName || parts[0] || '';
+        const lastName = fsDoc?.lastName || (parts.length > 1 ? parts.slice(1).join(' ') : '');
+        setProfile((p) => ({
+          ...p,
+          fullName: displayName || '--',
+          firstName,
+          lastName,
+          email: email || '--',
+          mobile: phone || '--',
+          location: fsDoc?.location || p.location,
+          dateOfBirth: fsDoc?.dateOfBirth || '',
+          sex: fsDoc?.sex || '',
+          bloodType: fsDoc?.bloodType || '',
+          wheelchair: fsDoc?.wheelchair || '',
+        }));
+        // If required fields missing, open edit dialog
+        const missing = !(firstName && lastName && email);
+        if (missing) setEditOpen(true);
+      } catch (e) { console.error(e); }
+    })();
+  // eslint-disable-next-line
+  }, []);
 
   // removed Care Team dialog since section is no longer displayed
   const [recordDialog, setRecordDialog] = useState(false);

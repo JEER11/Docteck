@@ -31,9 +31,16 @@ export function useAuth() {
             if (!userDoc.exists()) {
               // Seed a minimal profile document on first sign-in
               try {
+                const dn = (firebaseUser.displayName || '').trim();
+                const parts = dn.split(/\s+/).filter(Boolean);
+                const firstName = parts[0] || '';
+                const lastName = parts.length > 1 ? parts.slice(1).join(' ') : '';
                 await setDoc(ref, {
                   email: firebaseUser.email || '',
                   displayName: firebaseUser.displayName || '',
+                  firstName,
+                  lastName,
+                  fullName: dn || `${firstName} ${lastName}`.trim(),
                   photoURL: firebaseUser.photoURL || '',
                   phoneNumber: firebaseUser.phoneNumber || '',
                   providers: (firebaseUser.providerData || []).map(p => ({ providerId: p.providerId, uid: p.uid })),

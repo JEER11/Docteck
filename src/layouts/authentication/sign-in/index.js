@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 // react-router-dom components
-import { Link } from "react-router-dom";
+import { Link, useHistory } from "react-router-dom";
 
 // Vision UI Dashboard React components
 import VuiBox from "components/VuiBox";
@@ -44,6 +44,7 @@ import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
 
 function SignIn() {
+  const history = useHistory();
   const [rememberMe, setRememberMe] = useState(true);
   const { signin, signinWithGoogle, signinWithFacebook, signinWithMicrosoft, signinWithYahoo, user, loading } = useAuth();
   const [email, setEmail] = useState("");
@@ -71,7 +72,9 @@ function SignIn() {
     e.preventDefault();
     setError("");
     try {
-      await signin(email, password);
+  await signin(email, password);
+  // After sign-in, go to profile page to complete mandatory info
+  history.push('/profile');
       // Optional email 2FA gate
       if (auth?.currentUser && db) {
         try {
@@ -112,7 +115,9 @@ function SignIn() {
   const handleSocialSignin = async (fn) => {
     setError("");
     try {
-      await fn();
+  await fn();
+  // After social sign-in, go to profile
+  history.push('/profile');
     } catch (err) {
       if (err.code === 'auth/popup-closed-by-user') {
         setError('Sign-in popup was closed before completing.');
