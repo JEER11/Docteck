@@ -22,6 +22,7 @@ import CoverLayout from "layouts/authentication/components/CoverLayout";
 // Images
 import bgSignIn from "assets/images/Jellybackg.jpg";
 import { useAuth } from "hooks/useAuth";
+import { hasFirebaseConfig } from "lib/firebase";
 import { auth, db } from "lib/firebase";
 import {
   getMultiFactorResolver,
@@ -265,13 +266,18 @@ function SignIn() {
             &nbsp;&nbsp;&nbsp;&nbsp;Remember me
           </VuiTypography>
         </VuiBox>
+        {!hasFirebaseConfig && (
+          <VuiTypography color="error" fontWeight="medium" mt={2} mb={1} textAlign="center">
+            Authentication isn’t configured. Set your Firebase keys, then refresh.
+          </VuiTypography>
+        )}
         {error && (
           <VuiTypography color="error" fontWeight="medium" mt={2} mb={1} textAlign="center">
             {error}
           </VuiTypography>
         )}
         <VuiBox mt={4} mb={1}>
-          <VuiButton color="info" fullWidth sx={{ background: 'rgba(33,150,243,0.5)' }} type="submit" disabled={loading}>
+          <VuiButton color="info" fullWidth sx={{ background: 'rgba(33,150,243,0.5)' }} type="submit" disabled={loading || !hasFirebaseConfig}>
             SIGN IN
           </VuiButton>
         </VuiBox>

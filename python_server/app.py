@@ -114,6 +114,23 @@ PROFILE_JSON = os.path.join(UPLOAD_DIR, 'profile.json')
 STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY')
 if STRIPE_SECRET_KEY:
     stripe.api_key = STRIPE_SECRET_KEY
+    # Dev-friendly JSON store (uploads/stripe-customers.json) to map userId -> customerId
+    STRIPE_CUSTOMERS_JSON = os.path.join(UPLOAD_DIR, 'stripe-customers.json')
+    def _stripe_store_read():
+        try:
+            if not os.path.exists(STRIPE_CUSTOMERS_JSON):
+                return {}
+            with open(STRIPE_CUSTOMERS_JSON, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception:
+            return {}
+    def _stripe_store_write(obj):
+        try:
+            os.makedirs(os.path.dirname(STRIPE_CUSTOMERS_JSON), exist_ok=True)
+            with open(STRIPE_CUSTOMERS_JSON, 'w', encoding='utf-8') as f:
+                json.dump(obj, f, indent=2)
+        except Exception:
+            pass
 
 
 @app.route('/api/hello')
@@ -971,14 +988,24 @@ def stripe_save_card():
         return jsonify(error='stripe_not_configured'), 500
     payload = request.get_json(silent=True) or {}
     payment_method_id = payload.get('paymentMethodId')
-    user_id = payload.get('userId','demo')
+    user_id = (payload.get('userId') or 'demo').strip()
     if not payment_method_id:
         return jsonify(error='missing_paymentMethodId'), 400
-    # demo: create a customer per call; real app should persist
-    customer = stripe.Customer.create(metadata={'userId': user_id})
-    stripe.PaymentMethod.attach(payment_method_id, customer=customer['id'])
-    stripe.Customer.modify(customer['id'], invoice_settings={'default_payment_method': payment_method_id})
-    return jsonify(success=True, customerId=customer['id'])
+    try:
+        # Create or fetch a Stripe customer for this user, persist mapping in uploads/stripe-customers.json
+        store = _stripe_store_read()
+        customer_id = store.get(user_id)
+        if not customer_id:
+            customer = stripe.Customer.create(metadata={'userId': user_id})
+            customer_id = customer['id']
+            store[user_id] = customer_id
+            _stripe_store_write(store)
+        # Attach payment method and set as default
+        stripe.PaymentMethod.attach(payment_method_id, customer=customer_id)
+        stripe.Customer.modify(customer_id, invoice_settings={'default_payment_method': payment_method_id})
+        return jsonify(success=True, customerId=customer_id)
+    except Exception as e:
+        return jsonify(error=str(e)), 500
 
 @app.post('/api/stripe/pay')
 def stripe_pay():
@@ -986,18 +1013,36 @@ def stripe_pay():
         return jsonify(error='stripe_not_configured'), 500
     payload = request.get_json(silent=True) or {}
     amount = payload.get('amount')
-    customer_id = payload.get('customerId')
+    customer_id = (payload.get('customerId') or '').strip()
     payment_method_id = payload.get('paymentMethodId')
-    if not amount or not customer_id or not payment_method_id:
+    user_id = (payload.get('userId') or '').strip()
+    if not amount or not payment_method_id:
         return jsonify(error='missing_fields'), 400
-    pi = stripe.PaymentIntent.create(amount=int(round(float(amount) * 100)), currency='usd', customer=customer_id, payment_method=payment_method_id, off_session=True, confirm=True, description=payload.get('description') or 'Medical Payment')
-    return jsonify(success=True, paymentIntent=pi)
+    # Allow using userId instead of passing customerId explicitly
+    if not customer_id and user_id and STRIPE_SECRET_KEY:
+        store = _stripe_store_read()
+        customer_id = (store.get(user_id) or '').strip()
+    if not customer_id:
+        return jsonify(error='missing_customerId'), 400
+    try:
+        pi = stripe.PaymentIntent.create(
+            amount=int(round(float(amount) * 100)),
+            currency='usd',
+            customer=customer_id,
+            payment_method=payment_method_id,
+            off_session=True,
+            confirm=True,
+            description=payload.get('description') or 'Medical Payment'
+        )
+        return jsonify(success=True, paymentIntent=pi)
+    except Exception as e:
+        return jsonify(error=str(e)), 500
 
 if __name__ == '__main__':
-    # Development server (disable reloader to keep the process attached in terminals)
+    # Development server
     app.run(
         host='0.0.0.0',
-        port=int(os.environ.get('PORT', '5000')),
-    debug=True,
-    use_reloader=True,
+        port=int(os.environ.get('PORT', '5050')),
+        debug=True,
+        use_reloader=True,
     )

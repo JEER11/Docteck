@@ -105,8 +105,8 @@ function DefaultNavbar({ transparent, light, action }) {
         <VuiBox color="inherit" display={{ xs: "none", lg: "flex" }} m={0} p={0}>
           <DefaultNavbarLink icon="donut_large" name="dashboard" route="/dashboard" />
           <DefaultNavbarLink icon="person" name="profile" route="/profile" />
-          <DefaultNavbarLink icon="account_circle" name="sign up" route="/authentication/sign-up" />
-          <DefaultNavbarLink icon="key" name="sign in" route="/authentication/sign-in" />
+          <DefaultNavbarLink icon="account_circle" name="sign up" route="/authentication/sign-up" hideLabel />
+          <DefaultNavbarLink icon="key" name="sign in" route="/authentication/sign-in" hideLabel />
         </VuiBox>
         {/* No notifications in DefaultNavbar for auth pages */}
         {action &&

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 // react-router-dom components
 import { Link, useHistory } from "react-router-dom";
@@ -33,11 +33,12 @@ import bgSignIn from "assets/images/Jellybackg.jpg";
 
 // hooks
 import { useAuth } from "hooks/useAuth";
+import { hasFirebaseConfig } from "lib/firebase";
 
 function SignUp() {
   const history = useHistory();
   const [rememberMe, setRememberMe] = useState(true);
-  const { signup, signinWithGoogle, signinWithFacebook, signinWithMicrosoft, signinWithYahoo, loading } = useAuth();
+  const { signup, signinWithGoogle, signinWithFacebook, signinWithMicrosoft, signinWithYahoo, loading, user } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -46,8 +47,15 @@ function SignUp() {
 
   const handleSetRememberMe = () => setRememberMe(!rememberMe);
 
+  // If already authenticated (e.g., after successful sign-up), go to profile
+  useEffect(() => {
+    if (user) {
+      history.push('/profile');
+    }
+  }, [user, history]);
+
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     setError("");
     try {
   await signup(email, password, { fullName: name });
@@ -136,6 +144,11 @@ function SignUp() {
           >
             or
           </VuiTypography>
+          {!hasFirebaseConfig && (
+            <VuiTypography color="error" fontWeight="medium" mt={2} mb={1} textAlign="center">
+              Authentication isn’t configured. Set your Firebase keys, then refresh.
+            </VuiTypography>
+          )}
           {error && (
             <VuiTypography color="error" fontWeight="medium" mt={2} mb={1} textAlign="center">
               {error}
@@ -248,7 +261,7 @@ function SignUp() {
             </VuiTypography>
           </VuiBox>
           <VuiBox mt={4} mb={1}>
-            <VuiButton color="info" fullWidth sx={{ background: 'rgba(33,150,243,0.5)' }} type="submit" disabled={loading}>
+            <VuiButton color="info" fullWidth sx={{ background: 'rgba(33,150,243,0.5)' }} type="submit" onClick={handleSubmit} disabled={loading || !hasFirebaseConfig || !name || !email || !password}>
               SIGN UP
             </VuiButton>
           </VuiBox>

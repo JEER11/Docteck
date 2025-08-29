@@ -127,30 +127,15 @@ function DashboardNavbar({ absolute, light, isMini }) {
               />
             </VuiBox>
             <VuiBox color={light ? "white" : "inherit"}>
+              {/* Removed "Sign in" text next to account icon to declutter header */}
               <IconButton sx={navbarIconButton} size="small"
                 onMouseDown={() => routeLoadingBus.start()}
                 onClick={() => routeLoadingBus.start()}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') routeLoadingBus.start(); }}
+                component={Link}
+                to="/authentication/sign-in"
               >
-                <Link
-                  to="/authentication/sign-in"
-                  style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', color: 'inherit', width: '100%', height: '100%' }}
-                >
-                  <Icon
-                    sx={({ palette: { dark, white } }) => ({
-                      color: light ? white.main : dark.main,
-                    })}
-                  >
-                    account_circle
-                  </Icon>
-                  <VuiTypography
-                    variant="button"
-                    fontWeight="medium"
-                    color={light ? "white" : "dark"}
-                  >
-                    {t('navbar.signIn', { defaultValue: 'Sign in' })}
-                  </VuiTypography>
-                </Link>
+                <Icon sx={({ palette: { dark, white } }) => ({ color: light ? white.main : dark.main })}>account_circle</Icon>
               </IconButton>
               <IconButton
                 size="small"

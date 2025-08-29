@@ -27,6 +27,9 @@ export default styled("div")(({ theme, ownerState }) => {
     border: `${borderWidth[1]} solid`,
     borderRadius: borderRadius.lg,
     borderColor: borderColorValue,
+  // Add a touch of internal padding so the edge icon doesn't touch the rounded border
+  paddingRight: rightIcon ? pxToRem(6) : undefined,
+  paddingLeft: leftIcon ? pxToRem(6) : undefined,
     "& .MuiIcon-root": {
       color: grey[500],
     },
@@ -37,6 +40,12 @@ export default styled("div")(({ theme, ownerState }) => {
       paddingX: pxToRem(20),
       backgroundColor: disabled ? grey[600] : inputColors.backgroundColor,
     },
+    // Whole control turns to focus color; input itself stays flat
+    "&:focus-within": {
+      borderColor: inputColors.borderColor.focus,
+      boxShadow: `0 0 0 2px ${inputColors.boxShadow}`,
+    },
+
     "& .MuiInputBase-root": {
       border: `unset`,
       borderRadius: borderRadius.lg,
@@ -46,9 +55,9 @@ export default styled("div")(({ theme, ownerState }) => {
       borderTopRightRadius: borderRadius.lg,
       borderBottomRightRadius: borderRadius.lg,
       backgroundColor: `${disabled ? grey[600] : inputColors.backgroundColor} !important`,
-      // Add padding on the side where the icon sits so the icon doesn't overlap the text
-      paddingRight: rightIcon ? pxToRem(36) : undefined,
-      paddingLeft: leftIcon ? pxToRem(36) : undefined,
+  // Add more padding on the side where the icon sits so the icon doesn't touch the rounded border
+  paddingRight: rightIcon ? pxToRem(68) : undefined,
+  paddingLeft: leftIcon ? pxToRem(68) : undefined,
       "& ::placeholder": {
         color: `${white.main} !important`,
       },

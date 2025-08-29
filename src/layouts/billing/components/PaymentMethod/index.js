@@ -9,7 +9,8 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
-import MenuItem from "@mui/material/MenuItem";
+import CircularProgress from "@mui/material/CircularProgress";
+import Alert from "@mui/material/Alert";
 
 // Vision UI Dashboard React components
 import VuiBox from "components/VuiBox";
@@ -25,48 +26,75 @@ import colors from "assets/theme/base/colors";
 // Vision UI Dashboard component exemples
 import Mastercard from "examples/Icons/Mastercard";
 import Visa from "examples/Icons/Visa";
-import React, { useState } from "react";
-import { useBilling } from "context/BillingContext";
+import React, { useEffect, useState } from "react";
+import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
+import { auth } from "lib/firebase";
+import { addPaymentMethodDoc, onPaymentMethods } from "lib/billingData";
 
 function PaymentMethod() {
-  const { cards, addCard } = useBilling();
+  const stripe = useStripe();
+  const elements = useElements();
   const { grey } = colors;
 
   const [open, setOpen] = useState(false);
-  const [newCard, setNewCard] = useState({ cardId: "", name: "", validThru: "", cvv: "", type: "Mastercard" });
-  const [editIndex, setEditIndex] = useState(null);
+  const [billingName, setBillingName] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [savedMethods, setSavedMethods] = useState([]);
+
+  useEffect(() => {
+    if (!auth || !auth.currentUser) return; // Wait for signed-in user
+    const unsub = onPaymentMethods({}, setSavedMethods);
+    return () => unsub && unsub();
+  }, []);
 
   const handleOpen = () => {
-    setEditIndex(null);
-  setNewCard({ cardId: "", name: "", validThru: "", cvv: "", type: "Mastercard" });
-    setOpen(true);
-  };
-  const handleEdit = (idx) => {
-    const c = cards[idx];
-    setEditIndex(idx);
-    setNewCard({
-      cardId: c.cardId || "",
-      name: c.name || "",
-      validThru: c.validThru || "",
-      cvv: c.cvv || "",
-      type: c.type || "Mastercard",
-    });
+    setBillingName("");
     setOpen(true);
   };
   const handleClose = () => {
     setOpen(false);
-    setEditIndex(null);
+    setError("");
+    setSaving(false);
   };
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-  setNewCard({ ...newCard, [name]: value });
-  };
-  const handleAddOrEdit = () => {
-    if (!newCard.cardId || !newCard.name || !newCard.validThru || !newCard.cvv) return;
-    // For demo, append a new card; no edit support for now
-    addCard({ ...newCard });
-    setNewCard({ cardId: "", name: "", validThru: "", cvv: "", type: "Mastercard" });
-    handleClose();
+  const handleAddCard = async () => {
+    setError("");
+  if (!stripe || !elements) return;
+  if (!auth || !auth.currentUser) { setError("Please sign in to add a card."); return; }
+    const card = elements.getElement(CardElement);
+    if (!card) return;
+    setSaving(true);
+    try {
+      const { error: pmError, paymentMethod } = await stripe.createPaymentMethod({
+        type: "card",
+        card,
+        billing_details: { name: billingName || auth?.currentUser?.displayName || undefined },
+      });
+      if (pmError) throw new Error(pmError.message);
+      // Attach to customer via backend
+      const res = await fetch("/api/stripe/save-card", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ paymentMethodId: paymentMethod.id, userId: auth?.currentUser?.uid || "anon" }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "Failed to save card");
+      // Persist minimal metadata in Firestore
+      const pm = paymentMethod.card || {};
+      await addPaymentMethodDoc({
+        paymentMethodId: paymentMethod.id,
+        brand: pm.brand,
+        last4: pm.last4,
+        exp_month: pm.exp_month,
+        exp_year: pm.exp_year,
+        billingName: billingName || auth?.currentUser?.displayName || "",
+      });
+      handleClose();
+    } catch (e) {
+      setError(String(e.message || e));
+    } finally {
+      setSaving(false);
+    }
   };
 
   // Match Pharmacy dialog input style
@@ -100,23 +128,18 @@ function PaymentMethod() {
         },
       }}
     >
-      <DialogTitle sx={{ color: "white", fontWeight: 700, fontSize: 22, pb: 2 }}>
-        {editIndex !== null ? "Edit Card" : "Add Card"}
-      </DialogTitle>
+      <DialogTitle sx={{ color: "white", fontWeight: 700, fontSize: 22, pb: 2 }}>Add Payment Method</DialogTitle>
       <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 1.5, mt: 1, background: "transparent", color: "white", px: 2, minWidth: 400 }}>
-        <TextField label="Card Number" name="cardId" value={newCard.cardId} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: "#bfc6e0" } }} sx={{ ...fieldSx, mt: 1, mb: 1 }} />
-        <TextField label="Card Name" name="name" value={newCard.name} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: "#bfc6e0" } }} sx={{ ...fieldSx, mb: 1 }} />
-        <TextField label="Valid Thru (MM/YY)" name="validThru" value={newCard.validThru} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: "#bfc6e0" } }} sx={{ ...fieldSx, mb: 1 }} />
-        <TextField label="CVV" name="cvv" value={newCard.cvv} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: "#bfc6e0" } }} sx={{ ...fieldSx, mb: 1 }} />
-        <TextField label="Type" name="type" value={newCard.type} onChange={handleChange} select fullWidth InputLabelProps={{ shrink: true, style: { color: "#bfc6e0" } }} sx={{ ...fieldSx, mb: 1 }}>
-          <MenuItem value="Mastercard">Mastercard</MenuItem>
-          <MenuItem value="Visa">Visa</MenuItem>
-        </TextField>
+        <TextField label="Name on Card" value={billingName} onChange={(e)=>setBillingName(e.target.value)} fullWidth InputLabelProps={{ shrink: true, style: { color: "#bfc6e0" } }} sx={{ ...fieldSx, mt: 1, mb: 1 }} />
+        <div style={{ background: "#181a2f", borderRadius: 12, padding: 12, border: "1px solid #23244a" }}>
+          <CardElement options={{ style: { base: { fontSize: '16px', color: '#e7e9f3', '::placeholder': { color: '#8a8fb2' } } } }} />
+        </div>
+        {error && <Alert severity="error" sx={{ mt: 1 }}>{error}</Alert>}
       </DialogContent>
       <DialogActions sx={{ background: "transparent", px: 2, pb: 2, display: "flex", justifyContent: "flex-end", alignItems: "center" }}>
         <Button onClick={handleClose} sx={{ color: "#bfc6e0" }}>Cancel</Button>
-        <Button onClick={handleAddOrEdit} variant="contained" color="info" disabled={!newCard.cardId || !newCard.name || !newCard.validThru || !newCard.cvv} sx={{ borderRadius: 2, px: 3, fontWeight: 600 }}>
-          {editIndex !== null ? "Save" : "Add"}
+        <Button onClick={handleAddCard} variant="contained" color="info" disabled={!stripe || saving} sx={{ borderRadius: 2, px: 3, fontWeight: 600 }}>
+          {saving ? <CircularProgress size={18} sx={{ color: 'white' }} /> : 'Add Card'}
         </Button>
       </DialogActions>
     </Dialog>
@@ -134,7 +157,7 @@ function PaymentMethod() {
       </VuiBox>
       <VuiBox>
         <Grid container spacing={3}>
-          {cards.map((card, idx) => (
+          {savedMethods.map((card, idx) => (
             <Grid item xs={12} md={6} key={idx}>
               <VuiBox
                 border="2px solid"
@@ -147,24 +170,23 @@ function PaymentMethod() {
                 p="22px 20px"
               >
                 <VuiBox display="flex" alignItems="center" width="100%">
-                  {card.type === "Mastercard" ? <Mastercard width="21px" /> : <Visa width="25px" />}
+                  {String(card.brand || '').toLowerCase() === 'visa' ? <Visa width="25px" /> : <Mastercard width="21px" />}
                   <VuiTypography pl={2} variant="button" color="white" fontWeight="medium">
-                    {card.name}
+                    {card.billingName || 'Saved Card'}
                     <span style={{ color: '#aaa', fontWeight: 400, fontSize: 14, marginLeft: 12 }}>
-                      {card.cardId ? `•••• •••• •••• ${card.cardId.slice(-4)}` : ''}
+                      {card.last4 ? `•••• •••• •••• ${card.last4}` : ''}
                     </span>
                   </VuiTypography>
                 </VuiBox>
-                <VuiTypography mt={1} pl={card.type === "Mastercard" ? 5 : 6} variant="caption" color="white">
-                  EXP: {card.validThru} &nbsp;|&nbsp; CVV: {'***'}
+                <VuiTypography mt={1} pl={String(card.brand || '').toLowerCase() === 'visa' ? 6 : 5} variant="caption" color="white">
+                  EXP: {card.exp_month?.toString().padStart(2,'0')}/{String(card.exp_year || '').toString().slice(-2)}
                 </VuiTypography>
               </VuiBox>
             </Grid>
           ))}
         </Grid>
       </VuiBox>
-  {/* Add/Edit Card Dialog - matches Pharmacy dialog styling */}
-  {AddEditDialog}
+      {AddEditDialog}
     </Card>
   );
 }

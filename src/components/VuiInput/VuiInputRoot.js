@@ -11,15 +11,7 @@ export default styled(InputBase)(({ theme, ownerState }) => {
   const { size: fontSize } = typography;
   const { borderRadius } = borders;
 
-  // border color value
-
-  let borderColorValue = "";
-
-  if (error) {
-    borderColorValue = inputColors.error;
-  } else if (success) {
-    borderColorValue = inputColors.success;
-  }
+  // (borderColorValue removed - not used)
 
   // styles for the input with size="small"
   const smallStyles = () => ({
@@ -100,16 +92,6 @@ export default styled(InputBase)(({ theme, ownerState }) => {
 
   // styles for the input containing an icon
   const withIconStyles = () => {
-    let withIconBorderRadiusValue = `0 ${borderRadius.md} ${borderRadius.md} 0`;
-
-    if (direction === "rtl" && iconDirection === "left") {
-      withIconBorderRadiusValue = `0 ${borderRadius.md} ${borderRadius.md} 0`;
-    } else if (direction === "rtl" && iconDirection === "right") {
-      withIconBorderRadiusValue = `${borderRadius.md} 0 0 ${borderRadius.md}`;
-    } else if (direction === "ltr" && iconDirection === "right") {
-      withIconBorderRadiusValue = `${borderRadius.md} 0 0 ${borderRadius.md}`;
-    }
-
     let withIconPaddingLeftValue;
     if (direction === "rtl" && iconDirection === "left") {
       withIconPaddingLeftValue = 0;
@@ -139,8 +121,7 @@ export default styled(InputBase)(({ theme, ownerState }) => {
     };
   };
 
-  return {
-    backgroundColor: disabled ? `${grey[200]} !important` : white.main,
+  const base = {
     pointerEvents: disabled ? "none" : "auto",
     backgroundColor: `${disabled ? grey[600] : inputColors.backgroundColor} !important`,
     color: `${white.main} !important`,
@@ -156,7 +137,13 @@ export default styled(InputBase)(({ theme, ownerState }) => {
       color: `${white.main} !important`,
       fontSize: "12px",
     },
+    "&.MuiInputBase-multiline": {
+      padding: `${pxToRem(10)} ${pxToRem(12)}`,
+    },
+  };
 
+  // Default focus styles (no icon)
+  const focusDefault = {
     "&.Mui-focused": {
       borderColor: focusedBorderColorValue,
       paddingLeft: focusedPaddingLeftValue,
@@ -164,11 +151,24 @@ export default styled(InputBase)(({ theme, ownerState }) => {
       boxShadow: focusedBoxShadowValue,
       outline: 0,
     },
-
-    "&.MuiInputBase-multiline": {
-      padding: `${pxToRem(10)} ${pxToRem(12)}`,
-    },
   };
+
+  // When an icon is present, remove inner border/box-shadow so wrapper handles focus
+  const focusWithIcon = (iconDirection === "left" || iconDirection === "right")
+    ? {
+        border: "none",
+        boxShadow: "none",
+        "&.Mui-focused": {
+          border: "none",
+          boxShadow: "none",
+          paddingLeft: pxToRem(12),
+          paddingRight: pxToRem(12),
+          outline: 0,
+        },
+      }
+    : {};
+
+  return { ...base, ...(iconDirection ? focusWithIcon : focusDefault) };
 });
 
 // MIT: Portions © 2021 Creative Tim & Simmmple (Vision UI Free React). See LICENSE.md.

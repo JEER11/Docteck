@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import { IconButton, InputBase, Paper, Box, Tooltip } from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
 import getApiBase from "../lib/apiBase";
+import { onChatMessages, addChatMessage } from "lib/chatData";
+import { auth } from "lib/firebase";
 
 
 // Compute API base using helper to work across dev/prod and different host ports
@@ -29,6 +31,18 @@ function DoctorAssistant({ messages: controlledMessages, setMessages: setControl
     }
   }, [messages, loading]);
 
+  // Persisted chat subscription (default session)
+  useEffect(() => {
+    // Only bind when component manages its own messages and user is signed in
+    if (!auth || !auth.currentUser || isControlled) return;
+    const unsub = onChatMessages({}, (items) => {
+      if (!items.length) return setUncontrolledMessages(initialMessage);
+      setUncontrolledMessages(items.map((m) => ({ sender: m.sender, text: m.text, ts: m.tsClient || Date.now() })));
+    });
+    return () => unsub && unsub();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isControlled]);
+
   const formatTs = (t) => {
     if (!t) return "";
     try {
@@ -43,7 +57,7 @@ function DoctorAssistant({ messages: controlledMessages, setMessages: setControl
     if (!input.trim()) return;
     const now = Date.now();
     const userMessage = { sender: "user", text: input, ts: now };
-    setMessages((prev) => [...prev, userMessage]);
+  setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setLoading(true);
     try {
@@ -59,9 +73,18 @@ function DoctorAssistant({ messages: controlledMessages, setMessages: setControl
       });
       const data = await response.json();
       let aiText = data.reply || "Sorry, I couldn't process that.";
+      // Write both messages to Firestore when not controlled and signed in
+      try {
+        if (!isControlled && auth && auth.currentUser) {
+          await addChatMessage({ sender: 'user', text: userMessage.text, tsClient: now });
+          await addChatMessage({ sender: 'ai', text: aiText, tsClient: Date.now() });
+        }
+      } catch (_) {}
       setMessages((prev) => [...prev, { sender: "ai", text: aiText, ts: Date.now() }]);
     } catch (e) {
-      setMessages((prev) => [...prev, { sender: "ai", text: "Sorry, there was an error connecting to the Doctor Assistant.", ts: Date.now() }]);
+  const errText = "Sorry, there was an error connecting to the Doctor Assistant.";
+  try { if (!isControlled && auth && auth.currentUser) await addChatMessage({ sender: 'ai', text: errText, tsClient: Date.now() }); } catch (_) {}
+      setMessages((prev) => [...prev, { sender: "ai", text: errText, ts: Date.now() }]);
     }
     setLoading(false);
   };
