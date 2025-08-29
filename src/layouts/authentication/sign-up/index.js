@@ -42,6 +42,7 @@ function SignUp() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSetRememberMe = () => setRememberMe(!rememberMe);
 
@@ -210,10 +211,24 @@ function SignUp() {
               )}
             >
               <VuiInput
-                type="password"
+                type={showPassword ? "text" : "password"}
                 placeholder="Your password..."
                 value={password}
                 onChange={e => setPassword(e.target.value)}
+                icon={{
+                  direction: "right",
+                  component: (
+                    <IconButton
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      size="small"
+                      onClick={() => setShowPassword((v) => !v)}
+                      tabIndex={-1}
+                      sx={({ palette: { white } }) => ({ color: white.main })}
+                    >
+                      <Icon fontSize="small">{showPassword ? "visibility_off" : "visibility"}</Icon>
+                    </IconButton>
+                  ),
+                }}
                 sx={({ typography: { size } }) => ({
                   fontSize: size.sm,
                 })}
