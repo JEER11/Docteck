@@ -27,9 +27,9 @@ export default styled("div")(({ theme, ownerState }) => {
     border: `${borderWidth[1]} solid`,
     borderRadius: borderRadius.lg,
     borderColor: borderColorValue,
-  // Keep wrapper padding fixed so width doesn't change on focus
+  // Keep wrapper padding fixed (slightly tighter on the left)
   paddingRight: rightIcon ? pxToRem(6) : pxToRem(6),
-  paddingLeft: leftIcon ? pxToRem(6) : pxToRem(6),
+  paddingLeft: leftIcon ? pxToRem(4) : pxToRem(4),
     "& .MuiIcon-root": {
       color: grey[500],
     },
@@ -37,9 +37,9 @@ export default styled("div")(({ theme, ownerState }) => {
     "& .MuiInputBase-input": {
       color: white.main,
       height: "100%",
-      // Tighter internal padding to bring placeholder closer to the left
-      paddingLeft: pxToRem(12),
-      paddingRight: pxToRem(12),
+      // Much tighter internal padding to bring placeholder closer to the left
+      paddingLeft: pxToRem(8),
+      paddingRight: pxToRem(10),
       backgroundColor: disabled ? grey[600] : inputColors.backgroundColor,
     },
     // Whole control turns to focus color; input itself stays flat
@@ -58,9 +58,9 @@ export default styled("div")(({ theme, ownerState }) => {
   borderTopRightRadius: borderRadius.lg,
   borderBottomRightRadius: borderRadius.lg,
       backgroundColor: `${disabled ? grey[600] : inputColors.backgroundColor} !important`,
-  // Keep internal padding constant and slightly reduced to align text closer to icon
-  paddingRight: rightIcon ? pxToRem(56) : pxToRem(10),
-  paddingLeft: leftIcon ? pxToRem(56) : pxToRem(10),
+  // Keep internal padding constant and significantly reduced on the left
+  paddingRight: rightIcon ? pxToRem(48) : pxToRem(10),
+  paddingLeft: leftIcon ? pxToRem(12) : pxToRem(10),
       "& ::placeholder": {
         color: `${white.main} !important`,
       },
