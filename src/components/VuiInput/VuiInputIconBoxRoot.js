@@ -26,7 +26,7 @@ export default styled("div")(({ theme, ownerState }) => {
     // Create more breathing room from the rounded border so the icon is fully visible
   // Pull slightly away from the extreme edge, so the right side isn’t cut by the outer radius
   marginRight: iconDirection === 'right' ? pxToRem(14) : undefined,
-  marginLeft: iconDirection === 'left' ? pxToRem(8) : undefined,
+  marginLeft: iconDirection === 'left' ? pxToRem(4) : undefined,
     // Slightly smaller icon to avoid any clipping by the rounded corners
     '& .MuiSvgIcon-root, & .MuiIcon-root': {
       fontSize: pxToRem(18),
