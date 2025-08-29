@@ -2,7 +2,7 @@ import { styled } from "@mui/material/styles";
 
 export default styled("div")(({ theme, ownerState }) => {
   const { palette, functions, borders } = theme;
-  const { error, success, disabled } = ownerState;
+  const { error, success, disabled, iconDirection } = ownerState;
 
   const { inputColors, grey, white } = palette;
   const { pxToRem } = functions;
@@ -16,6 +16,9 @@ export default styled("div")(({ theme, ownerState }) => {
   } else if (success) {
     borderColorValue = inputColors.success;
   }
+
+  const rightIcon = iconDirection === "right";
+  const leftIcon = iconDirection === "left";
 
   return {
     display: "flex",
@@ -37,9 +40,15 @@ export default styled("div")(({ theme, ownerState }) => {
     "& .MuiInputBase-root": {
       border: `unset`,
       borderRadius: borderRadius.lg,
-      borderTopLeftRadius: "0px",
-      borderBottomLeftRadius: "0px",
+      // Keep the same rounded shape as fields without icons
+      borderTopLeftRadius: borderRadius.lg,
+      borderBottomLeftRadius: borderRadius.lg,
+      borderTopRightRadius: borderRadius.lg,
+      borderBottomRightRadius: borderRadius.lg,
       backgroundColor: `${disabled ? grey[600] : inputColors.backgroundColor} !important`,
+      // Add padding on the side where the icon sits so the icon doesn't overlap the text
+      paddingRight: rightIcon ? pxToRem(36) : undefined,
+      paddingLeft: leftIcon ? pxToRem(36) : undefined,
       "& ::placeholder": {
         color: `${white.main} !important`,
       },

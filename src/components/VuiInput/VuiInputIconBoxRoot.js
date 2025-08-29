@@ -9,8 +9,11 @@ export default styled("div")(({ theme, ownerState }) => {
 
   return {
     lineHeight: 0,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
     padding: size === "small" ? `${pxToRem(4)} ${pxToRem(10)}` : `${pxToRem(8)} ${pxToRem(10)}`,
-    width: pxToRem(39),
+    width: pxToRem(44),
     height: "100%",
     color: dark.main,
   };
