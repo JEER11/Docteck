@@ -207,12 +207,28 @@ function Overview() {
     bloodType: "",
     wheelchair: "",
   });
+  // Onboarding helpers
+  const [onboardingSkipped, setOnboardingSkipped] = useState(() => {
+    try { return localStorage.getItem('onboardingSkipV1') === '1'; } catch (_) { return false; }
+  });
+  const [profileSaveError, setProfileSaveError] = useState('');
   const handleEditOpen = () => setEditOpen(true);
   const handleEditClose = () => setEditOpen(false);
   const handleProfileChange = (e) => {
     setProfile({ ...profile, [e.target.name]: e.target.value });
   };
   const handleProfileSave = async () => {
+    // Enforce required fields unless user chooses Skip
+    const requiredMissing = !(
+      (profile.firstName && profile.firstName.trim()) &&
+      (profile.lastName && profile.lastName.trim()) &&
+      (profile.email && profile.email !== '--' && profile.email.trim()) &&
+      (profile.dateOfBirth && profile.dateOfBirth.trim())
+    );
+    if (requiredMissing) {
+      setProfileSaveError('Please fill first name, last name, email, and date of birth.');
+      return;
+    }
     try {
       if (db && auth?.currentUser) {
         const uid = auth.currentUser.uid;
@@ -233,6 +249,13 @@ function Overview() {
         await setDoc(ref, toSave, { merge: true });
       }
     } catch (e) { console.error(e); }
+    setProfileSaveError('');
+    setEditOpen(false);
+  };
+  const handleSkipForNow = () => {
+    try { localStorage.setItem('onboardingSkipV1', '1'); } catch (_) {}
+    setOnboardingSkipped(true);
+    setProfileSaveError('');
     setEditOpen(false);
   };
   // Prefill from Firebase user / Firestore on load
@@ -267,8 +290,8 @@ function Overview() {
           wheelchair: fsDoc?.wheelchair || '',
         }));
         // If required fields missing, open edit dialog
-        const missing = !(firstName && lastName && email);
-        if (missing) setEditOpen(true);
+  const missing = !(firstName && lastName && email && (fsDoc?.dateOfBirth || ''));
+  if (missing && !onboardingSkipped) setEditOpen(true);
       } catch (e) { console.error(e); }
     })();
   // eslint-disable-next-line
@@ -811,11 +834,54 @@ function Overview() {
                 }}
               >
                 <DialogTitle sx={{ color: '#fff', fontWeight: 700, fontSize: '1.15rem', pb: 1, letterSpacing: 0.2 }}>
-                  Edit Profile
+                  Complete your profile
                 </DialogTitle>
                 <DialogContent sx={{ color: '#fff', pb: 2, pt: 1 }}>
+                  {profileSaveError && (
+                    <Alert severity="warning" sx={{ mb: 1 }}>
+                      {profileSaveError}
+                    </Alert>
+                  )}
                   <Box mb={2}>
                     <Typography sx={{ color: '#a6b1e1', fontWeight: 600, fontSize: '1rem', mb: 1, letterSpacing: 0.5 }}>Contact Information</Typography>
+                    <TextField
+                      margin="dense"
+                      label="First Name"
+                      name="firstName"
+                      value={profile.firstName}
+                      onChange={handleProfileChange}
+                      fullWidth
+                      variant="outlined"
+                      placeholder="Enter your first name"
+                      sx={{
+                        background: '#181a2f',
+                        borderRadius: 2,
+                        border: '2px solid #23244a',
+                        input: { color: '#fff', fontWeight: 500 },
+                        label: { color: '#a6b1e1', fontSize: '0.95rem' },
+                        '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
+                        '& .MuiOutlinedInput-root': { background: '#181a2f', borderRadius: 2 },
+                      }}
+                    />
+                    <TextField
+                      margin="dense"
+                      label="Last Name"
+                      name="lastName"
+                      value={profile.lastName}
+                      onChange={handleProfileChange}
+                      fullWidth
+                      variant="outlined"
+                      placeholder="Enter your last name"
+                      sx={{
+                        background: '#181a2f',
+                        borderRadius: 2,
+                        border: '2px solid #23244a',
+                        input: { color: '#fff', fontWeight: 500 },
+                        label: { color: '#a6b1e1', fontSize: '0.95rem' },
+                        '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
+                        '& .MuiOutlinedInput-root': { background: '#181a2f', borderRadius: 2 },
+                      }}
+                    />
                     <TextField
                       margin="dense"
                       label="Full Name"
@@ -1068,13 +1134,18 @@ function Overview() {
                     />
                   </Box>
                 </DialogContent>
-                <DialogActions sx={{ justifyContent: 'flex-end', pb: 1 }}>
-                  <Button onClick={handleEditClose} sx={{ color: '#a259ec', background: 'transparent', borderRadius: 2, px: 2, mr: 1, fontWeight: 500, textTransform: 'none' }}>
-                    Close
+                <DialogActions sx={{ justifyContent: 'space-between', pb: 1, px: 2 }}>
+                  <Button onClick={handleSkipForNow} sx={{ color: '#a6b1e1', background: 'transparent', borderRadius: 2, px: 2, fontWeight: 500, textTransform: 'none' }}>
+                    Skip for now
                   </Button>
-                  <Button onClick={handleProfileSave} sx={{ color: '#fff', background: 'linear-gradient(90deg, #3a8dde 0%, #6f7cf7 100%)', borderRadius: 2, px: 2, fontWeight: 600, textTransform: 'none' }}>
-                    Save
-                  </Button>
+                  <Box>
+                    <Button onClick={handleEditClose} sx={{ color: '#a259ec', background: 'transparent', borderRadius: 2, px: 2, mr: 1, fontWeight: 500, textTransform: 'none' }}>
+                      Close
+                    </Button>
+                    <Button onClick={handleProfileSave} sx={{ color: '#fff', background: 'linear-gradient(90deg, #3a8dde 0%, #6f7cf7 100%)', borderRadius: 2, px: 2, fontWeight: 600, textTransform: 'none' }}>
+                      Save
+                    </Button>
+                  </Box>
                 </DialogActions>
               </Dialog>
             </Grid>
