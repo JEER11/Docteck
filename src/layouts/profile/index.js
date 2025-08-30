@@ -196,7 +196,6 @@ function Overview() {
   const [recordOpen, setRecordOpen] = useState(false);
   const [communicationOpen, setCommunicationOpen] = useState(false);
   const [profile, setProfile] = useState({
-    fullName: "--",
     firstName: "",
     lastName: "",
     mobile: "--",
@@ -214,6 +213,14 @@ function Overview() {
   const [profileSaveError, setProfileSaveError] = useState('');
   const handleEditOpen = () => setEditOpen(true);
   const handleEditClose = () => setEditOpen(false);
+  // Prefetch dialog deps to speed up first open
+  const prefetchProfileDialog = () => {
+    try {
+      import(/* webpackPrefetch: true */ '@mui/material/Dialog');
+      import(/* webpackPrefetch: true */ '@mui/material/TextField');
+      import(/* webpackPrefetch: true */ '@mui/material/MenuItem');
+    } catch (_) {}
+  };
   const handleProfileChange = (e) => {
     setProfile({ ...profile, [e.target.name]: e.target.value });
   };
@@ -233,8 +240,7 @@ function Overview() {
       if (db && auth?.currentUser) {
         const uid = auth.currentUser.uid;
         const ref = doc(db, 'users', uid);
-        const toSave = {
-          fullName: profile.fullName === '--' ? '' : profile.fullName,
+  const toSave = {
           firstName: profile.firstName || '',
           lastName: profile.lastName || '',
           phoneNumber: profile.mobile && profile.mobile !== '--' ? profile.mobile : '',
@@ -270,7 +276,7 @@ function Overview() {
             fsDoc = snap.exists() ? snap.data() : null;
           } catch (_) {}
         }
-        const displayName = fsDoc?.fullName || fsDoc?.displayName || fbu?.displayName || '';
+  const displayName = fsDoc?.displayName || fbu?.displayName || '';
         const email = fsDoc?.email || fbu?.email || '';
         const phone = fsDoc?.phoneNumber || fbu?.phoneNumber || '';
         const parts = (displayName || '').trim().split(/\s+/).filter(Boolean);
@@ -278,7 +284,6 @@ function Overview() {
         const lastName = fsDoc?.lastName || (parts.length > 1 ? parts.slice(1).join(' ') : '');
         setProfile((p) => ({
           ...p,
-          fullName: displayName || '--',
           firstName,
           lastName,
           email: email || '--',
@@ -294,6 +299,8 @@ function Overview() {
   if (missing && !onboardingSkipped) setEditOpen(true);
       } catch (e) { console.error(e); }
     })();
+  // Trigger a prefetch soon after mount so the dialog opens faster
+  useEffect(() => { const t = setTimeout(prefetchProfileDialog, 300); return () => clearTimeout(t); }, []);
   // eslint-disable-next-line
   }, []);
 
@@ -822,6 +829,8 @@ function Overview() {
                 onClose={handleEditClose}
                 maxWidth="xs"
                 fullWidth
+                keepMounted
+                transitionDuration={0}
                 PaperProps={{
                   style: {
                     background: 'rgba(20, 22, 40, 0.75)',
@@ -836,7 +845,15 @@ function Overview() {
                 <DialogTitle sx={{ color: '#fff', fontWeight: 700, fontSize: '1.15rem', pb: 1, letterSpacing: 0.2 }}>
                   Complete your profile
                 </DialogTitle>
-                <DialogContent sx={{ color: '#fff', pb: 2, pt: 1 }}>
+                <DialogContent sx={{ color: '#fff', pb: 2, pt: 1,
+                  '& .MuiInput-underline:before, & .MuiInput-underline:after': { display: 'none' },
+                  '& .MuiInputBase-root:before, & .MuiInputBase-root:after': { display: 'none' },
+                  '& .MuiOutlinedInput-notchedOutline': { border: 'none !important' },
+                  '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': { border: 'none !important' },
+                  '& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline': { border: 'none !important' },
+                  '& .MuiOutlinedInput-root': { background: '#181a2f', borderRadius: 8 },
+                  '& .MuiInputBase-input': { color: '#fff', fontWeight: 500 },
+                }}>
                   {profileSaveError && (
                     <Alert severity="warning" sx={{ mb: 1 }}>
                       {profileSaveError}
@@ -844,7 +861,7 @@ function Overview() {
                   )}
                   <Box mb={2}>
                     <Typography sx={{ color: '#a6b1e1', fontWeight: 600, fontSize: '1rem', mb: 1, letterSpacing: 0.5 }}>Contact Information</Typography>
-                    <TextField
+          <TextField
                       margin="dense"
                       label="First Name"
                       name="firstName"
@@ -854,13 +871,10 @@ function Overview() {
                       variant="outlined"
                       placeholder="Enter your first name"
                       sx={{
-                        background: '#181a2f',
-                        borderRadius: 2,
-                        border: '2px solid #23244a',
-                        input: { color: '#fff', fontWeight: 500 },
-                        label: { color: '#a6b1e1', fontSize: '0.95rem' },
-                        '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
-                        '& .MuiOutlinedInput-root': { background: '#181a2f', borderRadius: 2 },
+            input: { background: '#181a2f', color: '#fff', borderRadius: 2, border: '2px solid #23244a', fontWeight: 500 },
+            label: { color: '#a6b1e1', fontSize: '0.95rem' },
+            '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
+            '& .MuiOutlinedInput-root': { background: '#181a2f', borderRadius: 2 },
                       }}
                     />
                     <TextField
@@ -873,32 +887,10 @@ function Overview() {
                       variant="outlined"
                       placeholder="Enter your last name"
                       sx={{
-                        background: '#181a2f',
-                        borderRadius: 2,
-                        border: '2px solid #23244a',
-                        input: { color: '#fff', fontWeight: 500 },
-                        label: { color: '#a6b1e1', fontSize: '0.95rem' },
-                        '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
-                        '& .MuiOutlinedInput-root': { background: '#181a2f', borderRadius: 2 },
-                      }}
-                    />
-                    <TextField
-                      margin="dense"
-                      label="Full Name"
-                      name="fullName"
-                      value={profile.fullName}
-                      onChange={handleProfileChange}
-                      fullWidth
-                      variant="outlined"
-                      placeholder="Enter your full name"
-                      sx={{
-                        background: '#181a2f',
-                        borderRadius: 2,
-                        border: '2px solid #23244a',
-                        input: { color: '#fff', fontWeight: 500 },
-                        label: { color: '#a6b1e1', fontSize: '0.95rem' },
-                        '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
-                        '& .MuiOutlinedInput-root': { background: '#181a2f', borderRadius: 2 },
+            input: { background: '#181a2f', color: '#fff', borderRadius: 2, border: '2px solid #23244a', fontWeight: 500 },
+            label: { color: '#a6b1e1', fontSize: '0.95rem' },
+            '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
+            '& .MuiOutlinedInput-root': { background: '#181a2f', borderRadius: 2 },
                       }}
                     />
                     <TextField
@@ -911,13 +903,10 @@ function Overview() {
                       variant="outlined"
                       placeholder="Enter your mobile number"
                       sx={{
-                        background: '#181a2f',
-                        borderRadius: 2,
-                        border: '2px solid #23244a',
-                        input: { color: '#fff', fontWeight: 500 },
-                        label: { color: '#a6b1e1', fontSize: '0.95rem' },
-                        '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
-                        '& .MuiOutlinedInput-root': { background: '#181a2f', borderRadius: 2 },
+            input: { background: '#181a2f', color: '#fff', borderRadius: 2, border: '2px solid #23244a', fontWeight: 500 },
+            label: { color: '#a6b1e1', fontSize: '0.95rem' },
+            '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
+            '& .MuiOutlinedInput-root': { background: '#181a2f', borderRadius: 2 },
                       }}
                     />
                     <TextField
@@ -930,13 +919,10 @@ function Overview() {
                       variant="outlined"
                       placeholder="Enter your email"
                       sx={{
-                        background: '#181a2f',
-                        borderRadius: 2,
-                        border: '2px solid #23244a',
-                        input: { color: '#fff', fontWeight: 500 },
-                        label: { color: '#a6b1e1', fontSize: '0.95rem' },
-                        '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
-                        '& .MuiOutlinedInput-root': { background: '#181a2f', borderRadius: 2 },
+            input: { background: '#181a2f', color: '#fff', borderRadius: 2, border: '2px solid #23244a', fontWeight: 500 },
+            label: { color: '#a6b1e1', fontSize: '0.95rem' },
+            '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
+            '& .MuiOutlinedInput-root': { background: '#181a2f', borderRadius: 2 },
                       }}
                     />
                   </Box>
@@ -1111,28 +1097,7 @@ function Overview() {
                       <MenuItem value="Yes" sx={{ background: '#181a2f', color: '#fff' }}>Yes</MenuItem>
                     </TextField>
                   </Box>
-                  <Box mb={2}>
-                    <Typography sx={{ color: '#a6b1e1', fontWeight: 600, fontSize: '1rem', mb: 1, letterSpacing: 0.5 }}>Allergies</Typography>
-                    <TextField
-                      margin="dense"
-                      label="Allergies"
-                      name="allergies"
-                      value={profile.allergies}
-                      onChange={handleProfileChange}
-                      fullWidth
-                      variant="outlined"
-                      placeholder="Enter allergies"
-                      sx={{
-                        background: '#181a2f',
-                        borderRadius: 2,
-                        border: '2px solid #23244a',
-                        input: { color: '#fff', fontWeight: 500 },
-                        label: { color: '#a6b1e1', fontSize: '0.95rem' },
-                        '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
-                        '& .MuiOutlinedInput-root': { background: '#181a2f', borderRadius: 2 },
-                      }}
-                    />
-                  </Box>
+                  
                 </DialogContent>
                 <DialogActions sx={{ justifyContent: 'space-between', pb: 1, px: 2 }}>
                   <Button onClick={handleSkipForNow} sx={{ color: '#a6b1e1', background: 'transparent', borderRadius: 2, px: 2, fontWeight: 500, textTransform: 'none' }}>
