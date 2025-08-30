@@ -89,6 +89,14 @@ function DashboardNavbar({ absolute, light, isMini }) {
   const handleOpenMenu = (event) => setOpenMenu(event.currentTarget);
   const handleCloseMenu = () => setOpenMenu(false);
 
+  // Prefetch Sign In/Up chunks on hover to speed up first interaction
+  const prefetchAuth = () => {
+    try {
+      import(/* webpackPrefetch: true */ "layouts/authentication/sign-in");
+      import(/* webpackPrefetch: true */ "layouts/authentication/sign-up");
+    } catch (e) {}
+  };
+
   // Render the notifications menu
   const renderMenu = () => (
     <NotificationList
@@ -128,6 +136,8 @@ function DashboardNavbar({ absolute, light, isMini }) {
               <IconButton sx={navbarIconButton} size="small"
                 onMouseDown={() => routeLoadingBus.start()}
                 onClick={() => routeLoadingBus.start()}
+                onMouseEnter={prefetchAuth}
+                onFocus={prefetchAuth}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') routeLoadingBus.start(); }}
                 component={Link}
                 to="/authentication/sign-in"
