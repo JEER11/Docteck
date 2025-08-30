@@ -17,8 +17,6 @@ import Tables from "layouts/tables";
 import Billing from "layouts/billing";
 import Profile from "layouts/profile";
 import Assistance from "layouts/assistance";
-import SignIn from "layouts/authentication/sign-in";
-import SignUp from "layouts/authentication/sign-up";
 import Family from "layouts/profile/Family";
 import Pets from "layouts/profile/Pets";
 
@@ -33,6 +31,9 @@ import { FaDog, FaUsers, FaHandsHelping, FaUserNurse } from "react-icons/fa";
 
 // Lazy-loaded layouts
 const RTL = React.lazy(() => import("layouts/rtl"));
+// Split auth pages into separate chunks and hint prefetch
+const SignIn = React.lazy(() => import(/* webpackPrefetch: true */ "layouts/authentication/sign-in"));
+const SignUp = React.lazy(() => import(/* webpackPrefetch: true */ "layouts/authentication/sign-up"));
 
 const routes = [
   {
