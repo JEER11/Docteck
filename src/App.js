@@ -152,11 +152,13 @@ export default function App() {
               )}
               {layout === "vr" && <Configurator />}
               <RouteChangeLoader />
+              <Suspense fallback={<FullScreenLoader />}> 
                 <Switch>
                   {getRoutes(routes)}
                   <Route path="/calendar/oauth-success.html" />
                   <Redirect from="*" to="/dashboard" />
                 </Switch>
+              </Suspense>
             </TodoProvider>
           </AppointmentProvider>
         </ProjectsProvider>
@@ -184,11 +186,13 @@ export default function App() {
             )}
             {layout === "vr" && <Configurator />}
             <RouteChangeLoader />
+            <Suspense fallback={<FullScreenLoader />}> 
               <Switch>
                 {getRoutes(routes)}
                 <Route path="/calendar/oauth-success.html" />
                 <Redirect from="*" to="/dashboard" />
               </Switch>
+            </Suspense>
           </TodoProvider>
         </AppointmentProvider>
       </ProjectsProvider>

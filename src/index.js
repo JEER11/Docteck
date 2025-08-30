@@ -30,7 +30,7 @@ const root = createRoot(rootElement);
 
 
 root.render(
-  <BrowserRouter>
+  <BrowserRouter basename="/app">
     <VisionUIControllerProvider>
       <AppProviders>
         <StripeProvider>
