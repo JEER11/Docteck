@@ -383,24 +383,8 @@ def react_static(path):
     file_path = os.path.join(BUILD_DIR, path)
     if os.path.isfile(file_path):
         return send_from_directory(BUILD_DIR, path)
-    # SPA fallback
-    index_path = os.path.join(BUILD_DIR, 'index.html')
-    if os.path.exists(index_path):
-        try:
-            with open(index_path, 'r', encoding='utf-8') as f:
-                html = f.read()
-            html = _rewrite_react_index_paths(html)
-            inject = f"""
-            <script id=\"flask-config\" type=\"application/json\">{json.dumps({'apiBase': get_api_base()})}</script>
-            <script>window.__FIREBASE_CONFIG__ = {json.dumps(firebase_env_config())};</script>
-            <script src=\"/static/bridge.js\"></script>
-            """
-            if '</body>' in html:
-                html = html.replace('</body>', inject + '\n</body>')
-            return html
-        except Exception:
-            return send_from_directory(BUILD_DIR, 'index.html')
-    return jsonify(message='Not found'), 404
+    # SPA fallback: delegate to react_index to ensure consistent behavior
+    return react_index()
 
 # Friendly path for brand icon used in SPA Sidenav
 @app.get('/app/brand/sunset.png')

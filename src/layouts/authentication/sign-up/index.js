@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 // react-router-dom components
 import { Link, useHistory } from "react-router-dom";
@@ -7,6 +7,8 @@ import { Link, useHistory } from "react-router-dom";
 import Icon from "@mui/material/Icon";
 import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
+import CircularProgress from "@mui/material/CircularProgress";
+import { routeLoadingBus } from "components/routeLoadingBus";
 
 // Icons
 import { FaMicrosoft, FaFacebook, FaGoogle, FaYahoo } from "react-icons/fa";
@@ -38,48 +40,107 @@ import { hasFirebaseConfig } from "lib/firebase";
 function SignUp() {
   const history = useHistory();
   const [rememberMe, setRememberMe] = useState(true);
-  const { signup, signinWithGoogle, signinWithFacebook, signinWithMicrosoft, signinWithYahoo, loading, user } = useAuth();
+  const { signup, signin, signinWithGoogle, signinWithFacebook, signinWithMicrosoft, signinWithYahoo, user } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const handleSetRememberMe = () => setRememberMe(!rememberMe);
 
-  // If already authenticated (e.g., after successful sign-up), go to profile
-  useEffect(() => {
-    if (user) {
-      history.push('/profile');
-    }
-  }, [user, history]);
+  // Do not auto-redirect if already authenticated; only navigate after explicit successful sign-up
+
+  // Guard long operations to keep UX snappy
+  const withTimeout = (promise, ms = 5000) =>
+    Promise.race([
+      promise,
+      new Promise((_, reject) => setTimeout(() => reject(Object.assign(new Error('Request timed out. Please check your connection and try again.'), { code: 'timeout' })), ms)),
+    ]);
+
+  const didSubmitRef = useRef(false);
 
   const handleSubmit = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
     setError("");
     try {
-  await signup(email, password, { fullName: name });
-  // Go to profile to complete required info
-  history.push('/profile');
+  setSubmitting(true);
+  routeLoadingBus.start();
+        await withTimeout(signup(email, password, { fullName: name }));
+      // Go to profile to complete required info
+      history.push('/profile');
     } catch (err) {
-      setError(err.message);
+      const code = err?.code || '';
+      if (code === 'auth/email-already-in-use') {
+        // If the account exists, try signing in with the same password automatically
+        try {
+          await signin(email, password);
+          history.push('/profile');
+          return;
+        } catch (e2) {
+          if (e2?.code === 'auth/wrong-password') {
+            setError('That email is already registered. Try signing in instead.');
+          } else {
+            setError(e2?.message || 'Sign in failed. Try signing in from the Sign in page.');
+          }
+        }
+      } else if (code === 'timeout') {
+        // Sometimes the account is created but response was slow; try signing in once
+        try {
+          await signin(email, password);
+          history.push('/profile');
+          return;
+        } catch (_) {
+          setError('Request timed out. If you received a verification email, try signing in with your password.');
+        }
+      } else if (code === 'auth/invalid-email') {
+        setError('Please enter a valid email.');
+      } else if (code === 'auth/weak-password') {
+        setError('Please use a stronger password (at least 6 characters).');
+      } else {
+        setError(err.message || 'Sign up failed. Please try again.');
+      }
+    } finally {
+      setSubmitting(false);
     }
   };
+
+  // If Firebase logs us in after a slow network and our submit was triggered, auto-continue
+  useEffect(() => {
+    if (user && didSubmitRef.current) {
+      history.push('/profile');
+    }
+  }, [user, history]);
 
 
   // Unified social sign-in error handler
   const handleSocialSignin = async (fn) => {
     setError("");
     try {
-      await fn();
+  setSubmitting(true);
+  routeLoadingBus.start();
+  await withTimeout(fn());
     } catch (err) {
       if (err.code === "auth/popup-closed-by-user" || err.code === "auth/cancelled-popup-request") {
         setError("Sign-in popup was closed before completing.");
       } else {
         setError(err.message);
       }
+    } finally {
+      setSubmitting(false);
     }
   };
+
+  // Prefetch next routes for perceived speed
+  useEffect(() => {
+    import(/* webpackPrefetch: true */ "layouts/profile");
+    import(/* webpackPrefetch: true */ "layouts/dashboard");
+  }, []);
+
+  const emailOk = /.+@.+\..+/.test(email.trim());
+  const pwOk = password.trim().length >= 6; // basic UX check
+  const formValid = Boolean(name.trim() && emailOk && pwOk);
 
   return (
     <CoverLayout
@@ -115,22 +176,22 @@ function SignUp() {
           </VuiTypography>
           <Stack mb="25px" justifyContent="center" alignItems="center" direction="row" spacing={2}>
             <GradientBorder borderRadius="xl">
-              <IconButton onClick={() => handleSocialSignin(async () => { await signinWithFacebook(); history.push('/profile'); })} disabled={loading}>
+              <IconButton onClick={() => handleSocialSignin(async () => { await signinWithFacebook(); history.push('/profile'); })} disabled={submitting}>
                 <Icon as={FaFacebook} w="30px" h="30px" sx={({ palette: { white } }) => ({ color: white.focus })} />
               </IconButton>
             </GradientBorder>
             <GradientBorder borderRadius="xl">
-              <IconButton onClick={() => handleSocialSignin(async () => { await signinWithMicrosoft(); history.push('/profile'); })} disabled={loading}>
+              <IconButton onClick={() => handleSocialSignin(async () => { await signinWithMicrosoft(); history.push('/profile'); })} disabled={submitting}>
                 <Icon as={FaMicrosoft} w="30px" h="30px" sx={({ palette: { white } }) => ({ color: white.focus })} />
               </IconButton>
             </GradientBorder>
             <GradientBorder borderRadius="xl">
-              <IconButton onClick={() => handleSocialSignin(async () => { await signinWithGoogle(); history.push('/profile'); })} disabled={loading}>
+              <IconButton onClick={() => handleSocialSignin(async () => { await signinWithGoogle(); history.push('/profile'); })} disabled={submitting}>
                 <Icon as={FaGoogle} w="30px" h="30px" sx={({ palette: { white } }) => ({ color: white.focus })} />
               </IconButton>
             </GradientBorder>
             <GradientBorder borderRadius="xl">
-              <IconButton onClick={() => handleSocialSignin(async () => { await signinWithYahoo(); history.push('/profile'); })} disabled={loading}>
+              <IconButton onClick={() => handleSocialSignin(async () => { await signinWithYahoo(); history.push('/profile'); })} disabled={submitting}>
                 <Icon as={FaYahoo} w="30px" h="30px" sx={({ palette: { white } }) => ({ color: white.focus })} />
               </IconButton>
             </GradientBorder>
@@ -261,8 +322,15 @@ function SignUp() {
             </VuiTypography>
           </VuiBox>
           <VuiBox mt={4} mb={1}>
-            <VuiButton color="info" fullWidth sx={{ background: 'rgba(33,150,243,0.5)' }} type="submit" onClick={handleSubmit} disabled={loading || !hasFirebaseConfig || !name || !email || !password}>
-              SIGN UP
+            <VuiButton
+              color="info"
+              fullWidth
+              sx={{ background: 'rgba(33,150,243,0.5)' }}
+              type="submit"
+              onClick={handleSubmit}
+              disabled={submitting || !formValid}
+            >
+              {submitting ? <CircularProgress size={18} sx={{ color: 'white' }} /> : 'SIGN UP'}
             </VuiButton>
           </VuiBox>
           <VuiBox mt={3} textAlign="center">

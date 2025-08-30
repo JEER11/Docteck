@@ -10,6 +10,7 @@ import VuiInput from "components/VuiInput";
 import VuiButton from "components/VuiButton";
 import VuiSwitch from "components/VuiSwitch";
 import GradientBorder from "examples/GradientBorder";
+import CircularProgress from "@mui/material/CircularProgress";
 
 // Vision UI Dashboard assets
 import radialGradient from "assets/theme/functions/radialGradient";
@@ -43,15 +44,17 @@ import { FaMicrosoft, FaFacebook, FaGoogle, FaYahoo } from "react-icons/fa";
 import Icon from "@mui/material/Icon";
 import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
+import { routeLoadingBus } from "components/routeLoadingBus";
 
 function SignIn() {
   const history = useHistory();
   const [rememberMe, setRememberMe] = useState(true);
-  const { signin, signinWithGoogle, signinWithFacebook, signinWithMicrosoft, signinWithYahoo, user, loading } = useAuth();
+  const { signin, signinWithGoogle, signinWithFacebook, signinWithMicrosoft, signinWithYahoo, user } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   // MFA state
   const [mfaOpen, setMfaOpen] = useState(false);
   const [mfaResolver, setMfaResolver] = useState(null);
@@ -70,13 +73,22 @@ function SignIn() {
   const handleSetRememberMe = () => setRememberMe(!rememberMe);
 
 
+  // Guard long operations to keep UX snappy
+  const withTimeout = (promise, ms = 5000) =>
+    Promise.race([
+      promise,
+      new Promise((_, reject) => setTimeout(() => reject(Object.assign(new Error('Request timed out. Please check your connection and try again.'), { code: 'timeout' })), ms)),
+    ]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     try {
-  await signin(email, password);
-  // After sign-in, go to dashboard
-  history.push('/dashboard');
+  setSubmitting(true);
+  routeLoadingBus.start();
+  await withTimeout(signin(email, password));
+  // After sign-in, go to profile for onboarding
+  history.push('/profile');
       // Optional email 2FA gate
       if (auth?.currentUser && db) {
         try {
@@ -87,7 +99,7 @@ function SignIn() {
           }
         } catch (_) {}
       }
-    } catch (err) {
+  } catch (err) {
       if (err?.code === 'auth/multi-factor-auth-required') {
         try {
           const resolver = getMultiFactorResolver(auth, err);
@@ -105,11 +117,15 @@ function SignIn() {
           return;
         }
       }
-      if (err.code === 'auth/popup-closed-by-user') {
+      if (err?.code === 'timeout') {
+        setError(err.message);
+      } else if (err.code === 'auth/popup-closed-by-user') {
         setError('Sign-in popup was closed before completing.');
       } else {
         setError(err.message);
       }
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -117,17 +133,31 @@ function SignIn() {
   const handleSocialSignin = async (fn) => {
     setError("");
     try {
-  await fn();
-  // After social sign-in, go to dashboard
-  history.push('/dashboard');
+  setSubmitting(true);
+  routeLoadingBus.start();
+  await withTimeout(fn());
+  // After social sign-in, go to profile for onboarding
+  history.push('/profile');
     } catch (err) {
       if (err.code === 'auth/popup-closed-by-user') {
         setError('Sign-in popup was closed before completing.');
       } else {
         setError(err.message);
       }
+    } finally {
+      setSubmitting(false);
     }
   };
+
+  useEffect(() => {
+    // Prefetch common next routes and profile for speed
+    import(/* webpackPrefetch: true */ "layouts/dashboard");
+    import(/* webpackPrefetch: true */ "layouts/profile");
+  }, []);
+
+  const emailOk = /.+@.+\..+/.test(email.trim());
+  const pwOk = password.trim().length >= 6; // basic UX check
+  const formValid = Boolean(emailOk && pwOk);
 
   const startSmsSecondFactor = async () => {
     if (!mfaResolver || !mfaSelectedHint) return;
@@ -268,7 +298,7 @@ function SignIn() {
         </VuiBox>
         {!hasFirebaseConfig && (
           <VuiTypography color="error" fontWeight="medium" mt={2} mb={1} textAlign="center">
-            Authentication isn’t configured. Set your Firebase keys, then refresh.
+            Authentication isn’t configured. Set your Firebase keys in the backend or .env, then refresh.
           </VuiTypography>
         )}
         {error && (
@@ -277,8 +307,14 @@ function SignIn() {
           </VuiTypography>
         )}
         <VuiBox mt={4} mb={1}>
-          <VuiButton color="info" fullWidth sx={{ background: 'rgba(33,150,243,0.5)' }} type="submit" disabled={loading || !hasFirebaseConfig}>
-            SIGN IN
+          <VuiButton
+            color="info"
+            fullWidth
+            sx={{ background: 'rgba(33,150,243,0.5)' }}
+            type="submit"
+            disabled={submitting || !formValid}
+          >
+            {submitting ? <CircularProgress size={18} sx={{ color: 'white' }} /> : 'SIGN IN'}
           </VuiButton>
         </VuiBox>
         <VuiTypography color="white" fontWeight="bold" textAlign="center" mb="18px" mt={2}>
@@ -286,22 +322,22 @@ function SignIn() {
         </VuiTypography>
         <Stack mb={2} justifyContent="center" alignItems="center" direction="row" spacing={2}>
           <GradientBorder borderRadius="xl">
-            <IconButton onClick={() => handleSocialSignin(signinWithFacebook)} disabled={loading}>
+            <IconButton onClick={() => handleSocialSignin(signinWithFacebook)} disabled={submitting}>
               <Icon as={FaFacebook} w="30px" h="30px" sx={({ palette: { white } }) => ({ color: white.focus })} />
             </IconButton>
           </GradientBorder>
           <GradientBorder borderRadius="xl">
-            <IconButton onClick={() => handleSocialSignin(signinWithMicrosoft)} disabled={loading}>
+            <IconButton onClick={() => handleSocialSignin(signinWithMicrosoft)} disabled={submitting}>
               <Icon as={FaMicrosoft} w="30px" h="30px" sx={({ palette: { white } }) => ({ color: white.focus })} />
             </IconButton>
           </GradientBorder>
           <GradientBorder borderRadius="xl">
-            <IconButton onClick={() => handleSocialSignin(signinWithGoogle)} disabled={loading}>
+            <IconButton onClick={() => handleSocialSignin(signinWithGoogle)} disabled={submitting}>
               <Icon as={FaGoogle} w="30px" h="30px" sx={({ palette: { white } }) => ({ color: white.focus })} />
             </IconButton>
           </GradientBorder>
           <GradientBorder borderRadius="xl">
-            <IconButton onClick={() => handleSocialSignin(signinWithYahoo)} disabled={loading}>
+            <IconButton onClick={() => handleSocialSignin(signinWithYahoo)} disabled={submitting}>
               <Icon as={FaYahoo} w="30px" h="30px" sx={({ palette: { white } }) => ({ color: white.focus })} />
             </IconButton>
           </GradientBorder>

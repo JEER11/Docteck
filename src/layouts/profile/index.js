@@ -300,8 +300,13 @@ function Overview() {
       } catch (e) { console.error(e); }
     })();
   // Trigger a prefetch soon after mount so the dialog opens faster
-  useEffect(() => { const t = setTimeout(prefetchProfileDialog, 300); return () => clearTimeout(t); }, []);
   // eslint-disable-next-line
+  }, []);
+
+  // Trigger a prefetch soon after mount so the dialog opens faster
+  useEffect(() => {
+    const t = setTimeout(prefetchProfileDialog, 300);
+    return () => clearTimeout(t);
   }, []);
 
   // removed Care Team dialog since section is no longer displayed
@@ -547,6 +552,17 @@ function Overview() {
       '& input': { padding: '8px 12px' },
       '& .MuiSelect-select': { padding: '8px 12px', fontSize: 13, lineHeight: 1.4 },
     },
+  };
+  // Unified field style used inside the "Complete your profile" dialog so
+  // all inputs look identical to the Location select appearance
+  const dialogFieldSx = {
+    '& .MuiFormLabel-root': { color: '#a6b1e1', fontSize: '0.95rem' },
+    '& .MuiOutlinedInput-root': { background: '#181a2f', borderRadius: 2 },
+    '& .MuiOutlinedInput-notchedOutline': { border: '2px solid #23244a' },
+    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#2f3570' },
+    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#6a6afc' },
+    '& .MuiInputBase-input': { background: '#181a2f', color: '#fff', borderRadius: 2, fontWeight: 500, padding: '10px 12px' },
+    '& .MuiSelect-select': { background: '#181a2f', color: '#fff', borderRadius: 2, fontWeight: 500, padding: '10px 12px' },
   };
   // Consistent small label props to avoid floating label overlap
   const inputLabelPropsSmall = { shrink: true, sx: { color: '#aeb3d5', fontSize: 12 } };
@@ -870,12 +886,7 @@ function Overview() {
                       fullWidth
                       variant="outlined"
                       placeholder="Enter your first name"
-                      sx={{
-            input: { background: '#181a2f', color: '#fff', borderRadius: 2, border: '2px solid #23244a', fontWeight: 500 },
-            label: { color: '#a6b1e1', fontSize: '0.95rem' },
-            '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
-            '& .MuiOutlinedInput-root': { background: '#181a2f', borderRadius: 2 },
-                      }}
+                      sx={dialogFieldSx}
                     />
                     <TextField
                       margin="dense"
@@ -886,12 +897,7 @@ function Overview() {
                       fullWidth
                       variant="outlined"
                       placeholder="Enter your last name"
-                      sx={{
-            input: { background: '#181a2f', color: '#fff', borderRadius: 2, border: '2px solid #23244a', fontWeight: 500 },
-            label: { color: '#a6b1e1', fontSize: '0.95rem' },
-            '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
-            '& .MuiOutlinedInput-root': { background: '#181a2f', borderRadius: 2 },
-                      }}
+                      sx={dialogFieldSx}
                     />
                     <TextField
                       margin="dense"
@@ -902,12 +908,7 @@ function Overview() {
                       fullWidth
                       variant="outlined"
                       placeholder="Enter your mobile number"
-                      sx={{
-            input: { background: '#181a2f', color: '#fff', borderRadius: 2, border: '2px solid #23244a', fontWeight: 500 },
-            label: { color: '#a6b1e1', fontSize: '0.95rem' },
-            '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
-            '& .MuiOutlinedInput-root': { background: '#181a2f', borderRadius: 2 },
-                      }}
+                      sx={dialogFieldSx}
                     />
                     <TextField
                       margin="dense"
@@ -918,12 +919,7 @@ function Overview() {
                       fullWidth
                       variant="outlined"
                       placeholder="Enter your email"
-                      sx={{
-            input: { background: '#181a2f', color: '#fff', borderRadius: 2, border: '2px solid #23244a', fontWeight: 500 },
-            label: { color: '#a6b1e1', fontSize: '0.95rem' },
-            '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
-            '& .MuiOutlinedInput-root': { background: '#181a2f', borderRadius: 2 },
-                      }}
+                      sx={dialogFieldSx}
                     />
                   </Box>
                   <Box mb={2}>
@@ -936,7 +932,7 @@ function Overview() {
                       value={profile.location}
                       onChange={handleProfileChange}
                       fullWidth
-                      sx={{ select: { background: '#181a2f', color: '#fff', borderRadius: 2, border: '2px solid #23244a', fontWeight: 500 }, label: { color: '#a6b1e1', fontSize: '0.95rem' } }}
+                      sx={dialogFieldSx}
                       SelectProps={{
                         native: false,
                         MenuProps: {
@@ -976,7 +972,7 @@ function Overview() {
                       fullWidth
                       InputLabelProps={{ shrink: true }}
                       placeholder="yyyy-mm-dd"
-                      sx={{ input: { background: '#181a2f', color: '#fff', borderRadius: 2, border: '2px solid #23244a', fontWeight: 500 }, label: { color: '#a6b1e1', fontSize: '0.95rem' } }}
+                      sx={dialogFieldSx}
                     />
                     <TextField
                       margin="dense"
@@ -986,7 +982,7 @@ function Overview() {
                       value={profile.sex}
                       onChange={handleProfileChange}
                       fullWidth
-                      sx={{ select: { background: '#181a2f', color: '#fff', borderRadius: 2, border: '2px solid #23244a', fontWeight: 500 }, label: { color: '#a6b1e1', fontSize: '0.95rem' } }}
+                      sx={dialogFieldSx}
                       SelectProps={{
                         native: false,
                         MenuProps: {
@@ -1024,7 +1020,7 @@ function Overview() {
                       value={profile.bloodType}
                       onChange={handleProfileChange}
                       fullWidth
-                      sx={{ select: { background: '#181a2f', color: '#fff', borderRadius: 2, border: '2px solid #23244a', fontWeight: 500 }, label: { color: '#a6b1e1', fontSize: '0.95rem' } }}
+                      sx={dialogFieldSx}
                       SelectProps={{
                         native: false,
                         MenuProps: {
@@ -1067,7 +1063,7 @@ function Overview() {
                       value={profile.wheelchair}
                       onChange={handleProfileChange}
                       fullWidth
-                      sx={{ select: { background: '#181a2f', color: '#fff', borderRadius: 2, border: '2px solid #23244a', fontWeight: 500 }, label: { color: '#a6b1e1', fontSize: '0.95rem' } }}
+                      sx={dialogFieldSx}
                       SelectProps={{
                         native: false,
                         MenuProps: {

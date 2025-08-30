@@ -14,7 +14,8 @@ import { doc, setDoc, getDoc } from "firebase/firestore";
 
 export function useAuth() {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // global auth init
+  const [isAuthReady, setIsAuthReady] = useState(false); // becomes true after first onAuthStateChanged fires
 
   useEffect(() => {
     // If Firebase is not configured, mark loading false and skip listeners
@@ -63,6 +64,11 @@ export function useAuth() {
     });
     return () => unsubscribe();
   }, []);
+  useEffect(() => {
+    if (!isAuthReady && loading === false) {
+      setIsAuthReady(true);
+    }
+  }, [loading, isAuthReady]);
 
   // Email/password sign up
   const signup = async (email, password, profile = {}) => {
@@ -71,15 +77,18 @@ export function useAuth() {
     // Best-effort profile seed; don't block sign-up/navigation if this fails (e.g., strict rules)
     if (db) {
       try {
-        await setDoc(
+        // Fire-and-forget so slow networks don't delay the resolution of signup
+        setDoc(
           doc(db, "users", cred.user.uid),
           { email: cred.user.email || "", ...profile },
           { merge: true }
-        );
+        ).catch((e) => {
+          // Non-fatal: user account is created; onAuthStateChanged will still run
+          // eslint-disable-next-line no-console
+          console.warn("Profile seed failed; continuing sign-up:", e?.message || e);
+        });
       } catch (e) {
-        // Non-fatal: user account is created; onAuthStateChanged will still run
-        // eslint-disable-next-line no-console
-        console.warn("Profile seed failed; continuing sign-up:", e?.message || e);
+        // ignore
       }
     }
     return cred.user;
@@ -166,7 +175,8 @@ export function useAuth() {
 
   return {
     user,
-    loading,
+  loading,
+  isAuthReady,
     signup,
     signin,
     signinWithGoogle,
