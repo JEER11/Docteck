@@ -7,7 +7,11 @@ RUN apt-get update \
 	&& rm -rf /var/lib/apt/lists/* \
 	&& pip install --no-cache-dir -r requirements.txt
 COPY . .
-ENV FLASK_ENV=production
+ENV FLASK_ENV=production \
+	GUNICORN_WORKERS=4 \
+	GUNICORN_THREADS=2 \
+	GUNICORN_TIMEOUT=60 \
+	GUNICORN_KEEPALIVE=15
 EXPOSE 5000
 # Run with gunicorn in production; Celery worker can be started with 'celery -A tasks.celery worker --loglevel=info'
-CMD ["gunicorn", "-b", "0.0.0.0:5000", "app:app", "--workers", "2"]
+CMD ["gunicorn", "-b", "0.0.0.0:5000", "app:app", "--workers", "${GUNICORN_WORKERS}", "--threads", "${GUNICORN_THREADS}", "--timeout", "${GUNICORN_TIMEOUT}", "--keep-alive", "${GUNICORN_KEEPALIVE}"]

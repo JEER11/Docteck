@@ -18,6 +18,9 @@ const app = express();
 // Use a Node-specific port var to avoid clashing with Flask's PORT from root .env
 const port = Number(process.env.SERVER_PORT || process.env.NODE_PORT || 3001);
 
+// Behind Nginx, trust the first proxy for X-Forwarded-* headers
+app.set('trust proxy', 1);
+
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -63,7 +66,7 @@ app.use('/api/flask', createProxyMiddleware({
 }));
 
 // Health endpoint for Node that also checks Flask readiness
-app.get('/health', async (req, res) => {
+async function nodeHealth(req, res) {
   try {
     const flaskHealthUrl = `${FLASK_URL.replace(/\/$/, '')}/health`;
     const resp = await fetch(flaskHealthUrl, { method: 'GET' });
@@ -73,10 +76,12 @@ app.get('/health', async (req, res) => {
     console.error('Health check failed', e);
     return res.status(503).json({ ok: false, flask: false });
   }
-});
+}
+app.get('/health', nodeHealth);
+app.get('/api/health', nodeHealth);
 
 // Env presence (no secrets) for troubleshooting
-app.get('/health/env', (req, res) => {
+function envInfo(req, res) {
   res.json({
     ok: true,
     google: {
@@ -92,7 +97,9 @@ app.get('/health/env', (req, res) => {
     flaskUrl: process.env.FLASK_URL || null,
     serverPort: process.env.SERVER_PORT || process.env.NODE_PORT || null,
   });
-});
+}
+app.get('/health/env', envInfo);
+app.get('/api/health/env', envInfo);
 
 // Support endpoints (Ask / Report) with file uploads
 const fs = require('fs');

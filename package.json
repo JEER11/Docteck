@@ -66,7 +66,8 @@
 		"cross-env": "^7.0.3",
 		"eslint": "^8.57.0",
 		"eslint-plugin-react-hooks": "^4.6.0",
-		"react-scripts": "^5.0.1"
+		"react-scripts": "^5.0.1",
+		"artillery": "^2.0.0-37"
 	},
 	"scripts": {
 		"dev": "concurrently \"npm run server\" \"cross-env PORT=3002 npm start\"",
@@ -76,6 +77,9 @@
 		"build": "cross-env PUBLIC_URL=/ react-scripts build",
 		"test": "react-scripts test",
 		"eject": "react-scripts eject",
+		"loadtest": "artillery run loadtest/artillery.yaml",
+		"loadtest:quick": "artillery quick --count 10 --num 20 http://localhost:3001/health",
+		"loadtest:dev": "artillery run -t http://localhost:3001 loadtest/artillery.yaml",
 		"install:clean": "rm -rf node_modules/ && rm -rf package-lock.json && npm install && npm start"
 	},
 	"proxy": "http://localhost:3001",

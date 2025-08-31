@@ -1,5 +1,6 @@
 from flask import Flask, jsonify, request, send_from_directory, render_template, redirect  # docteck
 from flask_cors import CORS
+from werkzeug.middleware.proxy_fix import ProxyFix
 import os, json, time
 from werkzeug.utils import secure_filename
 from file_analysis import ocr_image
@@ -13,6 +14,8 @@ from datetime import datetime, timedelta
 
 load_dotenv()
 app = Flask(__name__)
+# Trust a single reverse proxy (Nginx) to supply X-Forwarded-* so request.url, scheme, and remote IP are correct
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 # Allow simple CORS for /api/* endpoints (adjust origins in production)
 # Include X-API-SECRET so frontends can pass an optional API secret if enabled
 CORS(app, resources={r"/api/*": {"origins": "*", "allow_headers": ["Content-Type","Authorization","X-API-SECRET"]}})
