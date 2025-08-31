@@ -59,6 +59,9 @@ function DefaultNavbar({ transparent, light, action }) {
     return () => window.removeEventListener("resize", displayMobileNavbar);
   }, []);
 
+  // Hide action (e.g., Subscribe) on auth pages (sign-in/sign-up)
+  const isAuthPage = typeof window !== 'undefined' && /\/authentication\/(sign-in|sign-up)/.test(window.location.pathname || '');
+
   return (
     <Container>
       <VuiBox
@@ -109,7 +112,7 @@ function DefaultNavbar({ transparent, light, action }) {
           <DefaultNavbarLink icon="key" name="sign in" route="/authentication/sign-in" hideLabel />
         </VuiBox>
         {/* No notifications in DefaultNavbar for auth pages */}
-        {action &&
+  {action && !isAuthPage &&
           (action.type === "internal" ? (
             <VuiBox display={{ xs: "none", lg: "inline-block" }}>
               <VuiButton
