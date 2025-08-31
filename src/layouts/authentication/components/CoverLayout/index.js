@@ -42,14 +42,7 @@ function CoverLayout({
       )}
     >
 
-      
-       <DefaultNavbar
-        action={{
-          type: "external",
-          route: "https://github.com/JEER11/Docteck#readme",
-          label: "Subscribe",
-        }} 
-      /> 
+  <DefaultNavbar /> 
 
 
       <VuiBox
