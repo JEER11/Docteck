@@ -42,7 +42,8 @@ function CoverLayout({
       )}
     >
 
-  <DefaultNavbar /> 
+  {/* No action button on auth pages */}
+  <DefaultNavbar action={false} /> 
 
 
       <VuiBox
