@@ -4,7 +4,6 @@ import "./i18n";
 import { createRoot} from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import App from "App";
-import StripeProvider from "components/StripeProvider";
 
 // Docteck Dashboard React Context Provider
 import { VisionUIControllerProvider } from "context";
@@ -33,9 +32,7 @@ root.render(
   <BrowserRouter basename="/app">
     <VisionUIControllerProvider>
       <AppProviders>
-        <StripeProvider>
-          <App />
-        </StripeProvider>
+  <App />
       </AppProviders>
     </VisionUIControllerProvider>
   </BrowserRouter>

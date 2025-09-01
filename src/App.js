@@ -1,20 +1,11 @@
-import { useState, useEffect, useMemo } from "react";
-
-// react-router components
+import { useState, useEffect, useMemo, Suspense } from "react";
 import { Route, Switch, Redirect, useLocation } from "react-router-dom";
-import { Suspense } from "react";
 import FullScreenLoader from "components/FullScreenLoader";
 import RouteChangeLoader from "components/RouteChangeLoader";
 
-// @mui material components
+// MUI theme
 import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
-import Icon from "@mui/material/Icon";
-
-import VuiBox from "components/VuiBox";
-
-import Sidenav from "examples/Sidenav";
-import Configurator from "examples/Configurator";
 
 import theme from "assets/theme";
 import themeRTL from "assets/theme/theme-rtl";
@@ -25,177 +16,73 @@ import { CacheProvider } from "@emotion/react";
 import createCache from "@emotion/cache";
 
 import routes from "routes";
-
-import { useVisionUIController, setMiniSidenav, setOpenConfigurator, setDirection } from "context";
-import { AppointmentProvider } from "context/AppointmentContext";
-import { ProjectsProvider } from "context/ProjectsContext";
-import { TodoProvider } from "context/TodoContext";
+import { useVisionUIController } from "context";
+import StripeProvider from "components/StripeProvider";
 
 export default function App() {
-  const [controller, dispatch] = useVisionUIController();
-  const { miniSidenav, direction, layout, openConfigurator, sidenavColor } = controller;
-  const [onMouseEnter, setOnMouseEnter] = useState(false);
+  const [controller] = useVisionUIController();
+  const { direction } = controller;
   const [rtlCache, setRtlCache] = useState(null);
   const { pathname } = useLocation();
 
-  // Cache for the rtl
+  // Create RTL cache once
   useMemo(() => {
-    const cacheRtl = createCache({
-      key: "rtl",
-      stylisPlugins: [rtlPlugin],
-    });
-
+    const cacheRtl = createCache({ key: "rtl", stylisPlugins: [rtlPlugin] });
     setRtlCache(cacheRtl);
   }, []);
 
-  // Open sidenav when mouse enter on mini sidenav
-  const handleOnMouseEnter = () => {
-    if (miniSidenav && !onMouseEnter) {
-      setMiniSidenav(dispatch, false);
-      setOnMouseEnter(true);
-    }
-  };
-
-  // Close sidenav when mouse leave mini sidenav
-  const handleOnMouseLeave = () => {
-    if (onMouseEnter) {
-      setMiniSidenav(dispatch, true);
-      setOnMouseEnter(false);
-    }
-  };
-
-  // Change the openConfigurator state
-  const handleConfiguratorOpen = () => setOpenConfigurator(dispatch, !openConfigurator);
-
-  // Setting the dir attribute for the body element
+  // Update document direction and scroll to top on route change
   useEffect(() => {
-    document.body.setAttribute("dir", direction);
-  }, [direction]);
+    document.body.setAttribute("dir", direction || "ltr");
+    if (document.scrollingElement) document.scrollingElement.scrollTop = 0;
+  }, [direction, pathname]);
 
-
-  // Setting page scroll to 0 when changing the route
-  useEffect(() => {
-    document.documentElement.scrollTop = 0;
-    document.scrollingElement.scrollTop = 0;
-  }, [pathname]);
-
-  // Set billing background class only on /billing route
+  // Add/remove a special background on billing route only
   useEffect(() => {
     if (pathname.startsWith("/billing")) {
       document.body.classList.add("billing-bg");
     } else {
       document.body.classList.remove("billing-bg");
     }
-    // Clean up on unmount or route change
-    return () => {
-      document.body.classList.remove("billing-bg");
-    };
+    return () => document.body.classList.remove("billing-bg");
   }, [pathname]);
 
+  // Helper to render routes
   const getRoutes = (allRoutes) =>
-    allRoutes.map((route) => {
-      if (route.collapse) {
-        return getRoutes(route.collapse);
-      }
-
-      if (route.route) {
-        return <Route exact path={route.route} component={route.component} key={route.key} />;
-      }
-
-      return null;
+    allRoutes.flatMap((route) => {
+      if (route.collapse) return getRoutes(route.collapse);
+      if (route.route && route.component)
+        return (
+          <Route key={route.key || route.route} exact path={route.route} component={route.component} />
+        );
+      return [];
     });
 
-  const configsButton = (
-    <VuiBox
-      display="flex"
-      justifyContent="center"
-      alignItems="center"
-      width="3.5rem"
-      height="3.5rem"
-      bgColor="info"
-      shadow="sm"
-      borderRadius="50%"
-      position="fixed"
-      right="2rem"
-      bottom="2rem"
-      zIndex={99}
-      color="white"
-      sx={{ cursor: "pointer" }}
-      onClick={handleConfiguratorOpen}
-    >
-      <Icon fontSize="default" color="inherit">
-        settings
-      </Icon>
-    </VuiBox>
+  const AppContent = (
+    <Suspense fallback={<FullScreenLoader />}> 
+      <StripeProvider>
+        <Switch>
+          {getRoutes(routes)}
+          <Route path="/calendar/oauth-success.html" />
+          <Redirect from="*" to="/dashboard" />
+        </Switch>
+      </StripeProvider>
+    </Suspense>
   );
 
   return direction === "rtl" ? (
     <CacheProvider value={rtlCache}>
       <ThemeProvider theme={themeRTL}>
         <CssBaseline />
-        <ProjectsProvider>
-          <AppointmentProvider>
-            <TodoProvider>
-              {layout === "dashboard" && (
-                <>
-                  <Sidenav
-                    color={sidenavColor}
-                    brand=""
-                    brandName="DOCTECK"
-                    routes={routes}
-                    onMouseEnter={handleOnMouseEnter}
-                    onMouseLeave={handleOnMouseLeave}
-                  />
-                  <Configurator />
-                  {configsButton}
-                </>
-              )}
-              {layout === "vr" && <Configurator />}
-              <RouteChangeLoader />
-              <Suspense fallback={<FullScreenLoader />}> 
-                <Switch>
-                  {getRoutes(routes)}
-                  <Route path="/calendar/oauth-success.html" />
-                  <Redirect from="*" to="/dashboard" />
-                </Switch>
-              </Suspense>
-            </TodoProvider>
-          </AppointmentProvider>
-        </ProjectsProvider>
+        <RouteChangeLoader />
+        {AppContent}
       </ThemeProvider>
     </CacheProvider>
   ) : (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <ProjectsProvider>
-        <AppointmentProvider>
-          <TodoProvider>
-            {layout === "dashboard" && (
-              <>
-                <Sidenav
-                  color={sidenavColor}
-                  brand=""
-                  brandName="DOCTECK"
-                  routes={routes}
-                  onMouseEnter={handleOnMouseEnter}
-                  onMouseLeave={handleOnMouseLeave}
-                />
-                <Configurator />
-                {configsButton}
-              </>
-            )}
-            {layout === "vr" && <Configurator />}
-            <RouteChangeLoader />
-            <Suspense fallback={<FullScreenLoader />}> 
-              <Switch>
-                {getRoutes(routes)}
-                <Route path="/calendar/oauth-success.html" />
-                <Redirect from="*" to="/dashboard" />
-              </Switch>
-            </Suspense>
-          </TodoProvider>
-        </AppointmentProvider>
-      </ProjectsProvider>
+      <RouteChangeLoader />
+      {AppContent}
     </ThemeProvider>
   );
 }
