@@ -15,21 +15,24 @@ import {
   orderBy,
 } from "firebase/firestore";
 
-const ensure = () => {
-  if (!auth || !db) throw new Error("Firebase is not configured.");
-};
+// Return boolean instead of throwing so callers can gracefully no-op
+const ensure = () => Boolean(auth && db);
 
-const billingCol = (uid, sub) => collection(db, "users", uid, "billing", sub);
-const insuranceDoc = (uid, id) => doc(db, "users", uid, "billing", "insuranceCards", id);
-const paymentMethodDoc = (uid, id) => doc(db, "users", uid, "billing", "paymentMethods", id);
+// Anchor billing data under a concrete document to satisfy Firestore path segment rules:
+// users/{uid}/billing/{root}/(insuranceCards|paymentMethods)
+const BILLING_ROOT_ID = "root";
+const billingRootDoc = (uid) => doc(db, "users", uid, "billing", BILLING_ROOT_ID);
+const billingSubCol = (uid, sub) => collection(billingRootDoc(uid), sub);
+const insuranceDoc = (uid, id) => doc(db, "users", uid, "billing", BILLING_ROOT_ID, "insuranceCards", id);
+const paymentMethodDoc = (uid, id) => doc(db, "users", uid, "billing", BILLING_ROOT_ID, "paymentMethods", id);
 
 // Insurance cards
 export async function addInsuranceCard(payload, uid) {
-  ensure();
+  if (!ensure()) return undefined;
   if (!uid) uid = auth?.currentUser?.uid;
-  if (!uid) throw new Error("No user");
+  if (!uid) return undefined;
   const now = serverTimestamp();
-  const ref = await addDoc(billingCol(uid, "insuranceCards"), {
+  const ref = await addDoc(billingSubCol(uid, "insuranceCards"), {
     ...payload,
     createdAt: now,
     updatedAt: now,
@@ -38,35 +41,40 @@ export async function addInsuranceCard(payload, uid) {
 }
 
 export async function updateInsuranceCard(id, patch, uid) {
-  ensure();
+  if (!ensure()) return;
   if (!uid) uid = auth?.currentUser?.uid;
-  if (!uid) throw new Error("No user");
+  if (!uid) return;
   await updateDoc(insuranceDoc(uid, id), { ...patch, updatedAt: serverTimestamp() });
 }
 
 export async function deleteInsuranceCard(id, uid) {
-  ensure();
+  if (!ensure()) return;
   if (!uid) uid = auth?.currentUser?.uid;
-  if (!uid) throw new Error("No user");
+  if (!uid) return;
   await deleteDoc(insuranceDoc(uid, id));
 }
 
 export function onInsuranceCards(opts = {}, cb) {
-  ensure();
-  let { uid } = opts;
-  if (!uid) uid = auth?.currentUser?.uid;
-  if (!uid) throw new Error("No user");
-  const q = query(billingCol(uid, "insuranceCards"), orderBy("updatedAt", "desc"));
-  return onSnapshot(q, (snap) => cb(snap.docs.map((d) => ({ id: d.id, ...d.data() }))));
+  try {
+    if (!ensure()) { try { cb([]); } catch (_) {} return () => {}; }
+    let { uid } = opts;
+    if (!uid) uid = auth?.currentUser?.uid;
+    if (!uid) { try { cb([]); } catch (_) {} return () => {}; }
+    const q = query(billingSubCol(uid, "insuranceCards"), orderBy("updatedAt", "desc"));
+    return onSnapshot(q, (snap) => cb(snap.docs.map((d) => ({ id: d.id, ...d.data() }))));
+  } catch (e) {
+    try { cb([]); } catch (_) {}
+    return () => {};
+  }
 }
 
 // Payment methods (store minimal metadata and Stripe PaymentMethod ID)
 export async function addPaymentMethodDoc(data, uid) {
-  ensure();
+  if (!ensure()) return undefined;
   if (!uid) uid = auth?.currentUser?.uid;
-  if (!uid) throw new Error("No user");
+  if (!uid) return undefined;
   const now = serverTimestamp();
-  const ref = await addDoc(billingCol(uid, "paymentMethods"), {
+  const ref = await addDoc(billingSubCol(uid, "paymentMethods"), {
     ...data, // { paymentMethodId, brand, last4, billingName }
     createdAt: now,
     updatedAt: now,
@@ -75,12 +83,17 @@ export async function addPaymentMethodDoc(data, uid) {
 }
 
 export function onPaymentMethods(opts = {}, cb) {
-  ensure();
-  let { uid } = opts;
-  if (!uid) uid = auth?.currentUser?.uid;
-  if (!uid) throw new Error("No user");
-  const q = query(billingCol(uid, "paymentMethods"), orderBy("createdAt", "desc"));
-  return onSnapshot(q, (snap) => cb(snap.docs.map((d) => ({ id: d.id, ...d.data() }))));
+  try {
+    if (!ensure()) { try { cb([]); } catch (_) {} return () => {}; }
+    let { uid } = opts;
+    if (!uid) uid = auth?.currentUser?.uid;
+    if (!uid) { try { cb([]); } catch (_) {} return () => {}; }
+    const q = query(billingSubCol(uid, "paymentMethods"), orderBy("createdAt", "desc"));
+    return onSnapshot(q, (snap) => cb(snap.docs.map((d) => ({ id: d.id, ...d.data() }))));
+  } catch (e) {
+    try { cb([]); } catch (_) {}
+    return () => {};
+  }
 }
 
 export default {

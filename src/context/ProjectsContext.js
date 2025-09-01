@@ -1,6 +1,13 @@
 import React, { createContext, useContext, useState } from "react";
 
-const ProjectsContext = createContext();
+// Provide a safe default shape so destructuring doesn't crash if a component
+// renders before the provider mounts (e.g., during lazy loading or error states).
+const ProjectsContext = createContext({
+  projects: [],
+  addProject: () => {},
+  updateProject: () => {},
+  removeProject: () => {},
+});
 
 const initialProjects = [
   {

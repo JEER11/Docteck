@@ -17,7 +17,8 @@ import createCache from "@emotion/cache";
 
 import routes from "routes";
 import { useVisionUIController } from "context";
-import StripeProvider from "components/StripeProvider";
+import Sidenav from "examples/Sidenav";
+import Configurator from "examples/Configurator";
 
 export default function App() {
   const [controller] = useVisionUIController();
@@ -60,13 +61,11 @@ export default function App() {
 
   const AppContent = (
     <Suspense fallback={<FullScreenLoader />}> 
-      <StripeProvider>
-        <Switch>
-          {getRoutes(routes)}
-          <Route path="/calendar/oauth-success.html" />
-          <Redirect from="*" to="/dashboard" />
-        </Switch>
-      </StripeProvider>
+      <Switch>
+        {getRoutes(routes)}
+        <Route path="/calendar/oauth-success.html" />
+        <Redirect from="*" to="/dashboard" />
+      </Switch>
     </Suspense>
   );
 
@@ -75,6 +74,8 @@ export default function App() {
       <ThemeProvider theme={themeRTL}>
         <CssBaseline />
         <RouteChangeLoader />
+        <Sidenav routes={routes} brandName="Docteck" color={controller.sidenavColor || "info"} />
+        <Configurator />
         {AppContent}
       </ThemeProvider>
     </CacheProvider>
@@ -82,6 +83,8 @@ export default function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <RouteChangeLoader />
+      <Sidenav routes={routes} brandName="Docteck" color={controller.sidenavColor || "info"} />
+      <Configurator />
       {AppContent}
     </ThemeProvider>
   );
