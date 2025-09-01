@@ -77,11 +77,15 @@ function Dashboard() {
   const { gradients } = colors;
   const { cardContent } = gradients;
 
-  const { getNextAppointment } = useAppointments();
+  // Access appointments context with safe fallbacks
+  const apptCtx = useAppointments() || {};
+  const getNextAppointment = typeof apptCtx.getNextAppointment === 'function' ? apptCtx.getNextAppointment : () => null;
   const nextAppointment = getNextAppointment();
 
   // Use todos from context
-  const { todos } = useTodos();
+  // Safely access todos
+  const todosCtx = useTodos() || { todos: [] };
+  const { todos } = todosCtx;
   // Find the todo with the closest date in the future
   const now = new Date();
   const todosWithDate = todos.filter(t => t.date);
@@ -209,7 +213,9 @@ function Dashboard() {
   };
 
   // --- CALENDAR INTEGRATION ---
-  const { appointments, addAppointment } = useAppointments();
+  // Guard appointments/addAppointment in case context is temporarily unavailable
+  const appointments = Array.isArray(apptCtx.appointments) ? apptCtx.appointments : [];
+  const addAppointment = typeof apptCtx.addAppointment === 'function' ? apptCtx.addAppointment : () => {};
   useEffect(() => {
     // Fetch Google Calendar events
   fetch(`${apiBase}/api/calendar/google`)
