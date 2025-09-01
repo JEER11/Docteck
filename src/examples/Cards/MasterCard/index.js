@@ -33,7 +33,9 @@ function MasterCard({ insuranceName, memberName, memberId, monthlyBill, onAdd, o
     memberName: "",
     memberId: "",
     monthlyBill: "",
-    backgroundSrc: Jelly1
+    backgroundSrc: Jelly1,
+    frontImageUrl: undefined,
+    backImageUrl: undefined,
   });
   const BG_OPTIONS = [
     { label: "Jelly 1", src: Jelly1 },
@@ -46,12 +48,12 @@ function MasterCard({ insuranceName, memberName, memberId, monthlyBill, onAdd, o
 
   const handleAddClick = (e) => {
     e.stopPropagation();
-  setForm({ insuranceName: "", memberName: "", memberId: "", monthlyBill: "", backgroundSrc: Jelly1 });
+    setForm({ insuranceName: "", memberName: "", memberId: "", monthlyBill: "", backgroundSrc: Jelly1, frontImageUrl: undefined, backImageUrl: undefined });
     setOpenAdd(true);
   };
   const handleEditClick = (e) => {
     e.stopPropagation();
-  setForm({ insuranceName, memberName, memberId, monthlyBill, backgroundSrc: backgroundSrc || Jelly1 });
+    setForm({ insuranceName, memberName, memberId, monthlyBill, backgroundSrc: backgroundSrc || Jelly1, frontImageUrl, backImageUrl });
     setOpenEdit(true);
   };
   const handleClose = (e) => {
@@ -78,6 +80,26 @@ function MasterCard({ insuranceName, memberName, memberId, monthlyBill, onAdd, o
     e.preventDefault();
     if (onDelete) onDelete(form);
     handleClose(e);
+  };
+
+  // Helpers to upload images and set into form (and persist immediately on Edit dialog)
+  const uploadAndSet = async (file, which) => {
+    if (!file) return;
+    try {
+      const { url, path } = await uploadUserFile(file, "insurance");
+      setForm((prev) => ({
+        ...prev,
+        ...(which === 'front' ? { frontImageUrl: url, frontImagePath: path } : {}),
+        ...(which === 'back' ? { backImageUrl: url, backImagePath: path } : {}),
+      }));
+      // If editing an existing card, push change to Firestore right away
+      if (openEdit && id) {
+        const patch = which === 'front' ? { frontImageUrl: url, frontImagePath: path } : { backImageUrl: url, backImagePath: path };
+        try { await updateInsuranceCard(id, patch); } catch (_) {}
+      }
+    } catch (_) {
+      // silently ignore upload errors for now
+    }
   };
 
   // Match Pharmacy dialog input style
@@ -151,45 +173,6 @@ function MasterCard({ insuranceName, memberName, memberId, monthlyBill, onAdd, o
               {insuranceName || "Insurance Card"}
             </VuiTypography>
             <VuiBox display="flex" alignItems="center" gap={1}>
-                {/* Upload buttons for front/back images */}
-                <VuiBox component="label" sx={{
-                    background: "rgba(255,255,255,0.12)", borderRadius: "50%", width: 32, height: 32,
-                    display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", mr: 1
-                  }} title="Upload front image">
-                  <input type="file" accept="image/*" hidden onChange={async (e)=>{
-                    const f = e.target.files?.[0];
-                    if (!f) return;
-                    if (!auth || !auth.currentUser) { e.target.value = ''; return; }
-                    try {
-                      const { url, path } = await uploadUserFile(f, "insurance");
-                      // Persist to Firestore if card is bound to a doc
-                      if (id) await updateInsuranceCard(id, { frontImageUrl: url, frontImagePath: path });
-                    } catch (err) {
-                      // no-op UI toast here if desired
-                    } finally {
-                      e.target.value = '';
-                    }
-                  }} />
-                  <PhotoCamera sx={{ color: '#fff' }} fontSize="small" />
-                </VuiBox>
-                <VuiBox component="label" sx={{
-                    background: "rgba(255,255,255,0.12)", borderRadius: "50%", width: 32, height: 32,
-                    display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", mr: 1
-                  }} title="Upload back image">
-                  <input type="file" accept="image/*" hidden onChange={async (e)=>{
-                    const f = e.target.files?.[0];
-                    if (!f) return;
-                    if (!auth || !auth.currentUser) { e.target.value = ''; return; }
-                    try {
-                      const { url, path } = await uploadUserFile(f, "insurance");
-                      if (id) await updateInsuranceCard(id, { backImageUrl: url, backImagePath: path });
-                    } catch (err) {
-                    } finally {
-                      e.target.value = '';
-                    }
-                  }} />
-                  <UploadIcon sx={{ color: '#fff' }} fontSize="small" />
-                </VuiBox>
               {canAdd && (
                 <VuiBox
                   component="button"
@@ -311,6 +294,30 @@ function MasterCard({ insuranceName, memberName, memberId, monthlyBill, onAdd, o
               }} />
             ))}
           </VuiBox>
+          {/* Card images (front/back) */}
+          <VuiTypography variant="button" color="white" sx={{ opacity: 0.8, mt: 2 }}>Card Images</VuiTypography>
+          <VuiBox sx={{ display: 'flex', gap: 1.5, alignItems: 'center', flexWrap: 'wrap' }}>
+            <VuiBox component="label" sx={{
+              background: 'rgba(255,255,255,0.12)', borderRadius: 2, px: 2, py: 1, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 1
+            }} title="Upload front image">
+              <PhotoCamera sx={{ color: '#fff' }} fontSize="small" />
+              <span style={{ color: '#fff', fontSize: 13 }}>Front Image</span>
+              <input type="file" accept="image/*" hidden onChange={(e) => { const f = e.target.files?.[0]; e.target.value=''; if (!auth || !auth.currentUser) return; uploadAndSet(f, 'front'); }} />
+            </VuiBox>
+            <VuiBox component="label" sx={{
+              background: 'rgba(255,255,255,0.12)', borderRadius: 2, px: 2, py: 1, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 1
+            }} title="Upload back image">
+              <UploadIcon sx={{ color: '#fff' }} fontSize="small" />
+              <span style={{ color: '#fff', fontSize: 13 }}>Back Image</span>
+              <input type="file" accept="image/*" hidden onChange={(e) => { const f = e.target.files?.[0]; e.target.value=''; if (!auth || !auth.currentUser) return; uploadAndSet(f, 'back'); }} />
+            </VuiBox>
+            {(form.frontImageUrl || form.backImageUrl) && (
+              <VuiBox sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                {form.frontImageUrl && <img alt="Front" src={form.frontImageUrl} style={{ width: 48, height: 32, objectFit: 'cover', borderRadius: 4, border: '1px solid rgba(255,255,255,0.25)' }} />}
+                {form.backImageUrl && <img alt="Back" src={form.backImageUrl} style={{ width: 48, height: 32, objectFit: 'cover', borderRadius: 4, border: '1px solid rgba(255,255,255,0.25)' }} />}
+              </VuiBox>
+            )}
+          </VuiBox>
         </DialogContent>
         <DialogActions sx={{ background: 'transparent', px: 2, pb: 2, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
           <Button onClick={handleClose} sx={{ color: '#bfc6e0' }}>Cancel</Button>
@@ -344,6 +351,30 @@ function MasterCard({ insuranceName, memberName, memberId, monthlyBill, onAdd, o
                 outline: form.backgroundSrc === opt.src ? '2px solid #6a6afc' : '1px solid rgba(255,255,255,0.2)'
               }} />
             ))}
+          </VuiBox>
+          {/* Card images (front/back) */}
+          <VuiTypography variant="button" color="white" sx={{ opacity: 0.8, mt: 2 }}>Card Images</VuiTypography>
+          <VuiBox sx={{ display: 'flex', gap: 1.5, alignItems: 'center', flexWrap: 'wrap' }}>
+            <VuiBox component="label" sx={{
+              background: 'rgba(255,255,255,0.12)', borderRadius: 2, px: 2, py: 1, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 1
+            }} title="Upload front image">
+              <PhotoCamera sx={{ color: '#fff' }} fontSize="small" />
+              <span style={{ color: '#fff', fontSize: 13 }}>Front Image</span>
+              <input type="file" accept="image/*" hidden onChange={(e) => { const f = e.target.files?.[0]; e.target.value=''; if (!auth || !auth.currentUser) return; uploadAndSet(f, 'front'); }} />
+            </VuiBox>
+            <VuiBox component="label" sx={{
+              background: 'rgba(255,255,255,0.12)', borderRadius: 2, px: 2, py: 1, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 1
+            }} title="Upload back image">
+              <UploadIcon sx={{ color: '#fff' }} fontSize="small" />
+              <span style={{ color: '#fff', fontSize: 13 }}>Back Image</span>
+              <input type="file" accept="image/*" hidden onChange={(e) => { const f = e.target.files?.[0]; e.target.value=''; if (!auth || !auth.currentUser) return; uploadAndSet(f, 'back'); }} />
+            </VuiBox>
+            {(form.frontImageUrl || form.backImageUrl) && (
+              <VuiBox sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                {form.frontImageUrl && <img alt="Front" src={form.frontImageUrl} style={{ width: 48, height: 32, objectFit: 'cover', borderRadius: 4, border: '1px solid rgba(255,255,255,0.25)' }} />}
+                {form.backImageUrl && <img alt="Back" src={form.backImageUrl} style={{ width: 48, height: 32, objectFit: 'cover', borderRadius: 4, border: '1px solid rgba(255,255,255,0.25)' }} />}
+              </VuiBox>
+            )}
           </VuiBox>
         </DialogContent>
         <DialogActions sx={{ background: 'transparent', px: 2, pb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -479,7 +510,7 @@ function MasterCardStack({ cards, setCards, onAdd, onEdit, onDelete }) {
       top: PEEK_OFFSET * depth,
               left: 0,
               width: "100%",
-              zIndex: isActive ? cards.length + 1 : idx,
+              zIndex: isActive ? (viewCards?.length || 0) + 1 : idx,
       filter: isActive ? undefined : `brightness(${dim}) saturate(${sat})`,
   opacity: isActive ? 1 : 0.96 - depth * 0.05,
               cursor: isActive ? "default" : "pointer",

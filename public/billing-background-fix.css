@@ -1,8 +1,8 @@
 body.billing-bg {
-  background: url("/assets/images/billing-background-balance.png") center center / cover no-repeat fixed !important;
+  /* Do not reference missing /assets paths; fallback to color only */
+  background-color: #181c3a !important;
   min-height: 100vh !important;
   width: 100vw !important;
-  background-color: #181c3a !important;
   position: relative !important;
   z-index: 0 !important;
   overflow-x: hidden !important;

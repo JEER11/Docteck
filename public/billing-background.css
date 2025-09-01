@@ -1,5 +1,6 @@
 body.billing-bg {
-  background: url("/assets/images/billing-background-balance.png") center center / cover no-repeat fixed;
+  /* Background image handled in React components; keep a safe fallback color only */
+  background-color: #181c3a;
   min-height: 100vh;
   width: 100vw;
 }

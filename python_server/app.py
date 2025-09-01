@@ -234,6 +234,9 @@ def _rewrite_react_index_paths(html: str) -> str:
         for path in ('/favicon.png','/apple-icon.png','/manifest.json','/billing-background.css','/billing-background-fix.css'):
             html = html.replace(f' href="{path}"', f' href="/app{path}"')
             html = html.replace(f' src="{path}"', f' src="/app{path}"')
+        # Handle CRA placeholders from public/index.html when build isn't ready
+        # Replace %PUBLIC_URL%/* with /app/* so assets load under the SPA prefix
+        html = html.replace('%PUBLIC_URL%/', '/app/')
         return html
     except Exception:
         return html
@@ -362,7 +365,25 @@ def classic_pets():
 def react_index():
     index_path = os.path.join(BUILD_DIR, 'index.html')
     if not os.path.exists(index_path):
-        return jsonify(message='React build not found'), 404
+        # During an in-progress CRA build, index.html can be briefly missing.
+        # Fall back to the unbuilt public/index.html if available, else show a gentle waiting page.
+        try:
+            public_index = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'public', 'index.html'))
+            if os.path.exists(public_index):
+                with open(public_index, 'r', encoding='utf-8') as f:
+                    html = f.read()
+                html = _rewrite_react_index_paths(html)
+                return html  # 200 OK
+        except Exception:
+            pass
+        return (
+            """<!doctype html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>Starting…</title>
+            <style>html,body{height:100%;margin:0}body{display:flex;align-items:center;justify-content:center;background:#0b1020;color:#e8ecff;font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif} .card{background:#0f1630;border:1px solid #1f2b56;border-radius:14px;padding:22px 26px;box-shadow:0 12px 30px rgba(5,10,40,.35)} h2{margin:0 0 6px 0;font-weight:700;font-size:20px} p{margin:6px 0 0 0;opacity:.85}</style></head>
+            <body><div class=\"card\"><h2>UI is building…</h2><p>Please wait a moment. This page will refresh automatically.</p></div>
+            <script>setTimeout(function(){location.reload()},2000)</script></body></html>""",
+            200,
+            {"Content-Type": "text/html; charset=utf-8"}
+        )
     try:
         with open(index_path, 'r', encoding='utf-8') as f:
             html = f.read()
@@ -376,7 +397,13 @@ def react_index():
         """
         if '</body>' in html:
             html = html.replace('</body>', inject + '\n</body>')
-        return html
+        # Send with dev-friendly no-cache headers to avoid stale shell during active changes
+        return html, 200, {
+            "Content-Type": "text/html; charset=utf-8",
+            "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+            "Pragma": "no-cache",
+            "Expires": "0",
+        }
     except Exception:
         # Fallback to static send if anything goes wrong
         return send_from_directory(BUILD_DIR, 'index.html')
