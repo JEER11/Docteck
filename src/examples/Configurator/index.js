@@ -2,7 +2,7 @@
 // MIT: Portions © 2021 Creative Tim & Simmmple (Vision UI Free React). See LICENSE.md.
 //
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useHistory } from "react-router-dom";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
@@ -36,13 +36,7 @@ import VuiSwitch from "components/VuiSwitch";
 import ConfiguratorRoot from "examples/Configurator/ConfiguratorRoot";
 
 // Vision UI Dashboard React context
-import {
-  useVisionUIController,
-  setOpenConfigurator,
-  setTransparentSidenav,
-  setFixedNavbar,
-  setSidenavColor,
-} from "context";
+import { useVisionUIController, setOpenConfigurator, setFixedNavbar, setTransparentSidenav, setSidenavColor } from "context";
 import { useAuth } from "hooks/useAuth";
 
 function Configurator() {
@@ -53,32 +47,14 @@ function Configurator() {
   const { i18n } = useTranslation();
   const history = useHistory();
   const [controller, dispatch] = useVisionUIController();
-  const { openConfigurator, transparentSidenav, fixedNavbar, sidenavColor } = controller;
-  const [disabled, setDisabled] = useState(false);
+  const { openConfigurator, fixedNavbar, transparentSidenav, sidenavColor } = controller;
   const { signout, user } = useAuth();
-  const sidenavColors = ["primary", "info", "success", "warning", "error"];
   const [lang, setLang] = useState(i18n.language || "en");
+  const sidenavColors = ["primary", "info", "success", "warning", "error"];
   const languageOptions = [
     { code: "en", label: "English" },
     { code: "es", label: "Español" },
   ];
-
-  // Use the useEffect hook to change the button state for the sidenav type based on window size.
-  useEffect(() => {
-    // A function that sets the disabled state of the buttons for the sidenav type.
-    function handleDisabled() {
-      return window.innerWidth > 1200 ? setDisabled(false) : setDisabled(true);
-    }
-
-    // The event listener that's calling the handleDisabled function when resizing the window.
-    window.addEventListener("resize", handleDisabled);
-
-    // Call the handleDisabled function to set the state with the initial value.
-    handleDisabled();
-
-    // Remove event listener on cleanup
-    return () => window.removeEventListener("resize", handleDisabled);
-  }, []);
 
   const handleCloseConfigurator = () => setOpenConfigurator(dispatch, false);
   const handleTransparentSidenav = () => setTransparentSidenav(dispatch, true);
@@ -91,17 +67,11 @@ function Configurator() {
     i18n.changeLanguage(newLng);
   };
 
-  // sidenav type buttons styles
-  const sidenavTypeButtonsStyles = ({
-    functions: { pxToRem },
-    boxShadows: { buttonBoxShadow },
-  }) => ({
+  // helper styles for compact buttons (kept for future appearance options)
+  const sidenavTypeButtonsStyles = ({ functions: { pxToRem }, boxShadows: { buttonBoxShadow } }) => ({
     height: pxToRem(42),
     boxShadow: buttonBoxShadow.main,
-
-    "&:hover, &:focus": {
-      opacity: 1,
-    },
+    "&:hover, &:focus": { opacity: 1 },
   });
 
   return (
@@ -117,10 +87,10 @@ function Configurator() {
       >
         <VuiBox>
           <VuiTypography color="white" variant="h5" fontWeight="bold">
-            Settings
+            App Settings
           </VuiTypography>
           <VuiTypography variant="body2" color="white" fontWeight="bold">
-            See our dashboard options.
+            Customize your experience.
           </VuiTypography>
         </VuiBox>
 
@@ -142,9 +112,10 @@ function Configurator() {
       <Divider light />
 
       <VuiBox pt={1.25} pb={3} px={3}>
+        {/* Navigation style & colors (renamed from Sidenav) */}
         <VuiBox>
           <VuiTypography variant="h6" color="white">
-            Sidenav Colors
+            Navigation Accent
           </VuiTypography>
 
           <VuiBox mb={0.5}>
@@ -164,64 +135,48 @@ function Configurator() {
                   backgroundImage: ({ functions: { linearGradient }, palette: { gradients } }) =>
                     linearGradient(gradients[color].main, gradients[color].state),
 
-                  "&:not(:last-child)": {
-                    mr: 1,
-                  },
-
-                  "&:hover, &:focus, &:active": {
-                    borderColor: dark.main,
-                  },
+                  "&:not(:last-child)": { mr: 1 },
+                  "&:hover, &:focus, &:active": { borderColor: dark.main },
                 })}
                 onClick={() => setSidenavColor(dispatch, color)}
               />
             ))}
           </VuiBox>
         </VuiBox>
-        {window.innerWidth >= 1440 && (
-          <VuiBox mt={3} lineHeight={1}>
-            <VuiTypography variant="h6" color="white">
-              Sidenav Type
-            </VuiTypography>
-            <VuiTypography variant="button" color="text" fontWeight="regular">
-              Choose between 2 different sidenav types.
-            </VuiTypography>
 
-            <VuiBox
-              sx={{
-                display: "flex",
-                mt: 2,
-              }}
+        <VuiBox mt={3} lineHeight={1}>
+          <VuiTypography variant="h6" color="white">
+            Navigation Style
+          </VuiTypography>
+          <VuiTypography variant="button" color="text" fontWeight="regular">
+            Choose between two navigation styles.
+          </VuiTypography>
+
+          <VuiBox sx={{ display: "flex", mt: 2 }}>
+            <VuiButton
+              color="info"
+              variant={transparentSidenav ? "contained" : "outlined"}
+              onClick={handleTransparentSidenav}
+              fullWidth
+              sx={{ mr: 1, ...sidenavTypeButtonsStyles }}
             >
-              <VuiButton
-                color="info"
-                variant={transparentSidenav ? "contained" : "outlined"}
-                onClick={handleTransparentSidenav}
-                disabled={disabled}
-                fullWidth
-                sx={{
-                  mr: 1,
-                  ...sidenavTypeButtonsStyles,
-                }}
-              >
-                Transparent
-              </VuiButton>
-              <VuiButton
-                color="info"
-                variant={transparentSidenav ? "outlined" : "contained"}
-                onClick={handleWhiteSidenav}
-                disabled={disabled}
-                fullWidth
-                sx={sidenavTypeButtonsStyles}
-              >
-                Opaque
-              </VuiButton>
-            </VuiBox>
+              Transparent
+            </VuiButton>
+            <VuiButton
+              color="info"
+              variant={transparentSidenav ? "outlined" : "contained"}
+              onClick={handleWhiteSidenav}
+              fullWidth
+              sx={sidenavTypeButtonsStyles}
+            >
+              Opaque
+            </VuiButton>
           </VuiBox>
-        )}
+        </VuiBox>
 
         <VuiBox mt={3} mb={2} lineHeight={1}>
           <VuiTypography variant="h6" color="white">
-            Navbar Fixed
+            Sticky Header
           </VuiTypography>
 
           {/* <Switch checked={fixedNavbar} onChange={handleFixedNavbar} color="info" /> */}
@@ -234,9 +189,7 @@ function Configurator() {
         <VuiBox mt={3} mb={2}>
           <VuiBox display="flex" alignItems="center" mb={1}>
             <Icon sx={{ color: 'white', mr: 1 }}>language</Icon>
-            <VuiTypography variant="h6" color="white">
-              Language
-            </VuiTypography>
+            <VuiTypography variant="h6" color="white">Language</VuiTypography>
           </VuiBox>
           <Autocomplete
             disablePortal

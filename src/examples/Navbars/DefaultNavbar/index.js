@@ -60,7 +60,7 @@ function DefaultNavbar({ transparent, light, action }) {
   }, []);
 
   // Hide action (e.g., Subscribe) on auth pages (sign-in/sign-up)
-  const isAuthPage = typeof window !== 'undefined' && /\/authentication\/(sign-in|sign-up)/.test(window.location.pathname || '');
+  const isAuthPage = typeof window !== 'undefined' && /\/authentication\//.test(window.location.pathname || '');
 
   return (
     <Container>

@@ -18,15 +18,7 @@ import Footer from "layouts/authentication/components/Footer";
 function BasicLayout({ title, description, image, children }) {
   return (
     <PageLayout>
-      <DefaultNavbar
-        action={{
-          type: "external",
-          route: "https://github.com/JEER11/Docteck#readme",
-          label: "Free Download",
-        }}
-        transparent
-        light
-      />
+  <DefaultNavbar action={false} transparent light />
       <VuiBox
         width="calc(100% - 2rem)"
         minHeight="50vh"
