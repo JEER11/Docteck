@@ -23,8 +23,25 @@ function BillingInformation() {
   // Persisted pharmacies list (per user)
   const [pharmacies, setPharmacies] = useState([]);
   useEffect(() => {
-    if (!auth) return; // Firebase not configured
-    const unsub = onPharmacies({}, setPharmacies);
+    // Prefer Firestore when a user is actually signed in; else load from localStorage
+    let unsub = null;
+    const loadLocal = () => {
+      try {
+        const raw = localStorage.getItem('pharmacies') || '[]';
+        const arr = JSON.parse(raw);
+        setPharmacies(Array.isArray(arr) ? arr : []);
+      } catch (_) { setPharmacies([]); }
+    };
+    try {
+      const uid = auth?.currentUser?.uid;
+      if (uid) {
+        unsub = onPharmacies({ uid }, setPharmacies);
+      } else {
+        loadLocal();
+      }
+    } catch (_) {
+      loadLocal();
+    }
     return () => unsub && unsub();
   }, []);
   const [open, setOpen] = useState(false);
@@ -66,8 +83,21 @@ function BillingInformation() {
     });
   };
   const handleAdd = async () => {
-    if (!newPharmacy.name || !newPharmacy.address || !newPharmacy.email || !newPharmacy.phone || !newPharmacy.prescription) return;
-    await addPharmacy({ ...newPharmacy });
+  // Only require name and address; other fields optional
+  if (!newPharmacy.name || !newPharmacy.address) return;
+    // Optimistically update local state to ensure immediate UI response
+    const localId = Date.now().toString();
+    const optimistic = { id: localId, ...newPharmacy };
+    const next = [ ...pharmacies, optimistic ];
+    setPharmacies(next);
+    try { localStorage.setItem('pharmacies', JSON.stringify(next)); } catch(_){}
+    // Attempt Firestore in background if a real user is signed in
+    try {
+      const uid = auth?.currentUser?.uid;
+      if (uid) {
+        await addPharmacy({ ...newPharmacy });
+      }
+    } catch(_) { /* ignore to keep UI responsive */ }
     handleClose();
   };
 
@@ -87,8 +117,23 @@ function BillingInformation() {
     });
   };
   const handleEditSave = async () => {
-    if (!editPharmacy.id || !editPharmacy.name || !editPharmacy.address || !editPharmacy.email || !editPharmacy.phone || !editPharmacy.prescription) return;
-    await updatePharmacy(editPharmacy.id, { name: editPharmacy.name, address: editPharmacy.address, email: editPharmacy.email, phone: editPharmacy.phone, prescription: editPharmacy.prescription });
+  // Only require name and address for edits
+  if (!editPharmacy.id || !editPharmacy.name || !editPharmacy.address) return;
+    // Update locally first
+    const idx = pharmacies.findIndex(p => p.id === editPharmacy.id);
+    if (idx !== -1) {
+      const next = pharmacies.slice();
+      next[idx] = { ...editPharmacy };
+      setPharmacies(next);
+      try { localStorage.setItem('pharmacies', JSON.stringify(next)); } catch(_){}
+    }
+    // Try Firestore in background for signed-in user
+    try {
+      const uid = auth?.currentUser?.uid;
+      if (uid) {
+        await updatePharmacy(editPharmacy.id, { name: editPharmacy.name, address: editPharmacy.address, email: editPharmacy.email, phone: editPharmacy.phone, prescription: editPharmacy.prescription });
+      }
+    } catch(_) { /* ignore */ }
     handleEditClose();
   };
 
@@ -113,7 +158,7 @@ function BillingInformation() {
       </DialogContent>
       <DialogActions sx={{ background: 'transparent', px: 2, pb: 2, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
         <Button onClick={handleClose} sx={{ color: '#bfc6e0' }}>Cancel</Button>
-        <Button onClick={handleAdd} variant="contained" color="info" disabled={!newPharmacy.name || !newPharmacy.address || !newPharmacy.email || !newPharmacy.phone || !newPharmacy.prescription} sx={{ borderRadius: 2, px: 3, fontWeight: 600 }}>Add</Button>
+  <Button onClick={handleAdd} variant="contained" color="info" disabled={!newPharmacy.name || !newPharmacy.address} sx={{ borderRadius: 2, px: 3, fontWeight: 600 }}>Add</Button>
       </DialogActions>
     </Dialog>
   );
@@ -135,7 +180,7 @@ function BillingInformation() {
       </DialogContent>
       <DialogActions sx={{ background: 'transparent', px: 2, pb: 2, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
         <Button onClick={handleEditClose} sx={{ color: '#bfc6e0' }}>Cancel</Button>
-        <Button onClick={handleEditSave} variant="contained" color="info" disabled={!editPharmacy.name || !editPharmacy.address || !editPharmacy.email || !editPharmacy.phone || !editPharmacy.prescription} sx={{ borderRadius: 2, px: 3, fontWeight: 600 }}>Save</Button>
+  <Button onClick={handleEditSave} variant="contained" color="info" disabled={!editPharmacy.name || !editPharmacy.address} sx={{ borderRadius: 2, px: 3, fontWeight: 600 }}>Save</Button>
       </DialogActions>
     </Dialog>
   );
@@ -157,7 +202,13 @@ function BillingInformation() {
               prescription={ph.prescription}
               noGutter={idx === pharmacies.length - 1}
         onEdit={() => handleEditOpen(idx)}
-        onDelete={() => deletePharmacy(ph.id)}
+        onDelete={() => {
+          const next = pharmacies.filter(p => p.id !== ph.id);
+          setPharmacies(next);
+          try { localStorage.setItem('pharmacies', JSON.stringify(next)); } catch(_){}
+          const uid = auth?.currentUser?.uid;
+          if (uid) return deletePharmacy(ph.id);
+        }}
             />
           ))}
         </div>
@@ -169,7 +220,7 @@ function BillingInformation() {
   );
 
   return (
-    <Card id="delete-account">
+    <Card id="delete-account" sx={{ height: { xs: 420, md: 520 }, display: 'flex', flexDirection: 'column' }}>
       <VuiBox display="flex" justifyContent="space-between" alignItems="center">
         <VuiTypography variant="lg" color="white" fontWeight="bold">
           Pharmacy Information
@@ -220,8 +271,8 @@ function BillingInformation() {
             <AddIcon />
           </VuiButton>
         </div>
-      </VuiBox>
-      <VuiBox style={{ maxHeight: 420, overflowY: pharmacies.length > MAX_VISIBLE ? 'auto' : 'visible', transition: 'max-height 0.2s', minHeight: 0 }}>
+  </VuiBox>
+  <VuiBox style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
         <VuiBox component="ul" display="flex" flexDirection="column" p={0} m={0}>
       {visiblePharmacies.map((ph, idx) => (
             <Bill
@@ -233,7 +284,13 @@ function BillingInformation() {
               prescription={ph.prescription}
               noGutter={idx === visiblePharmacies.length - 1}
         onEdit={() => handleEditOpen(idx)}
-        onDelete={() => deletePharmacy(ph.id)}
+        onDelete={() => {
+          const next = pharmacies.filter(p => p.id !== ph.id);
+          setPharmacies(next);
+          try { localStorage.setItem('pharmacies', JSON.stringify(next)); } catch(_){}
+          const uid = auth?.currentUser?.uid;
+          if (uid) return deletePharmacy(ph.id);
+        }}
             />
           ))}
         </VuiBox>

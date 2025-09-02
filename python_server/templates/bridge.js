@@ -6,6 +6,45 @@
   // Example: wire the assistant input if present on Dashboard
   function ready(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded', fn); }
   ready(function(){
+    // Global guards to avoid silent blank screens after minor deploys
+    (function guardAgainstChunkErrors(){
+      // If a dynamic chunk fails to load (common after new build), reload once
+      function shouldReload(err){
+        try {
+          const msg = (err && (err.message||err.reason && err.reason.message)) || '';
+          return /ChunkLoadError|Loading chunk|import\(\) failed|Failed to fetch dynamically imported module/i.test(String(msg));
+        } catch(_) { return false; }
+      }
+      function onError(ev){
+        if (shouldReload(ev)) {
+          if (!sessionStorage.getItem('spa-chunk-reload')) {
+            sessionStorage.setItem('spa-chunk-reload','1');
+            location.reload();
+            return;
+          }
+          sessionStorage.removeItem('spa-chunk-reload');
+        }
+      }
+      window.addEventListener('error', onError, true);
+      window.addEventListener('unhandledrejection', onError);
+
+      // Minimal visible banner for fatal errors to aid debugging instead of black screen
+      function showBanner(text){
+        try {
+          var el = document.createElement('div');
+          el.style.cssText = 'position:fixed;left:0;right:0;top:0;z-index:99999;background:#7f1d1d;color:#fee2e2;font:13px system-ui;padding:10px 14px;box-shadow:0 2px 6px rgba(0,0,0,.3)';
+          el.textContent = text;
+          document.body && document.body.appendChild(el);
+        } catch(_){}
+      }
+      window.addEventListener('error', function(e){
+        // Only surface if it bubbles to window (likely unhandled)
+        if (e && e.error && e.error.stack) {
+          showBanner('A script error occurred. Check the console for details.');
+        }
+      });
+    })();
+
     // Ensure the sidebar brand uses the desired icon
     (function ensureBrandIcon(){
       var tries = 0; var maxTries = 40; // ~4s

@@ -11,8 +11,8 @@ import {
   query,
 } from "firebase/firestore";
 
-// Return boolean instead of throwing; callers will gracefully no-op when false
-const ensure = () => Boolean(auth && db);
+// Return boolean only when Firestore is available AND a user is signed in
+const ensure = () => Boolean(auth && db && auth?.currentUser?.uid);
 // Use per-kind subcollections under the user doc to keep collection paths valid (odd segments)
 // users/{uid}/caringHub_{kind}
 const hubCol = (uid, kind) => collection(db, "users", uid, `caringHub_${kind}`);
