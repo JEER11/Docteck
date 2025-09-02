@@ -317,6 +317,7 @@ function Invoices() {
                   price={rx.price}
                   info={rx.info}
                   noGutter={idx === visiblePrescriptions.length - 1}
+                  showYear={false}
                   onInfoClick={() => handleInfoClick(idx)}
                 />
               </div>
