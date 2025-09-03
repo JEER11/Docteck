@@ -124,22 +124,22 @@ function PaymentMethodShell({ stripePromise, ensureStripe }) {
   };
 
   return (
-    <Card id="delete-account">
-      <VuiBox display="flex" justifyContent="space-between" alignItems="center" mb="32px">
+  <Card id="delete-account" sx={{ minHeight: { xs: 'auto', md: 200 }, display: 'flex', flexDirection: 'column' }}>
+      <VuiBox display="flex" justifyContent="space-between" alignItems="center" mb="8px">
         <VuiTypography variant="lg" fontWeight="bold" color="white">
           Payment Methods
         </VuiTypography>
-        <VuiButton
+  <VuiButton
           variant="contained"
           color="info"
           onClick={handleOpen}
-          style={{ background: 'rgba(32,34,64,0.7)', color: '#e0e0e0', opacity: 0.7, boxShadow: 'none', borderRadius: 12, fontWeight: 600, fontSize: 14, padding: '10px 24px', transition: 'background 0.2s', letterSpacing: 0.5 }}
+    style={{ background: 'rgba(32,34,64,0.7)', color: '#e0e0e0', opacity: 0.7, boxShadow: 'none', borderRadius: 12, fontWeight: 600, fontSize: 13, padding: '8px 16px', transition: 'background 0.2s', letterSpacing: 0.3 }}
         >
           ADD NEW CARD
         </VuiButton>
-      </VuiBox>
-      <VuiBox>
-        <Grid container spacing={3}>
+    </VuiBox>
+  <VuiBox sx={{ flexGrow: 0 }}>
+  <Grid container spacing={2}>
           {savedMethods.map((card, idx) => (
             <Grid item xs={12} md={6} key={idx}>
               <VuiBox

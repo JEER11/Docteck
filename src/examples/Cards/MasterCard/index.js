@@ -22,8 +22,9 @@ import React, { useEffect, useState } from "react";
 import PhotoCamera from "@mui/icons-material/PhotoCamera";
 import UploadIcon from "@mui/icons-material/CloudUpload";
 import { uploadUserFile, deleteUserFile } from "lib/storage";
-import { onInsuranceCards, addInsuranceCard, updateInsuranceCard, deleteInsuranceCard } from "lib/billingData";
+import { onInsuranceCards, addInsuranceCard, updateInsuranceCard, deleteInsuranceCard, fetchInsuranceCardsOnce } from "lib/billingData";
 import { auth } from "lib/firebase";
+import { useAuth } from "../../../hooks/useAuth";
 
 function MasterCard({ insuranceName, memberName, memberId, monthlyBill, onAdd, onEdit, onDelete, canAdd = true, overlayOpacity = 0.35, backgroundSrc, frontImageUrl, backImageUrl, id }) {
   const [openAdd, setOpenAdd] = useState(false);
@@ -418,22 +419,30 @@ MasterCard.propTypes = {
 };
 
 function MasterCardStack({ cards, setCards, onAdd, onEdit, onDelete }) {
+  const PLACEHOLDER = { id: "placeholder", insuranceName: "Insurance Card", memberName: "Member Name", memberId: "ID123456", monthlyBill: "0.00" };
   const [activeIndex, setActiveIndex] = useState(0);
-  // If setter not provided, load from Firestore live
-  const [liveCards, setLiveCards] = useState([]);
+  // If setter not provided, load from Firestore live; start with a placeholder so UI isn't empty
+  const [liveCards, setLiveCards] = useState([PLACEHOLDER]);
+  const { user, isAuthReady } = useAuth();
   const usingLive = typeof setCards !== 'function';
   useEffect(() => {
-    // If Firebase auth isn't configured or no user, avoid subscribing and show a placeholder card
-    if (!auth || !auth.currentUser) {
-      setLiveCards([
-        { id: "placeholder", insuranceName: "Insurance Card", memberName: "Member Name", memberId: "ID123456", monthlyBill: "0.00" }
-      ]);
-      return;
-    }
-    const unsub = onInsuranceCards({}, setLiveCards);
-    return () => unsub && unsub();
-  }, []);
-  const viewCards = usingLive ? liveCards : cards;
+    // If Firebase not configured, show placeholder and stop
+    if (!auth) { setLiveCards([PLACEHOLDER]); return; }
+    // Wait until auth state is known to avoid missing initial subscription
+    if (!isAuthReady) { setLiveCards([PLACEHOLDER]); return; }
+    // If no user, still show placeholder, but don't subscribe
+    if (!user) { setLiveCards([PLACEHOLDER]); return; }
+    // Kick off a fast one-time fetch so UI shows quickly, then keep live updates
+    fetchInsuranceCardsOnce(user.uid).then((rows) => {
+      if (rows?.length) setLiveCards(rows);
+    }).catch(() => {});
+    const unsub = onInsuranceCards({ uid: user.uid, onError: () => setLiveCards([PLACEHOLDER]) }, (rows) => {
+      // If stream returns empty, still show a placeholder so UI doesn't collapse
+      setLiveCards(rows?.length ? rows : [PLACEHOLDER]);
+    });
+    return () => { if (typeof unsub === 'function') unsub(); };
+  }, [isAuthReady, user?.uid]);
+  const viewCards = usingLive ? liveCards : (cards?.length ? cards : [{ id: "placeholder", insuranceName: "Insurance Card", memberName: "Member Name", memberId: "ID123456", monthlyBill: "0.00" }]);
 
   // Handler to add a new card and show it under the current one
   const MAX_CARDS = 4;
@@ -502,7 +511,7 @@ function MasterCardStack({ cards, setCards, onAdd, onEdit, onDelete }) {
   const bottomBandTopA = 0.20 + depth * 0.10;     // 0.20, 0.30, 0.40, 0.50
   const bottomBandBottomA = 0.40 + depth * 0.14;  // 0.40, 0.54, 0.68, 0.82
   const bottomBandH = 18; // band height in px
-        return (
+  return (
           <div
             key={idx}
             style={{
@@ -536,18 +545,35 @@ function MasterCardStack({ cards, setCards, onAdd, onEdit, onDelete }) {
               }
             }}
           >
-            <MasterCard
-              {...card}
-              onAdd={handleAdd}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-              canAdd={viewCards.length < MAX_CARDS && idx === activeIndex}
-              overlayOpacity={isActive ? 0.26 : 0.14 + depth * 0.06}
-              backgroundSrc={card.backgroundSrc}
-              id={card.id}
-              frontImageUrl={card.frontImageUrl}
-              backImageUrl={card.backImageUrl}
-            />
+            {card.id === 'placeholder' ? (
+              <MasterCard
+                insuranceName="Insurance Card"
+                memberName="Member Name"
+                memberId="ID123456"
+                monthlyBill="0.00"
+                onAdd={handleAdd}
+                // Treat placeholder Edit as creating the first real card
+                onEdit={(form) => handleAdd(form)}
+                onDelete={() => {}}
+                canAdd={viewCards.length < MAX_CARDS && idx === activeIndex}
+                overlayOpacity={isActive ? 0.26 : 0.14 + depth * 0.06}
+                backgroundSrc={Jelly1}
+                id="placeholder"
+              />
+            ) : (
+              <MasterCard
+                {...card}
+                onAdd={handleAdd}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                canAdd={viewCards.length < MAX_CARDS && idx === activeIndex}
+                overlayOpacity={isActive ? 0.26 : 0.14 + depth * 0.06}
+                backgroundSrc={card.backgroundSrc}
+                id={card.id}
+                frontImageUrl={card.frontImageUrl}
+                backImageUrl={card.backImageUrl}
+              />
+            )}
     {!isActive && (
               <div
                 style={{

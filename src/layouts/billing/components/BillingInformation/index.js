@@ -85,20 +85,22 @@ function BillingInformation() {
   const handleAdd = async () => {
   // Only require name and address; other fields optional
   if (!newPharmacy.name || !newPharmacy.address) return;
-    // Optimistically update local state to ensure immediate UI response
+    // Capture payload then close the dialog immediately for snappy UX
+    const payload = { ...newPharmacy };
+    handleClose();
+    // Optimistically update local state
     const localId = Date.now().toString();
-    const optimistic = { id: localId, ...newPharmacy };
+    const optimistic = { id: localId, ...payload };
     const next = [ ...pharmacies, optimistic ];
     setPharmacies(next);
     try { localStorage.setItem('pharmacies', JSON.stringify(next)); } catch(_){}
-    // Attempt Firestore in background if a real user is signed in
+    // Firestore in background for signed-in user
     try {
       const uid = auth?.currentUser?.uid;
       if (uid) {
-        await addPharmacy({ ...newPharmacy });
+        await addPharmacy(payload);
       }
-    } catch(_) { /* ignore to keep UI responsive */ }
-    handleClose();
+    } catch(_) { /* ignore */ }
   };
 
   const handleEditOpen = (idx) => {
@@ -119,11 +121,14 @@ function BillingInformation() {
   const handleEditSave = async () => {
   // Only require name and address for edits
   if (!editPharmacy.id || !editPharmacy.name || !editPharmacy.address) return;
+    // Capture then close immediately
+    const patch = { id: editPharmacy.id, name: editPharmacy.name, address: editPharmacy.address, email: editPharmacy.email, phone: editPharmacy.phone, prescription: editPharmacy.prescription };
+    handleEditClose();
     // Update locally first
-    const idx = pharmacies.findIndex(p => p.id === editPharmacy.id);
+    const idx = pharmacies.findIndex(p => p.id === patch.id);
     if (idx !== -1) {
       const next = pharmacies.slice();
-      next[idx] = { ...editPharmacy };
+      next[idx] = { ...patch };
       setPharmacies(next);
       try { localStorage.setItem('pharmacies', JSON.stringify(next)); } catch(_){}
     }
@@ -131,10 +136,9 @@ function BillingInformation() {
     try {
       const uid = auth?.currentUser?.uid;
       if (uid) {
-        await updatePharmacy(editPharmacy.id, { name: editPharmacy.name, address: editPharmacy.address, email: editPharmacy.email, phone: editPharmacy.phone, prescription: editPharmacy.prescription });
+        await updatePharmacy(patch.id, { name: patch.name, address: patch.address, email: patch.email, phone: patch.phone, prescription: patch.prescription });
       }
     } catch(_) { /* ignore */ }
-    handleEditClose();
   };
 
   const handleViewAllOpen = () => setViewAllOpen(true);
