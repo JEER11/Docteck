@@ -57,11 +57,16 @@ export async function deleteInsuranceCard(id, uid) {
 export function onInsuranceCards(opts = {}, cb) {
   try {
     if (!ensure()) { try { cb([]); } catch (_) {} return () => {}; }
-    let { uid } = opts;
+    let { uid, onError } = opts;
     if (!uid) uid = auth?.currentUser?.uid;
     if (!uid) { try { cb([]); } catch (_) {} return () => {}; }
     const q = query(billingSubCol(uid, "insuranceCards"), orderBy("updatedAt", "desc"));
-    return onSnapshot(q, (snap) => cb(snap.docs.map((d) => ({ id: d.id, ...d.data() }))));
+    return onSnapshot(
+      q,
+      (snap) => cb(snap.docs.map((d) => ({ id: d.id, ...d.data() }))),
+      // If Firestore streaming fails (e.g., 400 from webchannel), surface an empty list so callers can show placeholders
+      onError || (() => { try { cb([]); } catch (_) {} })
+    );
   } catch (e) {
     try { cb([]); } catch (_) {}
     return () => {};
@@ -104,3 +109,17 @@ export default {
   addPaymentMethodDoc,
   onPaymentMethods,
 };
+
+// Lightweight one-time fetch to quickly populate UI when streaming is slow or blocked
+export async function fetchInsuranceCardsOnce(uid) {
+  if (!ensure()) return [];
+  if (!uid) uid = auth?.currentUser?.uid;
+  if (!uid) return [];
+  try {
+    const q = query(billingSubCol(uid, "insuranceCards"), orderBy("updatedAt", "desc"));
+    const snap = await getDocs(q);
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  } catch (_) {
+    return [];
+  }
+}

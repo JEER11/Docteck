@@ -10,6 +10,9 @@ import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import Tooltip from "@mui/material/Tooltip";
+import EditRoundedIcon from "@mui/icons-material/EditRounded";
+import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 
 // Vision UI Dashboard React components
 import VuiBox from "components/VuiBox";
@@ -113,6 +116,10 @@ function Invoices() {
   const handleDelete = () => {
     setPrescriptions(prescriptions.filter((_, i) => i !== menuIdx));
     handleMenuClose();
+  };
+  // Direct delete by index (used inside View All rows where no menu is opened)
+  const handleDeleteAtIndex = (idx) => {
+    setPrescriptions(prev => prev.filter((_, i) => i !== idx));
   };
   const handleViewAllOpen = () => setViewAllOpen(true);
   const handleViewAllClose = () => setViewAllOpen(false);
@@ -229,18 +236,82 @@ function Invoices() {
     <Dialog open={viewAllOpen} onClose={handleViewAllClose} maxWidth="sm" fullWidth
       PaperProps={{ sx: { background: 'rgba(34, 40, 74, 0.65)', boxShadow: 24, borderRadius: 4, color: 'white', backdropFilter: 'blur(10px)', p: 4, minWidth: 400, maxWidth: 640 } }}
     >
-      <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 22, pb: 2 }}>All Prescriptions</DialogTitle>
+      <DialogTitle
+        sx={{
+          color: 'white', fontWeight: 700, fontSize: 22, pb: 2, pr: 1,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+        }}
+      >
+        <span>All Prescriptions</span>
+        <Button
+          onClick={handleOpen}
+          size="small"
+          sx={{
+            borderRadius: 999,
+            px: 1.5,
+            py: 0.5,
+            fontWeight: 700,
+            fontSize: 12,
+            letterSpacing: 0.3,
+            color: '#e7e9f3',
+            background: 'rgba(255,255,255,0.06)',
+            border: '1px solid rgba(255,255,255,0.12)',
+            textTransform: 'none',
+            '&:hover': {
+              background: 'rgba(255,255,255,0.12)',
+              borderColor: 'rgba(255,255,255,0.2)'
+            }
+          }}
+          startIcon={<AddIcon sx={{ fontSize: 18 }} />}
+        >
+          Add
+        </Button>
+      </DialogTitle>
       <DialogContent sx={{ pt: 1, background: 'transparent', color: 'white', px: 2, minWidth: 400 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {prescriptions.map((rx, idx) => (
-            <Invoice
-              key={rx.medicine + rx.date + idx}
-              date={rx.date}
-              medicine={rx.medicine}
-              price={rx.price}
-              info={rx.info}
-              noGutter={idx === prescriptions.length - 1}
-            />
+            <div key={rx.medicine + rx.date + idx} style={{ display: 'flex', alignItems: 'center', width: '100%', minHeight: 40 }}>
+              <div style={{ flex: 1 }}>
+                <Invoice
+                  date={rx.date}
+                  medicine={rx.medicine}
+                  price={rx.price}
+                  info={rx.info}
+                  noGutter={idx === prescriptions.length - 1}
+                  onInfoClick={() => handleInfoClick(idx)}
+                />
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, paddingLeft: 8, marginTop: (idx < 5 ? -18 : 0) }}>
+                <Tooltip title="Edit">
+                  <IconButton
+                    size="small"
+                    onClick={() => handleEditOpen(idx)}
+                    sx={{
+                      color: '#cfd5f3',
+                      background: 'rgba(255,255,255,0.06)',
+                      border: '1px solid rgba(255,255,255,0.12)',
+                      '&:hover': { background: 'rgba(0,255,208,0.12)', color: '#00ffd0' }
+                    }}
+                  >
+                    <EditRoundedIcon sx={{ fontSize: 18 }} />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Delete">
+                  <IconButton
+                    size="small"
+                    onClick={() => handleDeleteAtIndex(idx)}
+                    sx={{
+                      color: '#cfd5f3',
+                      background: 'rgba(255,255,255,0.06)',
+                      border: '1px solid rgba(255,255,255,0.12)',
+                      '&:hover': { background: 'rgba(255,107,107,0.14)', color: '#ff6b6b' }
+                    }}
+                  >
+                    <DeleteOutlineRoundedIcon sx={{ fontSize: 18 }} />
+                  </IconButton>
+                </Tooltip>
+              </div>
+            </div>
           ))}
         </div>
       </DialogContent>

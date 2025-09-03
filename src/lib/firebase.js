@@ -1,7 +1,7 @@
 // Firebase configuration and initialization for Docteck authentication
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, FacebookAuthProvider, OAuthProvider } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, initializeFirestore } from "firebase/firestore";
 import { getAnalytics } from "firebase/analytics";
 
 // Prefer runtime config injected by Flask (window.__FIREBASE_CONFIG__),
@@ -40,7 +40,13 @@ if (hasConfig) {
       }
     }
     auth = getAuth(app);
-    db = getFirestore(app);
+    // Use long polling to be robust against ad-blockers/corporate proxies blocking WebChannel
+    try {
+      db = initializeFirestore(app, { experimentalForceLongPolling: true, useFetchStreams: false });
+    } catch (e) {
+      // Fallback if initializeFirestore not available in this environment
+      db = getFirestore(app);
+    }
   } catch (e) {
     // If initialization fails, keep exports as null to avoid crashing the UI.
     // console.error("Firebase init failed:", e);
