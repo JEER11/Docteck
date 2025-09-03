@@ -302,8 +302,12 @@ function Dashboard() {
             <Grid item xs={12} md={6} xl={3}>
               <MiniStatisticsCard
                 title={{ text: "Next Todo" }}
-                count={nextTodo}
-                percentage={daysUntil !== null ? { color: "primary", hexColor: "#A58AFF", text: `${daysUntil} days` } : { color: "secondary", text: "-" }}
+                count={closestTodo ? nextTodo : "-"}
+                percentage={
+                  closestTodo
+                    ? { color: "primary", hexColor: "#A58AFF", text: `${daysUntil} days` }
+                    : { color: "secondary", text: "No tasks available" }
+                }
                 icon={{ color: "info", component: <FaClipboardList size="20px" color="rgba(33,150,243,0.5)" /> }}
               />
             </Grid>
