@@ -100,3 +100,12 @@ python .\python_server\app.py
 
 ## License
 MIT
+
+---
+
+## Demo 
+
+<img width="897" height="920" alt="image" src="https://github.com/user-attachments/assets/f1d739c0-4837-4601-9df1-c19280736080" />
+<img width="895" height="909" alt="image2" src="https://github.com/user-attachments/assets/23a23ac0-b6c2-4ea9-9a4d-36999f67c3e5" />
+<img width="896" height="918" alt="image3" src="https://github.com/user-attachments/assets/6d76144e-0a42-48ed-bf3e-0f06616f131d" />
+<img width="897" height="907" alt="image4" src="https://github.com/user-attachments/assets/db862300-8da3-4df3-89a4-6bd34f46d626" />
