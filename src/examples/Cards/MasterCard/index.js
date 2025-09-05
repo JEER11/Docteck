@@ -22,7 +22,7 @@ import React, { useEffect, useState } from "react";
 import PhotoCamera from "@mui/icons-material/PhotoCamera";
 import UploadIcon from "@mui/icons-material/CloudUpload";
 import { uploadUserFile, deleteUserFile } from "lib/storage";
-import { onInsuranceCards, addInsuranceCard, updateInsuranceCard, deleteInsuranceCard, fetchInsuranceCardsOnce } from "lib/billingData";
+import { onInsuranceCards, addInsuranceCard, updateInsuranceCard, deleteInsuranceCard, fetchInsuranceCardsOnce, getCachedInsuranceCards, setCachedInsuranceCards } from "lib/billingData";
 import { auth } from "lib/firebase";
 import { useAuth } from "../../../hooks/useAuth";
 
@@ -68,13 +68,14 @@ function MasterCard({ insuranceName, memberName, memberId, monthlyBill, onAdd, o
   };
   const handleAddSubmit = async (e) => {
     e.preventDefault();
-    const payload = { ...form };
+  const payload = { ...form, monthlyBill: form.monthlyBill || "0.00" };
     if (onAdd) await onAdd(payload);
     handleClose(e);
   };
   const handleEditSubmit = async (e) => {
     e.preventDefault();
-    if (onEdit) await onEdit(form);
+  const payload = { ...form, monthlyBill: form.monthlyBill || "0.00" };
+  if (onEdit) await onEdit(payload);
     handleClose(e);
   };
   const handleDelete = (e) => {
@@ -322,7 +323,7 @@ function MasterCard({ insuranceName, memberName, memberId, monthlyBill, onAdd, o
         </DialogContent>
         <DialogActions sx={{ background: 'transparent', px: 2, pb: 2, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
           <Button onClick={handleClose} sx={{ color: '#bfc6e0' }}>Cancel</Button>
-          <Button onClick={handleAddSubmit} variant="contained" color="info" disabled={!form.insuranceName || !form.memberName || !form.memberId || !form.monthlyBill} sx={{ borderRadius: 2, px: 3, fontWeight: 600 }}>Add</Button>
+          <Button onClick={handleAddSubmit} variant="contained" color="info" disabled={!form.insuranceName || !form.memberName || !form.memberId} sx={{ borderRadius: 2, px: 3, fontWeight: 600 }}>Add</Button>
         </DialogActions>
       </Dialog>
 
@@ -425,26 +426,77 @@ function MasterCardStack({ cards, setCards, onAdd, onEdit, onDelete }) {
   const [liveCards, setLiveCards] = useState([PLACEHOLDER]);
   const { user, isAuthReady } = useAuth();
   const usingLive = typeof setCards !== 'function';
+  // Dynamically measure the actual card height so the stack peek is always visible
+  const [cardHeight, setCardHeight] = useState(220);
+  const containerRef = React.useRef(null);
+  const [fanOut, setFanOut] = useState(false); // temporarily increase peek spacing after add
+  const [hoveredIndex, setHoveredIndex] = useState(null); // for slide-down on hover (non-top)
+  const triggerFanOut = () => { setFanOut(true); setTimeout(() => setFanOut(false), 1200); };
+  // Maintain local visual order for live cards so stream updates don't reset it
+  const [orderIds, setOrderIds] = useState([]);
   useEffect(() => {
     // If Firebase not configured, show placeholder and stop
-    if (!auth) { setLiveCards([PLACEHOLDER]); return; }
+  if (!auth) { const cachedAny = getCachedInsuranceCards(undefined); setLiveCards((cachedAny?.length ? cachedAny : [PLACEHOLDER])); return; }
     // Wait until auth state is known to avoid missing initial subscription
-    if (!isAuthReady) { setLiveCards([PLACEHOLDER]); return; }
+  if (!isAuthReady) { const cachedAny = getCachedInsuranceCards(undefined); setLiveCards((cachedAny?.length ? cachedAny : [PLACEHOLDER])); return; }
     // If no user, still show placeholder, but don't subscribe
-    if (!user) { setLiveCards([PLACEHOLDER]); return; }
+  if (!user) { const cachedAny = getCachedInsuranceCards(undefined); setLiveCards((cachedAny?.length ? cachedAny : [PLACEHOLDER])); return; }
     // Kick off a fast one-time fetch so UI shows quickly, then keep live updates
+    // Try cached cards first for instant UI when network is blocked
+    const cached = getCachedInsuranceCards(user.uid);
+    if (cached?.length) setLiveCards(cached);
     fetchInsuranceCardsOnce(user.uid).then((rows) => {
       if (rows?.length) setLiveCards(rows);
-    }).catch(() => {});
-    const unsub = onInsuranceCards({ uid: user.uid, onError: () => setLiveCards([PLACEHOLDER]) }, (rows) => {
+    }).catch(() => { /* keep cached/placeholder */ });
+    const unsub = onInsuranceCards({ uid: user.uid, onError: () => {
+      const latest = getCachedInsuranceCards(user.uid);
+      setLiveCards((prev) => (prev?.length ? prev : (latest?.length ? latest : [PLACEHOLDER])));
+    } }, (rows) => {
       // If stream returns empty, still show a placeholder so UI doesn't collapse
-      setLiveCards(rows?.length ? rows : [PLACEHOLDER]);
+      const latest = getCachedInsuranceCards(user.uid);
+      setLiveCards(rows?.length ? rows : (latest?.length ? latest : [PLACEHOLDER]));
     });
     return () => { if (typeof unsub === 'function') unsub(); };
   }, [isAuthReady, user?.uid]);
   const viewCards = usingLive ? liveCards : (cards?.length ? cards : [{ id: "placeholder", insuranceName: "Insurance Card", memberName: "Member Name", memberId: "ID123456", monthlyBill: "0.00" }]);
 
-  // Handler to add a new card and show it under the current one
+  // Sync orderIds with incoming live cards (keep previous order, add new ids to end)
+  useEffect(() => {
+    if (!usingLive) return;
+    const ids = (liveCards || []).map((c) => c?.id).filter(Boolean);
+    if (!ids.length) return;
+    setOrderIds((prev) => {
+      if (!prev || !prev.length) return ids;
+      const kept = prev.filter((id) => ids.includes(id));
+      const added = ids.filter((id) => !prev.includes(id));
+      return [...kept, ...added];
+    });
+  }, [usingLive, liveCards]);
+
+  // Cards to render with local order applied (live mode)
+  const displayCards = React.useMemo(() => {
+    if (!usingLive) return viewCards;
+    const list = liveCards || [];
+    if (!orderIds?.length) return list;
+    const byId = new Map(list.map((c) => [c?.id, c]));
+    const arranged = orderIds.map((id) => byId.get(id)).filter(Boolean);
+    const leftovers = list.filter((c) => !orderIds.includes(c?.id));
+    return [...arranged, ...leftovers];
+  }, [usingLive, viewCards, liveCards, orderIds]);
+
+  // Re-measure when cards change or active card switches
+  useEffect(() => {
+    const measure = () => {
+      const el = containerRef.current?.querySelector('[data-ins-card]');
+      if (el && el.offsetHeight) setCardHeight(el.offsetHeight);
+    };
+    // Give layout a tick after updates (dialogs closing, images, etc.)
+    const t = setTimeout(measure, 0);
+    window.addEventListener('resize', measure);
+    return () => { clearTimeout(t); window.removeEventListener('resize', measure); };
+  }, [viewCards.length, activeIndex]);
+
+  // Handler to add a new card and show it on top
   const MAX_CARDS = 4;
   const handleAdd = async (form) => {
     const arr = viewCards;
@@ -453,23 +505,86 @@ function MasterCardStack({ cards, setCards, onAdd, onEdit, onDelete }) {
       return;
     }
     if (usingLive) {
-      try { await addInsuranceCard(form); } catch (_) { /* noop if not signed in */ }
+      try {
+  const id = await addInsuranceCard(form);
+  const newCard = { id: id || `local-${Date.now()}`, backgroundSrc: form.backgroundSrc || Jelly1, ...form };
+  setLiveCards((prev) => {
+    // Remove placeholder if present; prepend new card
+    const base = (prev && prev[0]?.id === 'placeholder') ? [] : (prev || []);
+    const next = [newCard, ...base.filter((c) => c.id !== newCard.id)];
+          try { setCachedInsuranceCards(user?.uid, next); } catch {}
+          return next;
+        });
+  setActiveIndex(0);
+        triggerFanOut();
+      } catch (_) {
+        // If adding to Firestore failed (offline/blocked), still show locally and cache it
+  const newCard = { id: `local-${Date.now()}`, backgroundSrc: form.backgroundSrc || Jelly1, ...form };
+  setLiveCards((prev) => {
+    const base = (prev && prev[0]?.id === 'placeholder') ? [] : (prev || []);
+    const next = [newCard, ...base];
+          try { setCachedInsuranceCards(user?.uid, next); } catch {}
+          return next;
+        });
+  setActiveIndex(0);
+        triggerFanOut();
+      }
     } else {
-      const newCards = [...cards, form];
+      const newCard = { backgroundSrc: form.backgroundSrc || Jelly1, ...form };
+      const newCards = [newCard, ...cards];
       setCards(newCards);
       // Show the new card on top
-      setActiveIndex(newCards.length - 1);
+      setActiveIndex(0);
+      triggerFanOut();
     }
     if (onAdd) onAdd(form);
+  };
+
+  // Bring any clicked card to the top of the stack (index 0). This is a purely
+  // client-side visual reorder so it doesn't affect persisted order in Firestore.
+  const bringCardToTop = (idx) => {
+    if (idx === 0) { setActiveIndex(0); return; }
+    if (usingLive) {
+      const arr = displayCards || [];
+      const item = arr[idx];
+      if (!item?.id) return;
+      setOrderIds((prev) => {
+        const current = prev?.length ? prev : arr.map((c) => c?.id).filter(Boolean);
+        return [item.id, ...current.filter((id) => id !== item.id)];
+      });
+      setActiveIndex(0);
+    } else if (Array.isArray(cards) && typeof setCards === 'function') {
+      const target = cards[idx];
+      if (!target) return;
+      const rest = cards.filter((_, i) => i !== idx);
+      setCards([target, ...rest]);
+      setActiveIndex(0);
+    }
   };
 
   // Handler to edit the active card
   const handleEdit = async (form) => {
     if (usingLive) {
-      const target = viewCards[activeIndex];
-      if (target?.id) { try { await updateInsuranceCard(target.id, form); } catch (_) {} }
+  const target = (viewCards || [])[0];
+      if (target?.id) {
+        try {
+          await updateInsuranceCard(target.id, form);
+          setLiveCards((prev) => {
+            const base = (prev || []).map((c, i) => (i === 0 ? { ...c, ...form } : c));
+            try { setCachedInsuranceCards(user?.uid, base); } catch {}
+            return base;
+          });
+        } catch (_) {
+          // Update locally if network blocked
+          setLiveCards((prev) => {
+            const base = (prev || []).map((c, i) => (i === 0 ? { ...c, ...form } : c));
+            try { setCachedInsuranceCards(user?.uid, base); } catch {}
+            return base;
+          });
+        }
+      }
     } else {
-      const newCards = cards.map((c, i) => (i === activeIndex ? { ...c, ...form } : c));
+      const newCards = cards.map((c, i) => (i === 0 ? { ...c, ...form } : c));
       setCards(newCards);
     }
     if (onEdit) onEdit(form);
@@ -478,116 +593,131 @@ function MasterCardStack({ cards, setCards, onAdd, onEdit, onDelete }) {
   // Handler to delete the active card
   const handleDelete = async (form) => {
     if (usingLive) {
-      const target = viewCards[activeIndex];
-      if (target?.id) { try { await deleteInsuranceCard(target.id); } catch (_) {} }
+  const target = (viewCards || [])[0];
+      if (target?.id) {
+        try {
+          await deleteInsuranceCard(target.id);
+          setLiveCards((prev) => {
+            const base = (prev || []).filter((_, i) => i !== 0);
+            const nextIndex = 0;
+            try { setCachedInsuranceCards(user?.uid, base); } catch {}
+            setActiveIndex(nextIndex);
+            return base.length ? base : [PLACEHOLDER];
+          });
+        } catch (_) {
+          // Remove locally if network blocked
+          setLiveCards((prev) => {
+            const base = (prev || []).filter((_, i) => i !== 0);
+            const nextIndex = 0;
+            try { setCachedInsuranceCards(user?.uid, base); } catch {}
+            setActiveIndex(nextIndex);
+            return base.length ? base : [PLACEHOLDER];
+          });
+        }
+      }
     } else {
-      const newCards = cards.filter((_, i) => i !== activeIndex);
-      setCards(newCards);
-      setActiveIndex((prev) => Math.max(0, prev - 1));
+      const newCards = cards.filter((_, i) => i !== 0);
+      setCards(newCards.length ? newCards : [PLACEHOLDER]);
+      setActiveIndex(0);
     }
     if (onDelete) onDelete(form);
   };
 
   // Show all cards stacked, each peeking out a bit more
-  const CARD_HEIGHT = 220; // base height approximation
-  const PEEK_OFFSET = 22;  // larger peek for clearer bottom separation
+  // Clamp measured height to a safe, realistic range so layout math stays stable
+  const CARD_HEIGHT = Math.min(Math.max(cardHeight, 200), 320);
+  // Small default peek (subtle); briefly expand on add for the "spread" animation
+  const PEEK_OFFSET = fanOut ? 36 : 12;
   const MAX_PEEKS = 3;     // show up to 3 peeks (cards 2,3,4)
+  // Each lower card is shifted down by only the peek amount so most stays hidden under the top card
+  const STEP = PEEK_OFFSET;
   return (
-    <div style={{ position: "relative", width: "100%", minHeight: CARD_HEIGHT + PEEK_OFFSET * Math.min(Math.max(viewCards.length - 1, 0), MAX_PEEKS) }}>
-  {viewCards.map((card, idx) => {
-    const isActive = idx === activeIndex;
-        const depth = Math.min(idx, MAX_PEEKS); // 0..3
-  // Darken progressively by depth so each lower card is distinguishable (more contrast)
-  const dim = isActive ? 1 : [1, 0.92, 0.84, 0.76][depth] || 0.76;
-  const sat = isActive ? 1 : [1, 0.94, 0.88, 0.82][depth] || 0.82;
+    <div
+      ref={containerRef}
+      style={{
+        position: 'relative',
+        width: '100%',
+        overflow: 'hidden',
+        minHeight: CARD_HEIGHT + STEP * Math.min(Math.max((usingLive ? (displayCards?.length || 0) : viewCards.length) - 1, 0), MAX_PEEKS),
+        borderRadius: 18,
+      }}
+    >
+      {(usingLive ? displayCards : viewCards).map((card, idx) => {
+        // Depth is index in array; top card is 0
+        const depth = Math.min(idx, MAX_PEEKS);
+        const isActive = idx === 0;
+        // Visual scaling/shading for non-top cards
+        const dim = isActive ? 1 : [1, 0.92, 0.84, 0.76][depth] || 0.76;
+        const sat = isActive ? 1 : [1, 0.94, 0.88, 0.82][depth] || 0.82;
         const scale = isActive ? 1 : [1, 0.997, 0.994, 0.991][depth] || 0.991;
         const boxShadow = isActive
           ? '0 10px 24px rgba(15,22,60,0.35)'
-          : ['0 8px 18px rgba(5,8,28,0.55)', '0 7px 16px rgba(5,8,28,0.6)', '0 6px 14px rgba(5,8,28,0.62)'][depth-1] || '0 6px 14px rgba(5,8,28,0.6)';
-  // Depth-scaled dark gradient (darker the lower the card)
-  const overlayTopA = 0.10 + depth * 0.06;    // 0.10, 0.16, 0.22, 0.28
-  const overlayBottomA = 0.28 + depth * 0.14; // 0.28, 0.42, 0.56, 0.70
-  // Bottom separator band to emphasize visible peeks
-  const bottomBandTopA = 0.20 + depth * 0.10;     // 0.20, 0.30, 0.40, 0.50
-  const bottomBandBottomA = 0.40 + depth * 0.14;  // 0.40, 0.54, 0.68, 0.82
-  const bottomBandH = 18; // band height in px
-  return (
+          : ['0 8px 18px rgba(5,8,28,0.55)', '0 7px 16px rgba(5,8,28,0.6)', '0 6px 14px rgba(5,8,28,0.62)'][depth - 1] ||
+            '0 6px 14px rgba(5,8,28,0.6)';
+        // Gradient overlays for lower cards
+        const overlayTopA = 0.1 + depth * 0.06;
+        const overlayBottomA = 0.28 + depth * 0.14;
+        const bottomBandTopA = 0.2 + depth * 0.1;
+        const bottomBandBottomA = 0.4 + depth * 0.14;
+        const bottomBandH = 12;
+        const clipTop = Math.max(CARD_HEIGHT - PEEK_OFFSET, 0);
+
+        return (
           <div
-            key={idx}
+            key={card.id || idx}
             style={{
-              position: "absolute",
-      top: PEEK_OFFSET * depth,
+              position: 'absolute',
+              top: (isActive ? 0 : STEP * depth) + (hoveredIndex === idx && !isActive ? 8 : 0),
               left: 0,
-              width: "100%",
-              zIndex: isActive ? (viewCards?.length || 0) + 1 : idx,
-      filter: isActive ? undefined : `brightness(${dim}) saturate(${sat})`,
-  opacity: isActive ? 1 : 0.96 - depth * 0.05,
-              cursor: isActive ? "default" : "pointer",
+              width: '100%',
+              zIndex: isActive
+                ? (usingLive ? displayCards.length : viewCards.length) + 3
+                : (usingLive ? displayCards.length : viewCards.length) + 1 - idx,
+              filter: isActive ? undefined : `brightness(${dim}) saturate(${sat})`,
+              opacity: isActive ? 1 : 0.96 - depth * 0.05,
+              cursor: isActive ? 'default' : 'pointer',
               transform: `scale(${scale})`,
               transformOrigin: 'top center',
               boxShadow,
               borderRadius: 18,
-              transition: "top 260ms cubic-bezier(0.25,0.8,0.25,1), opacity 220ms ease, filter 220ms ease, transform 260ms cubic-bezier(0.25,0.8,0.25,1), box-shadow 260ms ease",
+              transition:
+                'top 260ms cubic-bezier(0.25,0.8,0.25,1), opacity 220ms ease, filter 220ms ease, transform 260ms cubic-bezier(0.25,0.8,0.25,1), box-shadow 260ms ease',
               willChange: 'transform, filter, top',
-              pointerEvents: isActive ? "auto" : "auto",
+              pointerEvents: 'auto',
+              clipPath: isActive ? undefined : `inset(${clipTop}px 0 0 0)`,
+              WebkitClipPath: isActive ? undefined : `inset(${clipTop}px 0 0 0)`,
             }}
-            // Click to bring the card to the top (active)
-            onClick={() => {
-              if (isActive) return;
-              if (usingLive) {
-                setActiveIndex(idx);
-              } else {
-                const selected = cards[idx];
-                const rest = cards.filter((_, i2) => i2 !== idx);
-                const reordered = [...rest, selected];
-                setCards(reordered);
-                setActiveIndex(reordered.length - 1);
-              }
-            }}
+            data-ins-card
+            onMouseEnter={() => setHoveredIndex(idx)}
+            onMouseLeave={() => setHoveredIndex((h) => (h === idx ? null : h))}
+            onClick={() => bringCardToTop(idx)}
           >
-            {card.id === 'placeholder' ? (
-              <MasterCard
-                insuranceName="Insurance Card"
-                memberName="Member Name"
-                memberId="ID123456"
-                monthlyBill="0.00"
-                onAdd={handleAdd}
-                // Treat placeholder Edit as creating the first real card
-                onEdit={(form) => handleAdd(form)}
-                onDelete={() => {}}
-                canAdd={viewCards.length < MAX_CARDS && idx === activeIndex}
-                overlayOpacity={isActive ? 0.26 : 0.14 + depth * 0.06}
-                backgroundSrc={Jelly1}
-                id="placeholder"
-              />
-            ) : (
-              <MasterCard
-                {...card}
-                onAdd={handleAdd}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-                canAdd={viewCards.length < MAX_CARDS && idx === activeIndex}
-                overlayOpacity={isActive ? 0.26 : 0.14 + depth * 0.06}
-                backgroundSrc={card.backgroundSrc}
-                id={card.id}
-                frontImageUrl={card.frontImageUrl}
-                backImageUrl={card.backImageUrl}
-              />
-            )}
-    {!isActive && (
+            <MasterCard
+              {...card}
+              onAdd={handleAdd}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              canAdd={idx === 0 && ((usingLive ? displayCards.length : viewCards.length) < MAX_CARDS)}
+              overlayOpacity={isActive ? 0.26 : 0.14 + depth * 0.06}
+              backgroundSrc={card.backgroundSrc}
+              id={card.id}
+              frontImageUrl={card.frontImageUrl}
+              backImageUrl={card.backImageUrl}
+            />
+            {!isActive && (
               <div
                 style={{
                   position: 'absolute',
                   inset: 0,
                   borderRadius: 18,
-          background: `linear-gradient(180deg, rgba(10,12,28,${overlayTopA}) 0%, rgba(10,12,28,0) 35%, rgba(10,12,28,${overlayBottomA}) 100%)`,
-          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)',
-          border: `1px solid rgba(255,255,255,${Math.max(0.02, 0.08 - depth * 0.02)})`,
-                  pointerEvents: 'none'
+                  background: `linear-gradient(180deg, rgba(10,12,28,${overlayTopA}) 0%, rgba(10,12,28,0) 35%, rgba(10,12,28,${overlayBottomA}) 100%)`,
+                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)',
+                  border: `1px solid rgba(255,255,255,${Math.max(0.02, 0.08 - depth * 0.02)})`,
+                  pointerEvents: 'none',
                 }}
               />
             )}
-    {!isActive && (
+            {!isActive && (
               <div
                 style={{
                   position: 'absolute',
@@ -599,11 +729,11 @@ function MasterCardStack({ cards, setCards, onAdd, onEdit, onDelete }) {
                   borderBottomRightRadius: 16,
                   background: `linear-gradient(180deg, rgba(5,8,28,0) 0%, rgba(5,8,28,${bottomBandTopA}) 70%, rgba(5,8,28,${bottomBandBottomA}) 100%)`,
                   boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)',
-                  pointerEvents: 'none'
+                  pointerEvents: 'none',
                 }}
               />
             )}
-    {!isActive && (
+            {!isActive && (
               <div
                 style={{
                   position: 'absolute',
@@ -612,16 +742,35 @@ function MasterCardStack({ cards, setCards, onAdd, onEdit, onDelete }) {
                   bottom: bottomBandH - 2,
                   height: 2,
                   borderRadius: 2,
-                  background: 'linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.22) 15%, rgba(255,255,255,0.26) 50%, rgba(255,255,255,0.22) 85%, rgba(255,255,255,0) 100%)',
+                  background:
+                    'linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.22) 15%, rgba(255,255,255,0.26) 50%, rgba(255,255,255,0.22) 85%, rgba(255,255,255,0) 100%)',
                   mixBlendMode: 'screen',
                   opacity: 0.9 - depth * 0.2,
-                  pointerEvents: 'none'
+                  pointerEvents: 'none',
                 }}
               />
             )}
           </div>
         );
       })}
+  {(usingLive ? displayCards.length : viewCards.length) > 0 && (
+        <div
+          style={{
+            position: 'absolute',
+            right: 6,
+            top: 6,
+    zIndex: ((usingLive ? displayCards.length : viewCards.length) || 0) + 2,
+            background: 'rgba(0,0,0,0.35)',
+            color: '#fff',
+            fontSize: 11,
+            padding: '2px 6px',
+            borderRadius: 10,
+            border: '1px solid rgba(255,255,255,0.12)',
+          }}
+        >
+      {(usingLive ? displayCards.length : viewCards.length)} {(usingLive ? displayCards.length : viewCards.length) === 1 ? 'card' : 'cards'}
+        </div>
+      )}
     </div>
   );
 }
