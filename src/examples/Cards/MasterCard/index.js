@@ -545,12 +545,23 @@ function MasterCardStack({ cards, setCards, onAdd, onEdit, onDelete }) {
   const bringCardToTop = (idx) => {
     if (idx === 0) { setActiveIndex(0); return; }
     if (usingLive) {
-      const arr = displayCards || [];
-      const item = arr[idx];
-      if (!item?.id) return;
+      const currentDisplay = displayCards || [];
+      const item = currentDisplay[idx];
+      if (!item) return;
+      // Reorder the underlying liveCards as well so the clicked card truly becomes index 0
+      setLiveCards((prev) => {
+        const list = prev || [];
+        const byId = new Map(list.map((c) => [c?.id, c]));
+        const picked = byId.get(item.id) || item; // fall back if not found (unlikely)
+        const rest = list.filter((c) => (c?.id || c) !== (item.id || item));
+        const next = [picked, ...rest];
+        try { setCachedInsuranceCards(user?.uid, next); } catch {}
+        return next;
+      });
+      // Maintain the local orderIds mirror used to arrange displayCards
       setOrderIds((prev) => {
-        const current = prev?.length ? prev : arr.map((c) => c?.id).filter(Boolean);
-        return [item.id, ...current.filter((id) => id !== item.id)];
+        const base = (prev?.length ? prev : (currentDisplay.map((c) => c?.id).filter(Boolean)));
+        return [item.id, ...base.filter((id) => id !== item.id)];
       });
       setActiveIndex(0);
     } else if (Array.isArray(cards) && typeof setCards === 'function') {
@@ -631,6 +642,10 @@ function MasterCardStack({ cards, setCards, onAdd, onEdit, onDelete }) {
   const MAX_PEEKS = 3;     // show up to 3 peeks (cards 2,3,4)
   // Each lower card is shifted down by only the peek amount so most stays hidden under the top card
   const STEP = PEEK_OFFSET;
+  // Count real cards (exclude placeholder) for the badge
+  const listForCount = (usingLive ? displayCards : viewCards) || [];
+  const realCount = listForCount.filter((c) => (c?.id || '') !== 'placeholder').length;
+
   return (
     <div
       ref={containerRef}
@@ -753,7 +768,7 @@ function MasterCardStack({ cards, setCards, onAdd, onEdit, onDelete }) {
           </div>
         );
       })}
-  {(usingLive ? displayCards.length : viewCards.length) > 0 && (
+  {realCount > 0 && (
         <div
           style={{
             position: 'absolute',
@@ -768,7 +783,7 @@ function MasterCardStack({ cards, setCards, onAdd, onEdit, onDelete }) {
             border: '1px solid rgba(255,255,255,0.12)',
           }}
         >
-      {(usingLive ? displayCards.length : viewCards.length)} {(usingLive ? displayCards.length : viewCards.length) === 1 ? 'card' : 'cards'}
+      {realCount} {realCount === 1 ? 'card' : 'cards'}
         </div>
       )}
     </div>
