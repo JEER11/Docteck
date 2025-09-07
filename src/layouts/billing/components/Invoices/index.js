@@ -24,6 +24,7 @@ import Invoice from "layouts/billing/components/Invoice";
 import React, { useState } from "react";
 import { auth } from "lib/firebase";
 import { onPrescriptions, addPrescription, updatePrescription, deletePrescription } from "lib/caringHubData";
+import { uploadUserFile, deleteUserFile } from "lib/storage";
 // ReactDOM no longer needed; using MUI Dialogs
 import AddIcon from "@mui/icons-material/Add";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
@@ -44,9 +45,23 @@ function Invoices() {
   const handleEditSave = async () => {
     if (editIdx == null) return;
     if (auth && auth.currentUser && prescriptions[editIdx]?.id) {
-      // Only persist simple fields to Firestore (exclude File objects)
+      // Persist fields; if a new File was provided for info, upload to Firebase Storage and include metadata
       const { medicine, price, date } = editPrescription || {};
-      try { await updatePrescription(prescriptions[editIdx].id, { medicine, price, date }); } catch (_) {}
+      let infoPatch = {};
+      try {
+        if (editPrescription?.info instanceof File) {
+          const file = editPrescription.info;
+          const { url, path } = await uploadUserFile(file, "prescriptions");
+          infoPatch = {
+            infoUrl: url,
+            infoPath: path,
+            infoName: file.name,
+            infoType: file.type || "",
+            infoSize: file.size || 0,
+          };
+        }
+      } catch (_) { /* ignore upload errors for now */ }
+      try { await updatePrescription(prescriptions[editIdx].id, { medicine, price, date, ...infoPatch }); } catch (_) {}
     } else {
       setPrescriptions(prev => {
         const next = prev.map((rx, idx) => idx === editIdx ? { ...editPrescription } : rx);
@@ -130,7 +145,22 @@ function Invoices() {
   const handleAdd = async () => {
     if (!newPrescription.medicine || !newPrescription.price || !newPrescription.date) return;
     if (auth && auth.currentUser) {
-      try { await addPrescription({ medicine: newPrescription.medicine, price: newPrescription.price, date: newPrescription.date, info: null }); } catch (_) {}
+      try {
+        let infoMeta = {};
+        if (newPrescription.info instanceof File) {
+          try {
+            const { url, path } = await uploadUserFile(newPrescription.info, "prescriptions");
+            infoMeta = {
+              infoUrl: url,
+              infoPath: path,
+              infoName: newPrescription.info.name,
+              infoType: newPrescription.info.type || "",
+              infoSize: newPrescription.info.size || 0,
+            };
+          } catch (_) { /* ignore upload errors; proceed without info */ }
+        }
+        await addPrescription({ medicine: newPrescription.medicine, price: newPrescription.price, date: newPrescription.date, ...infoMeta });
+      } catch (_) {}
     } else {
       const next = [
         ...prescriptions,
@@ -188,12 +218,14 @@ function Invoices() {
   // Document modal state
   const [docModalOpen, setDocModalOpen] = useState(false);
   const [docModalIdx, setDocModalIdx] = useState(null);
-  const [docModalFile, setDocModalFile] = useState(null);
+  const [docModalFile, setDocModalFile] = useState(null); // Can be File or { url, type }
 
   // Handle Info click
   const handleInfoClick = (idx) => {
     setDocModalIdx(idx);
-    setDocModalFile(prescriptions[idx]?.info || null);
+    const rx = prescriptions[idx];
+    if (rx?.infoUrl) setDocModalFile({ url: rx.infoUrl, type: rx.infoType || "" });
+    else setDocModalFile(rx?.info || null);
     setDocModalOpen(true);
   };
   const handleDocModalClose = () => {
@@ -201,12 +233,24 @@ function Invoices() {
     setDocModalIdx(null);
     setDocModalFile(null);
   };
-  const handleDocUpload = (e) => {
+  const handleDocUpload = async (e) => {
     const file = e.target.files[0];
     if (!file || docModalIdx == null) return;
-    // Save file to prescription
-    setPrescriptions(prescriptions.map((rx, idx) => idx === docModalIdx ? { ...rx, info: file } : rx));
-    setDocModalFile(file);
+    if (auth && auth.currentUser && prescriptions[docModalIdx]?.id) {
+      try {
+        const { url, path } = await uploadUserFile(file, "prescriptions");
+        const patch = { infoUrl: url, infoPath: path, infoName: file.name, infoType: file.type || "", infoSize: file.size || 0 };
+        await updatePrescription(prescriptions[docModalIdx].id, patch);
+        // update local state for immediate UI
+        setPrescriptions(prev => prev.map((rx, i) => i === docModalIdx ? { ...rx, ...patch } : rx));
+        setDocModalFile({ url, type: file.type || "" });
+      } catch (_) { /* ignore */ }
+    } else {
+      // Guest mode: store File locally
+      setPrescriptions(prev => prev.map((rx, idx) => idx === docModalIdx ? { ...rx, info: file } : rx));
+      setDocModalFile(file);
+      try { localStorage.setItem('prescriptions', JSON.stringify(prescriptions.map((rx, idx) => idx === docModalIdx ? { ...rx, info: file } : rx))); } catch (_) {}
+    }
   };
 
   // Document Dialog
@@ -222,10 +266,11 @@ function Invoices() {
       </DialogTitle>
       <DialogContent sx={{ pt: 1, background: 'transparent', color: 'white', px: 2, minWidth: 400 }}>
         {docModalFile ? (
-          docModalFile.type?.startsWith('image') ? (
-            <img src={URL.createObjectURL(docModalFile)} alt="Prescription" style={{ maxWidth: '100%', maxHeight: 380, borderRadius: 12, display: 'block', margin: '0 auto' }} />
-          ) : docModalFile.type === 'application/pdf' ? (
-            <iframe src={URL.createObjectURL(docModalFile)} title="Prescription PDF" style={{ width: '100%', height: 400, border: 'none', borderRadius: 12, background: '#222' }} />
+          // If docModalFile is a File, use URL.createObjectURL; if it's an object with url, use that
+          (docModalFile instanceof File ? (docModalFile.type || '').startsWith('image') : (docModalFile.type || '').startsWith('image')) ? (
+            <img src={docModalFile instanceof File ? URL.createObjectURL(docModalFile) : docModalFile.url} alt="Prescription" style={{ maxWidth: '100%', maxHeight: 380, borderRadius: 12, display: 'block', margin: '0 auto' }} />
+          ) : (docModalFile instanceof File ? (docModalFile.type === 'application/pdf') : (docModalFile.type === 'application/pdf')) ? (
+            <iframe src={docModalFile instanceof File ? URL.createObjectURL(docModalFile) : docModalFile.url} title="Prescription PDF" style={{ width: '100%', height: 400, border: 'none', borderRadius: 12, background: '#222' }} />
           ) : (
             <VuiTypography color="white" style={{ textAlign: 'center', margin: '24px 0' }}>Cannot preview this file type.</VuiTypography>
           )
