@@ -3,6 +3,7 @@ import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, FacebookAuthProvider, OAuthProvider } from "firebase/auth";
 import { getFirestore, initializeFirestore } from "firebase/firestore";
 import { getAnalytics } from "firebase/analytics";
+import { getStorage } from "firebase/storage";
 
 // Prefer runtime config injected by Flask (window.__FIREBASE_CONFIG__),
 // then fall back to env vars that CRA inlines at build time.
@@ -26,6 +27,7 @@ let app = null;
 let analytics = null;
 let auth = null;
 let db = null;
+let storage = null;
 
 if (hasConfig) {
   try {
@@ -47,6 +49,11 @@ if (hasConfig) {
       // Fallback if initializeFirestore not available in this environment
       db = getFirestore(app);
     }
+    try {
+      storage = getStorage(app);
+    } catch (e) {
+      storage = null;
+    }
   } catch (e) {
     // If initialization fails, keep exports as null to avoid crashing the UI.
     // console.error("Firebase init failed:", e);
@@ -55,7 +62,7 @@ if (hasConfig) {
   // Uncomment for local debugging: console.warn("Firebase config missing. Auth features disabled.");
 }
 
-export { app, analytics, auth, db };
+export { app, analytics, auth, db, storage };
 export const hasFirebaseConfig = hasConfig;
 export const googleProvider = new GoogleAuthProvider();
 export const facebookProvider = new FacebookAuthProvider();
