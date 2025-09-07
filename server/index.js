@@ -468,7 +468,20 @@ app.patch('/api/records/mf-files/:id', (req, res) => {
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
+  // Prevent long hangs if upstream is slow
+  timeout: 20_000,
 });
+
+// Helper: apply a timeout to any promise to avoid hanging requests
+function withTimeout(promise, ms, onTimeoutValue = null) {
+  let timer;
+  return Promise.race([
+    promise.finally(() => clearTimeout(timer)),
+    new Promise((resolve) => {
+      timer = setTimeout(() => resolve(onTimeoutValue), ms);
+    })
+  ]);
+}
 
 app.post('/api/doctor-assistant', async (req, res) => {
   const { message } = req.body;
@@ -792,7 +805,13 @@ app.post('/api/assistant-smart', async (req, res) => {
     };
     // Merge short memory with latest messages
     const memory = recall(uid).slice(-10);
-    const first = await openai.chat.completions.create({ model: 'gpt-4o-mini', messages: [sys, ...memory, ...messages], tools, tool_choice: 'auto', temperature: 0.4, max_tokens: 250 });
+    const first = await withTimeout(
+      openai.chat.completions.create({ model: 'gpt-4o-mini', messages: [sys, ...memory, ...messages], tools, tool_choice: 'auto', temperature: 0.4, max_tokens: 250 }),
+      25_000
+    );
+    if (!first) {
+      return res.status(504).json({ error: 'upstream_timeout', reply: 'Sorry, the assistant took too long to respond. Please try again.' });
+    }
     const msg = first.choices[0].message;
     if (msg.tool_calls && msg.tool_calls.length > 0) {
       const call = msg.tool_calls[0];
@@ -852,12 +871,18 @@ app.post('/api/assistant-smart', async (req, res) => {
           date: args.date || ''
         }};
       }
-      const follow = await openai.chat.completions.create({
-        model: 'gpt-4o-mini',
-        messages: [sys, ...messages, msg, { role: 'tool', tool_call_id: call.id, content: JSON.stringify(toolResult) }],
-        temperature: 0.4,
-        max_tokens: 250,
-      });
+      const follow = await withTimeout(
+        openai.chat.completions.create({
+          model: 'gpt-4o-mini',
+          messages: [sys, ...messages, msg, { role: 'tool', tool_call_id: call.id, content: JSON.stringify(toolResult) }],
+          temperature: 0.4,
+          max_tokens: 250,
+        }),
+        25_000
+      );
+      if (!follow) {
+        return res.status(504).json({ error: 'upstream_timeout', reply: 'Action performed. The assistant reply timed out. Please ask again if needed.', tool: { name, result: toolResult } });
+      }
       const replyText = follow.choices[0].message.content;
       remember(uid, 'user', messages[messages.length - 1]?.content || '');
       remember(uid, 'assistant', replyText);
