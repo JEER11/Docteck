@@ -11,6 +11,9 @@ import { Calendar, momentLocalizer, Views } from "react-big-calendar";
 import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { useAppointments } from "../context/AppointmentContext";
+import { useTodos } from "../context/TodoContext";
+import { onPrescriptions } from "lib/caringHubData";
+import { auth } from "lib/firebase";
 import AddIcon from "@mui/icons-material/Add";
 import AppointmentDialog from "./AppointmentDialog";
 import CalendarToolbar from "./CalendarToolbar";
@@ -21,6 +24,43 @@ function AppointmentCalendar() {
   // Defensive: fallback to empty object if context is undefined
   const context = useAppointments() || {};
   const appointments = Array.isArray(context.appointments) ? context.appointments : [];
+  // Overlays
+  const { todos = [] } = useTodos?.() || {};
+  const [rxList, setRxList] = React.useState([]);
+  React.useEffect(() => {
+    // Subscribe to prescriptions from Firestore if signed in, else use localStorage
+    if (auth && auth.currentUser) {
+      const unsub = onPrescriptions({}, (items) => setRxList(items));
+      return () => unsub && unsub();
+    }
+    try {
+      const raw = localStorage.getItem('prescriptions');
+      const list = raw ? JSON.parse(raw) : [];
+      setRxList(Array.isArray(list) ? list : []);
+    } catch (_) { setRxList([]); }
+  }, []);
+
+  const overlayEvents = React.useMemo(() => {
+    const t = (Array.isArray(todos) ? todos : [])
+      .filter(x => x && x.date)
+      .map((x, i) => ({
+        id: `todo-${i}-${x.date}`,
+        title: x.label || x.text || 'Task',
+        start: new Date(x.date),
+        end: new Date(new Date(x.date).getTime() + 30 * 60000),
+        source: 'todo',
+      }));
+    const rx = (Array.isArray(rxList) ? rxList : [])
+      .filter(r => r && r.date)
+      .map((r, i) => ({
+        id: `rx-${i}-${r.date}`,
+        title: r.medicine ? `Pick up: ${r.medicine}` : 'Prescription pick-up',
+        start: new Date(r.date),
+        end: new Date(new Date(r.date).getTime() + 30 * 60000),
+        source: 'prescription',
+      }));
+    return [...t, ...rx];
+  }, [todos, rxList]);
   const addAppointment = context.addAppointment || (() => {});
   const [view, setView] = useState(Views.MONTH);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -140,7 +180,7 @@ function AppointmentCalendar() {
           </Box>
           <Calendar
             localizer={localizer}
-            events={appointments}
+            events={[...appointments, ...overlayEvents]}
             startAccessor="start"
             endAccessor="end"
             style={{ height: '100%', minHeight: 320, width: "100%", minWidth: 0, fontSize: 13 }}

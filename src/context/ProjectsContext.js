@@ -35,6 +35,29 @@ export function ProjectsProvider({ children }) {
   const updateProject = (id, updates) => setProjects((prev) => prev.map(p => p.id === id ? { ...p, ...updates } : p));
   const removeProject = (id) => setProjects((prev) => prev.filter(p => p.id !== id));
 
+  // Assistant-triggered HUB add
+  React.useEffect(() => {
+    const onAddHub = (e) => {
+      const h = e.detail || {};
+      if (!h.hospital) return;
+      setProjects(prev => [...prev, {
+        id: Date.now(),
+        hospital: h.hospital,
+        doctors: Array.isArray(h.doctors) ? h.doctors : (h.doctors ? [h.doctors] : []),
+        bill: h.bill || '$',
+        completion: typeof h.completion === 'number' ? h.completion : 0
+      }]);
+    };
+    window.addEventListener('assistant:add_hub_item', onAddHub);
+    // Drain queued
+    try {
+      const list = JSON.parse(localStorage.getItem('assistant_queue_add_hub_item') || '[]');
+      if (Array.isArray(list)) list.forEach((p) => onAddHub({ detail: p }));
+      localStorage.removeItem('assistant_queue_add_hub_item');
+    } catch (_) {}
+    return () => window.removeEventListener('assistant:add_hub_item', onAddHub);
+  }, []);
+
   return (
     <ProjectsContext.Provider value={{ projects, addProject, updateProject, removeProject }}>
       {children}
