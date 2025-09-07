@@ -33,6 +33,7 @@ import { FaRegEdit } from "react-icons/fa";
 import { IoIosRocket } from "react-icons/io";
 import { IoBuild, IoDocumentText, IoGlobe, IoWallet } from "react-icons/io5";
 import DoctorAssistant from "components/DoctorAssistant";
+import { auth } from "lib/firebase";
 import ChatHistoryBox from "layouts/rtl/components/ChatHistoryBox";
 import TodoTracker from "components/TodoTracker";
 import getApiBase from "lib/apiBase";
@@ -227,7 +228,13 @@ function Assistance() {
                   Ask your AI assistant anything about your appointments, prescriptions, or medical workflow.
                 </VuiTypography>
                 <Box flex={1} minHeight={0} display="flex" flexDirection="column" justifyContent="flex-start">
-                  <DoctorAssistant messages={messages} setMessages={setMessages} compact={compact} />
+                  {auth?.currentUser ? (
+                    // When signed in, let DoctorAssistant manage its own state and persist to Firestore
+                    <DoctorAssistant compact={compact} />
+                  ) : (
+                    // Fallback to local controlled mode for guests
+                    <DoctorAssistant messages={messages} setMessages={setMessages} compact={compact} />
+                  )}
                 </Box>
               </Card>
             </Grid>

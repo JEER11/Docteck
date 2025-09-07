@@ -698,10 +698,97 @@ app.post('/api/assistant-smart', async (req, res) => {
           parameters: { type: 'object', properties: { query: { type: 'string' } }, required: ['query'] }
         }
       }
+      ,
+      // App-integrations: let the AI request structured adds. The client will perform the actual add
+      {
+        type: 'function',
+        function: {
+          name: 'add_todo',
+          description: 'Add a short task/reminder to the To-do tracker',
+          parameters: {
+            type: 'object',
+            properties: {
+              text: { type: 'string', description: 'Short description of the task' },
+              date: { type: 'string', description: 'When to do it, natural language or ISO' }
+            },
+            required: ['text']
+          }
+        }
+      },
+      {
+        type: 'function',
+        function: {
+          name: 'add_appointment',
+          description: 'Add an appointment to the app calendar and appointments list',
+          parameters: {
+            type: 'object',
+            properties: {
+              title: { type: 'string', description: 'Doctor or appointment title' },
+              startTime: { type: 'string', description: 'When the appointment starts (e.g., "Tuesday 4pm")' },
+              durationMinutes: { type: 'number', description: 'Duration in minutes', default: 30 },
+              doctor: { type: 'string', description: 'Doctor name if available' },
+              hospital: { type: 'string', description: 'Hospital/clinic name' },
+              location: { type: 'string' }
+            },
+            required: ['title','startTime']
+          }
+        }
+      },
+      {
+        type: 'function',
+        function: {
+          name: 'add_hub_item',
+          description: 'Add a provider/hospital information card in the HUB table',
+          parameters: {
+            type: 'object',
+            properties: {
+              hospital: { type: 'string' },
+              doctors: { type: 'array', items: { type: 'string' }, description: 'One or more doctor names' },
+              bill: { type: 'string', description: 'Bill currency symbol or amount, optional' },
+              completion: { type: 'number', description: 'Completion percent 0-100', default: 0 }
+            },
+            required: ['hospital']
+          }
+        }
+      },
+      {
+        type: 'function',
+        function: {
+          name: 'add_pharmacy',
+          description: 'Add a pharmacy to Pharmacy Information box',
+          parameters: {
+            type: 'object',
+            properties: {
+              name: { type: 'string' },
+              address: { type: 'string' },
+              email: { type: 'string' },
+              phone: { type: 'string' },
+              prescription: { type: 'string', description: 'Name of a prescription to pick up' }
+            },
+            required: ['name','address']
+          }
+        }
+      },
+      {
+        type: 'function',
+        function: {
+          name: 'add_prescription',
+          description: 'Add an entry to the Prescriptions list',
+          parameters: {
+            type: 'object',
+            properties: {
+              medicine: { type: 'string' },
+              price: { type: 'string', description: 'Price like $60' },
+              date: { type: 'string', description: 'Pick-up date (YYYY-MM-DD or natural language)' }
+            },
+            required: ['medicine','date']
+          }
+        }
+      }
     ];
     const sys = {
       role: 'system',
-      content: 'You are a concise, action-oriented medical assistant with broad general knowledge. You specialize in medical topics but can answer other queries succinctly. Maintain short-term memory across turns. When users ask to schedule appointments, call create_event. If they ask general “what is X”, use wiki_summary. Use web_search/web_fetch for current info. For contacting a doctor, call contact_doctor. Keep replies to 2-4 sentences.'
+      content: 'You are a concise, action-oriented medical assistant. Prefer calling tools to take actions. When users ask to schedule appointments, call add_appointment (and optionally create_event if appropriate). When they ask to add or remember a task, call add_todo. When they specify a main doctor/hospital/provider for the HUB, call add_hub_item. For pharmacy entries, call add_pharmacy. For medicines to track under Prescriptions, call add_prescription. For general “what is X”, use wiki_summary. Use web_search/web_fetch for current info. For contacting a doctor, call contact_doctor. Keep replies to 2-4 sentences.'
     };
     // Merge short memory with latest messages
     const memory = recall(uid).slice(-10);
@@ -731,6 +818,39 @@ app.post('/api/assistant-smart', async (req, res) => {
         } catch (e) {
           toolResult = { ok: false, error: 'send_failed' };
         }
+      } else if (name === 'add_todo') {
+        toolResult = { ok: true, todo: { text: args.text || '', date: args.date || null } };
+      } else if (name === 'add_appointment') {
+        toolResult = { ok: true, appointment: {
+          title: args.title || args.doctor || 'Appointment',
+          startTime: args.startTime || args.date || '',
+          durationMinutes: typeof args.durationMinutes === 'number' ? args.durationMinutes : 30,
+          doctor: args.doctor || null,
+          hospital: args.hospital || null,
+          location: args.location || null
+        }};
+      } else if (name === 'add_hub_item') {
+        const doctors = Array.isArray(args.doctors) ? args.doctors : (args.doctor ? [args.doctor] : []);
+        toolResult = { ok: true, hub: {
+          hospital: args.hospital || 'Hospital',
+          doctors,
+          bill: args.bill || '$',
+          completion: typeof args.completion === 'number' ? args.completion : 0
+        }};
+      } else if (name === 'add_pharmacy') {
+        toolResult = { ok: true, pharmacy: {
+          name: args.name || '',
+          address: args.address || '',
+          email: args.email || '',
+          phone: args.phone || '',
+          prescription: args.prescription || ''
+        }};
+      } else if (name === 'add_prescription') {
+        toolResult = { ok: true, prescription: {
+          medicine: args.medicine || '',
+          price: args.price || '',
+          date: args.date || ''
+        }};
       }
       const follow = await openai.chat.completions.create({
         model: 'gpt-4o-mini',

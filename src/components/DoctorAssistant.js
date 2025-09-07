@@ -3,6 +3,7 @@ import { IconButton, InputBase, Paper, Box, Tooltip } from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
 import getApiBase from "../lib/apiBase";
 import { onChatMessages, addChatMessage } from "lib/chatData";
+import { enqueue } from "lib/assistantBus";
 import { auth } from "lib/firebase";
 
 
@@ -73,6 +74,19 @@ function DoctorAssistant({ messages: controlledMessages, setMessages: setControl
       });
       const data = await response.json();
       let aiText = data.reply || "Sorry, I couldn't process that.";
+      // If the assistant used an app tool, emit a DOM event so existing UI can react without UI changes
+      try {
+        const tool = data.tool || {};
+        if (tool && tool.name) {
+          // Normalize payloads
+          const detail = tool.result || {};
+          if (tool.name === 'add_todo' && detail.todo) enqueue('add_todo', detail.todo);
+          else if (tool.name === 'add_appointment' && detail.appointment) enqueue('add_appointment', detail.appointment);
+          else if (tool.name === 'add_hub_item' && detail.hub) enqueue('add_hub_item', detail.hub);
+          else if (tool.name === 'add_pharmacy' && detail.pharmacy) enqueue('add_pharmacy', detail.pharmacy);
+          else if (tool.name === 'add_prescription' && detail.prescription) enqueue('add_prescription', detail.prescription);
+        }
+      } catch (_) {}
       // Write both messages to Firestore when not controlled and signed in
       try {
         if (!isControlled && auth && auth.currentUser) {

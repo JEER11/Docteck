@@ -22,6 +22,8 @@ import VuiButton from "components/VuiButton";
 // Billing page components
 import Invoice from "layouts/billing/components/Invoice";
 import React, { useState } from "react";
+import { auth } from "lib/firebase";
+import { onPrescriptions, addPrescription, updatePrescription, deletePrescription } from "lib/caringHubData";
 // ReactDOM no longer needed; using MUI Dialogs
 import AddIcon from "@mui/icons-material/Add";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
@@ -39,9 +41,19 @@ function Invoices() {
     '& .MuiInputBase-input': { color: '#e7e9f3', fontSize: 14, py: 1, background: 'transparent' },
   };
   // Save changes in the Edit modal
-  const handleEditSave = () => {
+  const handleEditSave = async () => {
     if (editIdx == null) return;
-    setPrescriptions(prev => prev.map((rx, idx) => idx === editIdx ? { ...editPrescription } : rx));
+    if (auth && auth.currentUser && prescriptions[editIdx]?.id) {
+      // Only persist simple fields to Firestore (exclude File objects)
+      const { medicine, price, date } = editPrescription || {};
+      try { await updatePrescription(prescriptions[editIdx].id, { medicine, price, date }); } catch (_) {}
+    } else {
+      setPrescriptions(prev => {
+        const next = prev.map((rx, idx) => idx === editIdx ? { ...editPrescription } : rx);
+        try { localStorage.setItem('prescriptions', JSON.stringify(next)); } catch (_) {}
+        return next;
+      });
+    }
     handleEditClose();
   };
   // Handle changes in the Edit modal
@@ -52,15 +64,19 @@ function Invoices() {
       [name]: name === "info" ? files[0] : value
     }));
   };
-  // Example prescription data (restored with multiple entries)
-  const [prescriptions, setPrescriptions] = useState([
-    { date: "July, 01, 2025", medicine: "Amlodipine 5mg", price: "$80", info: null },
-    { date: "July, 15, 2025", medicine: "Metformin 500mg", price: "$60", info: null },
-    { date: "August, 01, 2025", medicine: "Atorvastatin 20mg", price: "$90", info: null },
-    { date: "August, 10, 2025", medicine: "Lisinopril 10mg", price: "$70", info: null },
-    { date: "August, 20, 2025", medicine: "Levothyroxine 50mcg", price: "$50", info: null },
-    { date: "September, 01, 2025", medicine: "Simvastatin 40mg", price: "$85", info: null }
-  ]);
+  // Prescriptions state; subscribe to Firestore when signed-in, fallback to localStorage
+  const [prescriptions, setPrescriptions] = useState([]);
+  React.useEffect(() => {
+    if (auth && auth.currentUser) {
+      const unsub = onPrescriptions({}, (items) => setPrescriptions(items));
+      return () => unsub && unsub();
+    }
+    try {
+      const raw = localStorage.getItem('prescriptions');
+      const list = raw ? JSON.parse(raw) : [];
+      if (Array.isArray(list)) setPrescriptions(list);
+    } catch (_) {}
+  }, []);
   const [open, setOpen] = useState(false);
   const [newPrescription, setNewPrescription] = useState({ medicine: "", price: "", date: "", info: null });
   const [menuAnchor, setMenuAnchor] = useState(null);
@@ -69,6 +85,31 @@ function Invoices() {
   const MAX_VISIBLE = 5; // Show up to 5 prescriptions in the main box
   const visiblePrescriptions = prescriptions.slice(0, MAX_VISIBLE);
   const extraPrescriptions = prescriptions.length > MAX_VISIBLE ? prescriptions.slice(MAX_VISIBLE) : [];
+
+  // Assistant-triggered add prescription
+  React.useEffect(() => {
+    const onAddRx = async (e) => {
+      const rx = e.detail || {};
+      if (!rx.medicine || !rx.date) return;
+      if (auth && auth.currentUser) {
+        try { await addPrescription({ medicine: rx.medicine, price: rx.price || '', date: rx.date, info: null }); } catch (_) {}
+      } else {
+        setPrescriptions(prev => {
+          const next = [...prev, { medicine: rx.medicine, price: rx.price || '', date: rx.date, info: null }];
+          try { localStorage.setItem('prescriptions', JSON.stringify(next)); } catch (_) {}
+          return next;
+        });
+      }
+    };
+    window.addEventListener('assistant:add_prescription', onAddRx);
+    // Drain queued
+    try {
+      const list = JSON.parse(localStorage.getItem('assistant_queue_add_prescription') || '[]');
+      if (Array.isArray(list)) list.forEach((p) => onAddRx({ detail: p }));
+      localStorage.removeItem('assistant_queue_add_prescription');
+    } catch (_) {}
+    return () => window.removeEventListener('assistant:add_prescription', onAddRx);
+  }, []);
 
   // Edit modal state
   const [editIdx, setEditIdx] = useState(null);
@@ -86,12 +127,18 @@ function Invoices() {
       [name]: name === "info" ? files[0] : value
     });
   };
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!newPrescription.medicine || !newPrescription.price || !newPrescription.date) return;
-    setPrescriptions([
-      ...prescriptions,
-      { medicine: newPrescription.medicine, price: newPrescription.price, date: newPrescription.date, info: newPrescription.info }
-    ]);
+    if (auth && auth.currentUser) {
+      try { await addPrescription({ medicine: newPrescription.medicine, price: newPrescription.price, date: newPrescription.date, info: null }); } catch (_) {}
+    } else {
+      const next = [
+        ...prescriptions,
+        { medicine: newPrescription.medicine, price: newPrescription.price, date: newPrescription.date, info: newPrescription.info }
+      ];
+      setPrescriptions(next);
+      try { localStorage.setItem('prescriptions', JSON.stringify(next)); } catch (_) {}
+    }
     handleClose();
   };
   const handleMenuOpen = (event, idx) => {
@@ -113,13 +160,27 @@ function Invoices() {
     setEditIdx(null);
     setEditPrescription({ medicine: '', price: '', date: '', info: null });
   };
-  const handleDelete = () => {
-    setPrescriptions(prescriptions.filter((_, i) => i !== menuIdx));
+  const handleDelete = async () => {
+    if (auth && auth.currentUser && prescriptions[menuIdx]?.id) {
+      try { await deletePrescription(prescriptions[menuIdx].id); } catch (_) {}
+    } else {
+      const next = prescriptions.filter((_, i) => i !== menuIdx);
+      setPrescriptions(next);
+      try { localStorage.setItem('prescriptions', JSON.stringify(next)); } catch (_) {}
+    }
     handleMenuClose();
   };
   // Direct delete by index (used inside View All rows where no menu is opened)
-  const handleDeleteAtIndex = (idx) => {
-    setPrescriptions(prev => prev.filter((_, i) => i !== idx));
+  const handleDeleteAtIndex = async (idx) => {
+    if (auth && auth.currentUser && prescriptions[idx]?.id) {
+      try { await deletePrescription(prescriptions[idx].id); } catch (_) {}
+    } else {
+      setPrescriptions(prev => {
+        const next = prev.filter((_, i) => i !== idx);
+        try { localStorage.setItem('prescriptions', JSON.stringify(next)); } catch (_) {}
+        return next;
+      });
+    }
   };
   const handleViewAllOpen = () => setViewAllOpen(true);
   const handleViewAllClose = () => setViewAllOpen(false);

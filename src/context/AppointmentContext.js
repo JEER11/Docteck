@@ -2,6 +2,8 @@ import React, { createContext, useState, useContext, useEffect } from 'react';
 import getApiBase from '../lib/apiBase';
 import { onAppointments as onAppts, addAppointment as addAppt, updateAppointment as updAppt, deleteAppointment as delAppt } from '../lib/appointmentsData';
 import { auth } from '../lib/firebase';
+import { useTodos } from './TodoContext';
+import { onPrescriptions } from '../lib/caringHubData';
 
 const AppointmentContext = createContext();
 
@@ -9,6 +11,9 @@ export function AppointmentProvider({ children }) {
   const API = getApiBase();
   const [appointments, setAppointments] = useState([]);
   const [providers, setProviders] = useState([]);
+  // Also project todos and prescription pickups into calendar events (read-only overlays)
+  const { todos = [] } = useTodos?.() || {};
+  const [rxDates, setRxDates] = useState([]); // prescriptions overlay
 
   useEffect(() => {
     // Prefer per-user Firestore persistence when auth is configured
@@ -37,6 +42,48 @@ export function AppointmentProvider({ children }) {
   }, [API]);
   // Add global selectedDate state
   const [selectedDate, setSelectedDate] = useState(new Date());
+
+  // Project To-do's (with dates) into the calendar view as read-only pseudo-appointments
+  const todoAsAppointments = React.useMemo(() => {
+    try {
+      return (Array.isArray(todos) ? todos : [])
+        .filter(t => t && t.date)
+        .map((t, idx) => ({
+          id: `todo-${idx}-${new Date(t.date).toISOString()}`,
+          title: t.label || t.text || 'Task',
+          start: new Date(t.date),
+          end: new Date(new Date(t.date).getTime() + 30 * 60000),
+          source: 'todo',
+          task: t.label || t.text
+        }));
+    } catch (_) { return []; }
+  }, [todos]);
+
+  // Read prescriptions from Firestore if signed in; else from localStorage
+  useEffect(() => {
+    if (auth && auth.currentUser) {
+      const unsub = onPrescriptions({}, (items) => setRxDates(items));
+      return () => unsub && unsub();
+    }
+    try {
+      const raw = localStorage.getItem('prescriptions');
+      const list = raw ? JSON.parse(raw) : null;
+      if (Array.isArray(list)) setRxDates(list);
+    } catch (_) { setRxDates([]); }
+  }, []);
+  const rxAsAppointments = React.useMemo(() => {
+    try {
+      return (Array.isArray(rxDates) ? rxDates : [])
+        .filter(r => r && r.date)
+        .map((r, idx) => ({
+          id: `rx-${idx}-${r.date}`,
+          title: r.medicine ? `Pick up: ${r.medicine}` : 'Prescription pick-up',
+          start: new Date(r.date),
+          end: new Date(new Date(r.date).getTime() + 30 * 60000),
+          source: 'prescription',
+        }));
+    } catch (_) { return []; }
+  }, [rxDates]);
 
   const addAppointment = async (appointment) => {
   if (auth && auth.currentUser) {
@@ -74,6 +121,38 @@ export function AppointmentProvider({ children }) {
       setAppointments(prev => [...prev, appointment]);
     }
   };
+
+  // Assistant-triggered appointment add
+  React.useEffect(() => {
+    const onAddAppt = async (e) => {
+      try {
+        const d = e.detail || {};
+        // Parse start time; fallback to now
+        let start = d.startTime ? new Date(d.startTime) : new Date();
+        if (isNaN(start.getTime())) start = new Date();
+        const end = new Date(start.getTime() + (Number(d.durationMinutes) || 30) * 60000);
+        const payload = {
+          title: d.title || d.doctor || 'Appointment',
+          start,
+          end,
+          providerId: null,
+          location: d.location || d.hospital || '',
+          reason: '',
+          details: ''
+        };
+        await addAppointment(payload);
+      } catch (_) {}
+    };
+    window.addEventListener('assistant:add_appointment', onAddAppt);
+    // Drain queued
+    try {
+      const raw = localStorage.getItem('assistant_queue_add_appointment');
+      const list = JSON.parse(raw || '[]');
+      if (Array.isArray(list)) list.forEach((p) => onAddAppt({ detail: p }));
+      localStorage.removeItem('assistant_queue_add_appointment');
+    } catch (_) {}
+    return () => window.removeEventListener('assistant:add_appointment', onAddAppt);
+  }, []);
 
   const assignProvider = async (id, providerId) => {
     if (auth && auth.currentUser) {
@@ -135,14 +214,16 @@ export function AppointmentProvider({ children }) {
 
   // Get appointments/tasks for a specific date
   const getAppointmentsForDate = (date) => {
-    return appointments.filter(app => {
+  // Merge core appointments with overlays (todo + rx) for display
+  const merged = [...appointments, ...todoAsAppointments, ...rxAsAppointments];
+  return merged.filter(app => {
       const appDate = new Date(app.start);
       return appDate.toDateString() === date.toDateString();
     });
   };
 
   return (
-    <AppointmentContext.Provider value={{ appointments, addAppointment, assignProvider, removeAppointment, providers, suggestSlots, addProvider, getNextAppointment, selectedDate, setSelectedDate, getAppointmentsForDate }}>
+  <AppointmentContext.Provider value={{ appointments, addAppointment, assignProvider, removeAppointment, providers, suggestSlots, addProvider, getNextAppointment, selectedDate, setSelectedDate, getAppointmentsForDate }}>
       {children}
     </AppointmentContext.Provider>
   );
