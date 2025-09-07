@@ -23,7 +23,12 @@ app.set('trust proxy', 1);
 
 
 app.use(cors());
-app.use(bodyParser.json());
+// Harden JSON parser: avoid noisy logs if a non-JSON request slips through
+app.use((req, res, next) => {
+  const ct = (req.headers['content-type'] || '').toLowerCase();
+  if (ct.includes('application/json')) return bodyParser.json()(req, res, next);
+  return next();
+});
 app.use('/api/stripe', stripeRoutes);
 app.use('/api/stripe', stripePayRoutes);
 // Serve uploaded files (optional)
@@ -581,20 +586,211 @@ async function wikiSummary(query) {
   }
 }
 
-async function webFetchAndSummarize(url, openaiClient) {
-  const html = await (await fetch(url, { headers: { 'User-Agent': 'DocteckBot/1.0' } })).text();
-  const $ = cheerio.load(html);
-  const text = $('body').text().replace(/\s+/g, ' ').trim().slice(0, 12000);
+function isYouTubeUrl(u) {
+  try {
+    const x = new URL(u);
+    if (x.hostname.includes('youtube.com')) return true;
+    if (x.hostname.includes('youtu.be')) return true;
+  } catch(_) {}
+  return false;
+}
+
+function parseYouTubeId(u) {
+  try {
+    const x = new URL(u);
+    if (x.hostname.includes('youtu.be')) return x.pathname.slice(1);
+    if (x.searchParams.get('v')) return x.searchParams.get('v');
+    const m = x.pathname.match(/\/shorts\/([A-Za-z0-9_-]{5,})/);
+    if (m) return m[1];
+  } catch(_) {}
+  return '';
+}
+
+function sanitize(str) { return (str || '').toString(); }
+
+function vttToText(vtt) {
+  try {
+    return vtt
+      .split(/\r?\n/)
+      .filter(l => !/^\d+$/.test(l) && !/-->/.test(l) && l.trim() !== '' && !/^WEBVTT/i.test(l))
+      .join(' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  } catch { return ''; }
+}
+
+function xmlToText(xml) {
+  try {
+    // Remove tags and decode basic entities
+    const noTags = xml.replace(/<[^>]+>/g, ' ');
+    return noTags.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/\s+/g,' ').trim();
+  } catch { return ''; }
+}
+
+async function fetchYouTubeMeta(url) {
+  const headers = { 'User-Agent': 'DocteckBot/1.0 (+https://docteck.local)' };
+  let oembed = {};
+  try {
+    const oe = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`, { headers });
+    if (oe.ok) oembed = await oe.json();
+  } catch(_) {}
+  let html = '';
+  try {
+    html = await (await fetch(url, { headers })).text();
+  } catch(_) {}
+  const $ = cheerio.load(html || '');
+  const meta = (name, attr='content') => ($(`meta[property="${name}"]`).attr(attr) || $(`meta[name="${name}"]`).attr(attr) || '').trim();
+  const title = meta('og:title') || oembed.title || $('title').first().text().trim();
+  const description = meta('og:description');
+  const thumbnail = meta('og:image') || oembed.thumbnail_url || '';
+  const author = oembed.author_name || '';
+  const duration = ($('meta[itemprop="duration"]').attr('content') || '').trim();
+  const published = ($('meta[itemprop="datePublished"]').attr('content') || '').trim();
+  // Try to capture short description text from initial data JSON if present
+  let shortDesc = '';
+  let transcript = '';
+  try {
+    const m = html.match(/ytInitialPlayerResponse\s*=\s*(\{[\s\S]*?\});/);
+    if (m) {
+      const data = JSON.parse(m[1]);
+      shortDesc = data?.videoDetails?.shortDescription || '';
+      const tracks = data?.captions?.playerCaptionsTracklistRenderer?.captionTracks || [];
+      let track = null;
+      if (Array.isArray(tracks) && tracks.length) {
+        track = tracks.find(t => t.languageCode && t.languageCode.startsWith('en')) || tracks[0];
+      }
+      if (track && track.baseUrl) {
+        try {
+          const capRes = await fetch(track.baseUrl + '&fmt=vtt', { headers });
+          if (capRes.ok) {
+            const vtt = await capRes.text();
+            transcript = vttToText(vtt);
+          }
+          if (!transcript) {
+            const capXml = await (await fetch(track.baseUrl, { headers })).text();
+            transcript = xmlToText(capXml);
+          }
+          transcript = sanitize(transcript).slice(0, 10000);
+        } catch(_) {}
+      }
+    }
+  } catch(_) {}
+  return { title, description, thumbnail, author, duration, published, shortDesc, transcript };
+}
+
+function localBulletSummary(headerLines, contentText, maxBullets = 8) {
+  const bullets = [];
+  const seen = new Set();
+  for (const h of headerLines) {
+    const v = (h || '').toString().trim();
+    if (v && !seen.has(v)) { bullets.push(v); seen.add(v); }
+  }
+  const text = (contentText || '').toString();
+  const parts = text
+    .replace(/\r/g, '')
+    .split(/\n+|(?<=[.!?])\s+/)
+    .map(s => s.trim())
+    .filter(s => s.length >= 30)
+    .slice(0, maxBullets);
+  for (const p of parts) {
+    if (bullets.length >= maxBullets + headerLines.length) break;
+    const line = p.length > 180 ? p.slice(0, 177) + '…' : p;
+    if (!seen.has(line)) { bullets.push(line); seen.add(line); }
+  }
+  return bullets.map(b => `- ${b}`).join('\n');
+}
+
+async function summarizeWithOpenAI(openaiClient, system, user, max=350) {
   const completion = await openaiClient.chat.completions.create({
     model: 'gpt-4o-mini',
-    messages: [
-      { role: 'system', content: 'Summarize the following web page content into the most relevant medical or appointment-related points. Include key facts, dates, medications, contact info and links if present.' },
-      { role: 'user', content: text }
-    ],
-    max_tokens: 300,
+    messages: [ { role: 'system', content: system }, { role: 'user', content: user } ],
+    max_tokens: max,
     temperature: 0.2,
   });
   return completion.choices?.[0]?.message?.content || '';
+}
+
+async function webFetchAndSummarize(url, openaiClient) {
+  const headers = { 'User-Agent': 'DocteckBot/1.0 (+https://docteck.local)' };
+  if (isYouTubeUrl(url)) {
+    const meta = await fetchYouTubeMeta(url);
+    const payload = [
+      `Title: ${meta.title || ''}`,
+      meta.author ? `Channel: ${meta.author}` : '',
+      meta.published ? `Published: ${meta.published}` : '',
+      meta.duration ? `Duration: ${meta.duration}` : '',
+      meta.description ? `OG Description: ${meta.description}` : '',
+      meta.shortDesc ? `Video Description: ${meta.shortDesc.slice(0, 4000)}` : '',
+      meta.transcript ? `Transcript (partial): ${meta.transcript.slice(0, 6000)}` : ''
+    ].filter(Boolean).join('\n');
+    const sys = 'You are summarizing a YouTube video for practical understanding. Extract topic, key takeaways, any steps/processes, risks/considerations, and 3-5 actionable next steps. If medical/health related, include cautions to see a professional when appropriate. Keep it concise with headings and bullet points.';
+    try {
+      return await summarizeWithOpenAI(openaiClient, sys, payload, 420);
+    } catch (_) {
+      // Local fallback summary
+      const header = [
+        meta.title ? `Title: ${meta.title}` : '',
+        meta.author ? `Channel: ${meta.author}` : '',
+        meta.published ? `Published: ${meta.published}` : '',
+        meta.duration ? `Duration: ${meta.duration}` : ''
+      ].filter(Boolean);
+      const content = meta.transcript || meta.shortDesc || meta.description || '';
+      const bullets = localBulletSummary(header, content, 8);
+      return `YouTube quick summary (offline):\n${bullets}\n\nNote: This is a quick local summary; ask again for a richer summary when limits reset.`;
+    }
+  }
+
+  // Generic page
+  let html = '';
+  try {
+    const controller = new AbortController();
+    const t = setTimeout(() => controller.abort(), 20000);
+    const resp = await fetch(url, { headers, signal: controller.signal });
+    clearTimeout(t);
+    html = await resp.text();
+  } catch (e) {
+    return 'Unable to fetch the page right now.';
+  }
+  const $ = cheerio.load(html);
+  $('script, style, nav, aside, footer, noscript, svg, header, form, iframe').remove();
+  const title = ($('title').first().text() || '').trim();
+  const description = ($('meta[name="description"]').attr('content') || '').trim();
+  const ogTitle = ($('meta[property="og:title"]').attr('content') || '').trim();
+  const ogDesc = ($('meta[property="og:description"]').attr('content') || '').trim();
+  const canonical = ($('link[rel="canonical"]').attr('href') || '').trim();
+  const blocks = [];
+  $('main, article, section, h1, h2, h3, p, li').each((_, el) => {
+    const tx = $(el).text().replace(/\s+/g, ' ').trim();
+    if (!tx) return;
+    if (tx.length < 40) return;
+    if (/^Skip to content/i.test(tx)) return;
+    if (/Reload to refresh your session/i.test(tx)) return;
+    blocks.push(tx);
+  });
+  const unique = Array.from(new Set(blocks));
+  const top = unique.sort((a,b)=>b.length-a.length).slice(0, 20);
+  const body = top.join('\n');
+  const sys = 'Summarize the following web page focusing on information useful for a healthcare/appointments assistant. Provide: 1) What this page is, 2) Key points (<=10 bullets), 3) Important dates/contacts/links (if any), 4) Suggested next steps. Ignore navigation/boilerplate text.';
+  const user = [
+    `Title: ${title}`,
+    ogTitle && ogTitle !== title ? `OG Title: ${ogTitle}` : '',
+    description ? `Description: ${description}` : '',
+    ogDesc && ogDesc !== description ? `OG Description: ${ogDesc}` : '',
+    canonical ? `Canonical: ${canonical}` : '',
+    body
+  ].filter(Boolean).join('\n');
+  try {
+    return await summarizeWithOpenAI(openaiClient, sys, user, 380);
+  } catch (_) {
+    // Local fallback summary
+    const header = [
+      title ? `Title: ${title}` : '',
+      ogTitle && ogTitle !== title ? `OG Title: ${ogTitle}` : '',
+      description ? `Description: ${description}` : ''
+    ].filter(Boolean);
+    const bullets = localBulletSummary(header, body, 10);
+    return `Page quick summary (offline):\n${bullets}\n\nNote: This is a quick local summary; ask again for a richer summary when limits reset.`;
+  }
 }
 
 function parseDateTime(phrase) {
@@ -801,7 +997,7 @@ app.post('/api/assistant-smart', async (req, res) => {
     ];
     const sys = {
       role: 'system',
-      content: 'You are a concise, action-oriented medical assistant. Prefer calling tools to take actions. When users ask to schedule appointments, call add_appointment (and optionally create_event if appropriate). When they ask to add or remember a task, call add_todo. When they specify a main doctor/hospital/provider for the HUB, call add_hub_item. For pharmacy entries, call add_pharmacy. For medicines to track under Prescriptions, call add_prescription. For general “what is X”, use wiki_summary. Use web_search/web_fetch for current info. For contacting a doctor, call contact_doctor. Keep replies to 2-4 sentences.'
+      content: 'You are a concise, action-oriented medical assistant. Prefer calling tools to take actions. When users ask to schedule appointments, call add_appointment (and optionally create_event if appropriate). When they ask to add or remember a task, call add_todo. When they specify a main doctor/hospital/provider for the HUB, call add_hub_item. For pharmacy entries, call add_pharmacy. For medicines to track under Prescriptions, call add_prescription. For general “what is X”, use wiki_summary. Use web_search/web_fetch for current info. For contacting a doctor, call contact_doctor.\n\nWhen the user submits text from files, do NOT repeat long transcripts. Instead, synthesize: 1) What it is, 2) Key points (<=8 bullets), 3) Risks/alerts, 4) Next steps. Quote short snippets only when necessary. Keep replies to ~150-250 words unless the user requests detail.'
     };
     // Merge short memory with latest messages
     const memory = recall(uid).slice(-10);
@@ -881,6 +1077,12 @@ app.post('/api/assistant-smart', async (req, res) => {
         25_000
       );
       if (!follow) {
+        // If we fetched content already (e.g., web_fetch) but can’t get model to finalize, return the tool content directly.
+        if (name === 'web_fetch' && typeof toolResult === 'string' && toolResult.trim()) {
+          remember(uid, 'user', messages[messages.length - 1]?.content || '');
+          remember(uid, 'assistant', toolResult);
+          return res.json({ reply: toolResult, tool: { name, result: toolResult }, fallback: true });
+        }
         return res.status(504).json({ error: 'upstream_timeout', reply: 'Action performed. The assistant reply timed out. Please ask again if needed.', tool: { name, result: toolResult } });
       }
       const replyText = follow.choices[0].message.content;
@@ -893,8 +1095,27 @@ app.post('/api/assistant-smart', async (req, res) => {
     remember(uid, 'assistant', replyText);
     return res.json({ reply: replyText });
   } catch (e) {
-    console.error('assistant-smart error', e);
-    return res.status(500).json({ error: 'assistant_error' });
+    // Graceful rate-limit handling
+    const status = e?.status || e?.code === 'rate_limit_exceeded' ? 429 : 500;
+    if (status === 429) {
+      try { console.warn('assistant-smart rate limited', e?.error?.message || e?.message); } catch(_) {}
+      const headers = e?.headers || {};
+      let retryAfter = 20;
+      if (headers['retry-after-ms']) {
+        const ms = parseInt(headers['retry-after-ms'], 10);
+        if (!Number.isNaN(ms)) retryAfter = Math.max(1, Math.round(ms / 1000));
+      } else if (headers['retry-after']) {
+        const sec = parseInt(headers['retry-after'], 10);
+        if (!Number.isNaN(sec)) retryAfter = Math.max(1, sec);
+      }
+      return res.status(429).json({
+        error: 'rate_limit_exceeded',
+        retryAfter,
+        reply: `The assistant is temporarily rate limited. Please try again in about ${retryAfter} seconds.`
+      });
+    }
+  console.error('assistant-smart error', e);
+  return res.status(500).json({ error: 'assistant_error', reply: 'The assistant is temporarily unavailable. Please try again shortly.' });
   }
 });
 
