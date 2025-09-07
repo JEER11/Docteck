@@ -34,6 +34,7 @@ import { IoIosRocket } from "react-icons/io";
 import { IoBuild, IoDocumentText, IoGlobe, IoWallet } from "react-icons/io5";
 import DoctorAssistant from "components/DoctorAssistant";
 import { auth } from "lib/firebase";
+import { addChatMessage } from "lib/chatData";
 import ChatHistoryBox from "layouts/rtl/components/ChatHistoryBox";
 import TodoTracker from "components/TodoTracker";
 import getApiBase from "lib/apiBase";
@@ -65,6 +66,7 @@ function Assistance() {
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [analysis, setAnalysis] = useState([]); // {name,type,result,loading,error}
   const [analyzing, setAnalyzing] = useState(false);
+  const [sendingAnalysis, setSendingAnalysis] = useState(false);
   const fileInputRef = useRef(null);
   const API_URL = getApiBase();
 
@@ -139,17 +141,90 @@ function Assistance() {
       const t = (data.transcript || '').trim();
       return `${name} (${kind}) transcription:\n${t || 'No speech detected or unavailable.'}`;
     }
-    if (data.type === 'text') {
+    if (data.type === 'text' || data.type === 'pdf') {
       const content = (data.content || '').slice(0, 4000);
-      return `${name} (text) preview:\n${content}`;
+      const label = data.type === 'pdf' ? 'pdf text' : 'text';
+      return `${name} (${label}) preview:\n${content || '(no extractable text)'}`;
+    }
+    if (data.type === 'url') {
+      const page = data.page || {};
+      const lines = [];
+      if (page.title) lines.push(`Title: ${page.title}`);
+      if (page.description) lines.push(`Description: ${page.description}`);
+      if (page.text) lines.push(`Content: ${page.text.slice(0, 4000)}`);
+      return `${name} (url)\n${lines.join('\n\n') || 'No readable content found.'}`;
     }
     return `${name}: ${data.info || 'Unsupported file type.'}`;
   };
 
-  const pushAnalysisToChat = () => {
-    if (!analysis.length) return;
-    const combined = analysis.map(a => a.result || `${a.name}: ${a.error || 'No result'}`).join('\n\n---\n\n');
-    setMessages(prev => [...prev, { sender: 'user', text: 'Please analyze the attached files.', ts: Date.now() }, { sender: 'ai', text: `Here are the extracted details:\n\n${combined}`, ts: Date.now() }]);
+  const pushAnalysisToChat = async () => {
+    if (!analysis.length || sendingAnalysis) return;
+    setSendingAnalysis(true);
+    try {
+      // Safety timer so UI never stays stuck
+      let finished = false;
+      const safetyTimer = setTimeout(() => {
+        if (!finished) {
+          setSendingAnalysis(false);
+          const combined = analysis
+            .map(a => a.result || `${a.name}: ${a.error || 'No result'}`)
+            .join('\n\n---\n\n')
+            .slice(0, 6000);
+          setMessages(prev => [...prev, { sender: 'ai', text: `The assistant is taking longer than expected. Here are the extracted details from your files so far:\n\n${combined}`, ts: Date.now() }]);
+        }
+      }, 25000);
+      // Prepare a single user prompt that includes the extracted content so the AI can respond.
+      const combined = analysis
+        .map(a => a.result || `${a.name}: ${a.error || 'No result'}`)
+        .join('\n\n---\n\n')
+        .slice(0, 6000);
+      const now = Date.now();
+      const prompt = `Please analyze the following extracted content from my attached files and provide a concise summary with key findings, likely concerns, and suggested next steps (if any).\n\n${combined}`;
+
+  // Add the user message immediately so chat updates right away
+  const userMsg = { sender: 'user', text: prompt, ts: now };
+  setMessages(prev => [...prev, userMsg]);
+
+  // Call the smart assistant directly to obtain an actual AI reply.
+  const payload = { messages: [{ role: 'user', content: prompt }] };
+      let aiText = '';
+      try {
+        // Abort after 20s to avoid hanging UI
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 20000);
+        const resp = await fetch(`${API_URL}/api/assistant-smart`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+          signal: controller.signal,
+        }).finally(() => clearTimeout(timer));
+        let data = null;
+        try { data = await resp.json(); } catch (_) { data = null; }
+        aiText = (data && data.reply) ? data.reply : '';
+        if (!resp.ok && !aiText) {
+          aiText = 'The assistant took too long or encountered an error. Here are the extracted details from your files:';
+        }
+      } catch (_) {
+        aiText = 'The assistant request timed out. Here are the extracted details from your files:';
+      }
+
+      // If the AI call failed, at least include the extracted details as an AI echo so the user sees content
+  const aiMsg = { sender: 'ai', text: aiText ? `${aiText}\n\n---\n\n${combined}` : `Here are the extracted details from your files:\n\n${combined}`, ts: Date.now() };
+
+      if (auth && auth.currentUser) {
+        // Persist for signed-in users
+        try {
+          await addChatMessage({ sender: 'user', text: userMsg.text, tsClient: userMsg.ts });
+          await addChatMessage({ sender: 'ai', text: aiMsg.text, tsClient: Date.now() });
+        } catch (_) { /* ignore */ }
+      }
+  // Append AI message (user already added above)
+  setMessages(prev => [...prev, aiMsg]);
+  finished = true;
+  clearTimeout(safetyTimer);
+    } finally {
+      setSendingAnalysis(false);
+    }
   };
 
   const handleDrop = (e) => {
@@ -228,13 +303,8 @@ function Assistance() {
                   Ask your AI assistant anything about your appointments, prescriptions, or medical workflow.
                 </VuiTypography>
                 <Box flex={1} minHeight={0} display="flex" flexDirection="column" justifyContent="flex-start">
-                  {auth?.currentUser ? (
-                    // When signed in, let DoctorAssistant manage its own state and persist to Firestore
-                    <DoctorAssistant compact={compact} />
-                  ) : (
-                    // Fallback to local controlled mode for guests
-                    <DoctorAssistant messages={messages} setMessages={setMessages} compact={compact} />
-                  )}
+                  {/* Always run DoctorAssistant in controlled mode so injected messages appear immediately. */}
+                  <DoctorAssistant messages={messages} setMessages={setMessages} compact={compact} />
                 </Box>
               </Card>
             </Grid>
@@ -251,11 +321,10 @@ function Assistance() {
                 p: { xs: 2, md: 3 },
                 height: '100%',
                 color: 'white',
-                cursor: 'pointer',
+                cursor: 'default',
               }}
               onDrop={handleDrop}
               onDragOver={handleDragOver}
-              onClick={openFileDialog}
             >
               <input
                 ref={fileInputRef}
@@ -273,7 +342,7 @@ function Assistance() {
                        Drag and drop files here, or click to select files
                 </VuiTypography>
               </Box>
-              <Box sx={{
+              <Box onClick={openFileDialog} sx={{
                 flex: 1,
                 display: 'flex',
                 alignItems: 'center',
@@ -294,7 +363,7 @@ function Assistance() {
                   </VuiTypography>
                   <Stack direction="row" flexWrap="wrap" spacing={2}>
                     {uploadedFiles.map((file, idx) => (
-                      <Box key={idx} sx={{ m: 1, p: 1, border: '1px solid #444', borderRadius: 2, background: '#22284a', minWidth: 160, maxWidth: 220, textAlign: 'center' }}>
+                      <Box key={idx} sx={{ position: 'relative', m: 1, p: 1, border: '1px solid #444', borderRadius: 2, background: '#22284a', minWidth: 160, maxWidth: 220, textAlign: 'center' }}>
                         {file.type.startsWith('image') ? (
                           <img
                             src={URL.createObjectURL(file)}
@@ -306,6 +375,18 @@ function Assistance() {
                             <span role="img" aria-label="file">📄</span>
                           </Box>
                         )}
+                        {/* Delete file button */}
+                        <button
+                          title="Remove file"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setUploadedFiles(prev => prev.filter((_, i) => i !== idx));
+                            setAnalysis(prev => prev.filter((_, i) => i !== idx));
+                          }}
+                          style={{ position: 'absolute', top: 6, right: 6, width: 22, height: 22, borderRadius: 6, border: '1px solid #555', background: 'rgba(0,0,0,0.45)', color: '#fff', lineHeight: '18px', cursor: 'pointer' }}
+                        >
+                          ×
+                        </button>
                         <VuiTypography variant="caption" color="white" sx={{ wordBreak: 'break-all' }}>
                           {file.name}
                         </VuiTypography>
@@ -318,12 +399,19 @@ function Assistance() {
                       </Box>
                     ))}
                   </Stack>
-                  <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
-                    <button disabled={!analysis.length || analyzing} onClick={pushAnalysisToChat} style={{ background: 'rgba(25, 118, 210, 0.12)', color: '#bdbdbd', border: 'none', borderRadius: 6, padding: '6px 12px', fontWeight: 600, fontSize: 14, cursor: !analysis.length || analyzing ? 'not-allowed' : 'pointer' }}>Send analysis to chat</button>
+                  <Box sx={{ mt: 2, display: 'flex', gap: 1, alignItems: 'center' }}>
+                    <button
+                      disabled={!analysis.length || analyzing || sendingAnalysis}
+                      onClick={(e) => { e.stopPropagation(); pushAnalysisToChat(); }}
+                      style={{ background: 'rgba(25, 118, 210, 0.12)', color: '#bdbdbd', border: 'none', borderRadius: 6, padding: '6px 12px', fontWeight: 600, fontSize: 14, cursor: (!analysis.length || analyzing || sendingAnalysis) ? 'not-allowed' : 'pointer' }}
+                    >
+                      {sendingAnalysis ? 'Sending…' : 'Send analysis to chat'}
+                    </button>
                     {analyzing && <span style={{ fontSize: 12, color: '#aaa' }}>Analyzing files…</span>}
                   </Box>
                 </Box>
               )}
+              {/* Link analysis input removed; use chat box for links */}
             </Card>
           </Grid>
           <Grid item xs={12} md={6} lg={4}>

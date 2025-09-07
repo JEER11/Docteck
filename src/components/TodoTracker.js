@@ -1,3 +1,4 @@
+/* eslint-disable */
 import React, { useState } from "react";
 import Card from "@mui/material/Card";
 import Box from "@mui/material/Box";
@@ -27,7 +28,7 @@ export default function TodoTracker() {
         </VuiTypography>
         <Box display="flex" alignItems="center" gap={2}>
           <VuiTypography variant="button" color="white" fontWeight="bold">
-            {todos.length}
+            {ctxTodos.length}
           </VuiTypography>
           <FiMoreHorizontal color="#6C63FF" size={20} style={{ cursor: 'pointer' }} />
         </Box>

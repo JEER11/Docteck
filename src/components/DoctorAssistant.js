@@ -62,6 +62,31 @@ function DoctorAssistant({ messages: controlledMessages, setMessages: setControl
     setInput("");
     setLoading(true);
     try {
+      // Detect URLs in the user's message and attempt lightweight analysis
+      const urlMatches = (userMessage.text.match(/https?:\/\/\S+/gi) || []).slice(0, 3);
+      let linkSummaries = [];
+      for (const u of urlMatches) {
+        try {
+          const form = new FormData();
+          form.append('url', u);
+          const r = await fetch(`${API_URL}/api/analyze-file`, { method: 'POST', body: form });
+          const d = await r.json();
+          let summary = '';
+          if (d.type === 'url') {
+            const p = d.page || {}; const parts = [];
+            if (p.title) parts.push(`Title: ${p.title}`);
+            if (p.description) parts.push(`Description: ${p.description}`);
+            if (p.text) parts.push(`Content: ${p.text.slice(0, 600)}`);
+            summary = parts.join('\n');
+          } else if (d.type === 'pdf' || d.type === 'text') {
+            summary = (d.content || '').slice(0, 800);
+          } else if (d.type === 'image') {
+            const parts = []; if (d.caption) parts.push(`Image: ${d.caption}`); if (d.ocr) parts.push(`OCR: ${d.ocr.slice(0, 600)}`); summary = parts.join('\n');
+          }
+          if (summary) linkSummaries.push(`URL: ${u}\n${summary}`);
+        } catch (_) { /* ignore link failures */ }
+      }
+
       // Prepare a trimmed chat history for the smart assistant
       const history = [...messages, userMessage].slice(-15).map(m => ({
         role: m.sender === 'user' ? 'user' : 'assistant',
@@ -74,6 +99,9 @@ function DoctorAssistant({ messages: controlledMessages, setMessages: setControl
       });
       const data = await response.json();
       let aiText = data.reply || "Sorry, I couldn't process that.";
+      if (linkSummaries.length) {
+        aiText = `I analyzed the links you shared:\n\n${linkSummaries.join('\n\n')}\n\n---\n${aiText}`;
+      }
       // If the assistant used an app tool, emit a DOM event so existing UI can react without UI changes
       try {
         const tool = data.tool || {};
