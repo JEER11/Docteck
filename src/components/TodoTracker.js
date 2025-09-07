@@ -5,25 +5,16 @@ import Stack from "@mui/material/Stack";
 import VuiTypography from "components/VuiTypography";
 import VuiInput from "components/VuiInput";
 import { FiMoreHorizontal, FiX } from "react-icons/fi";
-
-const initialTodos = [
-  { desc: "Aspirin 100mg daily", done: true },
-  { desc: "Schedule blood test", done: true },
-];
+import { useTodos } from "context/TodoContext";
 
 export default function TodoTracker() {
-  const [todos, setTodos] = useState(initialTodos);
+  const { todos: ctxTodos = [], addTodo: ctxAdd = () => {}, removeTodo: ctxRemove = () => {} } = useTodos() || {};
+  // Local input only; items come from context to stay in sync across app
   const [input, setInput] = useState("");
 
   const addTodo = () => {
     if (input.trim()) {
-      setTodos([
-        ...todos,
-        {
-          desc: input,
-          done: false,
-        },
-      ]);
+      ctxAdd({ type: 'note', label: input, date: undefined });
       setInput("");
     }
   };
@@ -65,7 +56,7 @@ export default function TodoTracker() {
         'scrollbarColor': 'rgba(255,255,255,0.13) transparent',
       }}>
         <Stack spacing={2}>
-          {todos.map((todo, idx) => (
+            {ctxTodos.map((todo, idx) => (
             <Box
               key={idx}
               sx={{
@@ -81,13 +72,13 @@ export default function TodoTracker() {
               }}
             >
               <VuiTypography variant="button" color="white" fontWeight="bold" sx={{ fontSize: 18, flex: 1, wordBreak: 'break-word' }}>
-                {todo.desc}
+                {todo.label || todo.desc}
               </VuiTypography>
               <FiX
                 size={20}
                 color="#fff"
                 style={{ cursor: 'pointer', marginLeft: 12, opacity: 0.7 }}
-                onClick={() => setTodos(todos.filter((_, i) => i !== idx))}
+                onClick={() => ctxRemove(idx)}
                 title="Delete note"
               />
             </Box>

@@ -51,5 +51,20 @@ export async function deletePharmacy(id) {
 export const onDoctors = (opts, cb) => onItems("doctors", opts || {}, cb);
 export const onHospitals = (opts, cb) => onItems("hospitals", opts || {}, cb);
 export const onPrescriptions = (opts, cb) => onItems("prescriptions", opts || {}, cb);
+export async function addPrescription(rx) {
+  if (!ensure()) return;
+  const uid = auth?.currentUser?.uid; if (!uid) return;
+  await addDoc(hubCol(uid, "prescriptions"), rx);
+}
+export async function updatePrescription(id, patch) {
+  if (!ensure()) return;
+  const uid = auth?.currentUser?.uid; if (!uid) return;
+  await updateDoc(hubDoc(uid, "prescriptions", id), patch);
+}
+export async function deletePrescription(id) {
+  if (!ensure()) return;
+  const uid = auth?.currentUser?.uid; if (!uid) return;
+  await deleteDoc(hubDoc(uid, "prescriptions", id));
+}
 
-export default { onPharmacies, addPharmacy, updatePharmacy, deletePharmacy, onDoctors, onHospitals, onPrescriptions };
+export default { onPharmacies, addPharmacy, updatePharmacy, deletePharmacy, onDoctors, onHospitals, onPrescriptions, addPrescription, updatePrescription, deletePrescription };

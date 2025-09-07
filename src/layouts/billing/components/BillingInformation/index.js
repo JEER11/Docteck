@@ -53,6 +53,28 @@ function BillingInformation() {
   const visiblePharmacies = pharmacies.slice(0, MAX_VISIBLE);
   const extraPharmacies = pharmacies.length > MAX_VISIBLE ? pharmacies.slice(MAX_VISIBLE) : [];
 
+  // Assistant-triggered add pharmacy
+  useEffect(() => {
+    const onAddPharmacy = (e) => {
+      const ph = e.detail || {};
+      if (!ph.name || !ph.address) return;
+      const rec = { id: Date.now().toString(), ...ph };
+      setPharmacies(prev => {
+        const next = [...prev, rec];
+        try { localStorage.setItem('pharmacies', JSON.stringify(next)); } catch(_){}
+        return next;
+      });
+    };
+    window.addEventListener('assistant:add_pharmacy', onAddPharmacy);
+    // Drain queued
+    try {
+      const list = JSON.parse(localStorage.getItem('assistant_queue_add_pharmacy') || '[]');
+      if (Array.isArray(list)) list.forEach((p) => onAddPharmacy({ detail: p }));
+      localStorage.removeItem('assistant_queue_add_pharmacy');
+    } catch (_) {}
+    return () => window.removeEventListener('assistant:add_pharmacy', onAddPharmacy);
+  }, []);
+
   // Match HUB dialog input style (no inner bubbles)
   const fieldSx = {
     width: '100%',
@@ -91,9 +113,9 @@ function BillingInformation() {
     // Optimistically update local state
     const localId = Date.now().toString();
     const optimistic = { id: localId, ...payload };
-    const next = [ ...pharmacies, optimistic ];
-    setPharmacies(next);
-    try { localStorage.setItem('pharmacies', JSON.stringify(next)); } catch(_){}
+  const next = [ ...pharmacies, optimistic ];
+  setPharmacies(next);
+  try { localStorage.setItem('pharmacies', JSON.stringify(next)); } catch(_){ }
     // Firestore in background for signed-in user
     try {
       const uid = auth?.currentUser?.uid;
