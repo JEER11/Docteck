@@ -108,7 +108,7 @@ async function captionImage(filePath) {
                 '- Focus on: cuts/lacerations, bruises/hematomas, swelling, redness, rashes, discoloration, bleeding level, infection signs (warmth, spreading redness, pus, streaking).',
                 '- For bruises, estimate color category (red, purple/blue, green, yellow/brown) and what that may suggest about healing stage (approximate only).',
                 '- Provide: 1) What you see, 2) Likely severity (rough), 3) Home-care steps, 4) Red flags that require urgent care, 5) When to see a clinician.',
-                '- Keep output to 4–8 bullet points plus a one-line disclaimer. Avoid long paragraphs.'
+                '- Keep output to 4–8 bullet points plus a one-line disclaimer. Avoid long paragraphs. Avoid echoing long text from the image; summarize only.'
               ].join('\n')
             }
           ]
@@ -178,13 +178,25 @@ async function fetchHtmlText(url) {
   if (!res.ok) throw new Error(`Failed to fetch page: ${res.status}`);
   const html = await res.text();
   const $ = cheerio.load(html);
-  // Remove script/style/nav elements to avoid noise
-  ['script','style','noscript','header','footer','nav'].forEach(sel => $(sel).remove());
+  // Remove script/style/nav/aside/footer and common boilerplate
+  $('script, style, nav, aside, footer, noscript, svg, header, form').remove();
+  // Strip common GitHub/SPA chrome elements
+  $('[id^="desktop-menu"], [id^="sidebar"], [class*="Header"], [class*="flash"], [class*="toast"], [class*="Banner"], [class*="notification"], [class*="cookie"], [class*="modal"], [role="alert"], [role="navigation"], [role="menu"]').remove();
   const title = ($('title').first().text() || '').trim();
-  const metaDesc = ($('meta[name="description"]').attr('content') || '').trim();
-  const bodyText = ($('body').text() || '').replace(/\s+/g, ' ').trim();
-  const sample = bodyText.slice(0, 5000);
-  return { title, description: metaDesc, text: sample };
+  const description = ($('meta[name="description"]').attr('content') || '').trim();
+  // Gather main content blocks and filter out very short/boilerplate snippets
+  const blocks = [];
+  $('main, article, section, h1, h2, h3, p, li').each((_, el) => {
+    const tx = $(el).text().replace(/\s+/g, ' ').trim();
+    if (tx && tx.length >= 40 && !/^Skip to content/i.test(tx) && !/Reload to refresh your session/i.test(tx)) {
+      blocks.push(tx);
+    }
+  });
+  // Deduplicate and select top content chunks by length (limited)
+  const unique = Array.from(new Set(blocks));
+  const top = unique.sort((a,b)=>b.length-a.length).slice(0, 12);
+  const text = top.join('\n');
+  return { title, description, text };
 }
 
 // Main file analysis endpoint

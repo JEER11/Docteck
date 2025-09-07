@@ -162,28 +162,26 @@ function Assistance() {
     setSendingAnalysis(true);
     try {
       // Safety timer so UI never stays stuck
-      let finished = false;
-      const safetyTimer = setTimeout(() => {
-        if (!finished) {
-          setSendingAnalysis(false);
-          const combined = analysis
-            .map(a => a.result || `${a.name}: ${a.error || 'No result'}`)
-            .join('\n\n---\n\n')
-            .slice(0, 6000);
-          setMessages(prev => [...prev, { sender: 'ai', text: `The assistant is taking longer than expected. Here are the extracted details from your files so far:\n\n${combined}`, ts: Date.now() }]);
-        }
-      }, 25000);
+  let finished = false;
       // Prepare a single user prompt that includes the extracted content so the AI can respond.
       const combined = analysis
         .map(a => a.result || `${a.name}: ${a.error || 'No result'}`)
         .join('\n\n---\n\n')
         .slice(0, 6000);
-      const now = Date.now();
-      const prompt = `Please analyze the following extracted content from my attached files and provide a concise summary with key findings, likely concerns, and suggested next steps (if any).\n\n${combined}`;
+  const now = Date.now();
+  const prompt = `You are analyzing the following extracted content from files. Provide a clear, structured explanation without repeating the full text.\n\nReturn sections with short bullets: 1) What this is, 2) Key points (<=8 bullets), 3) Risks/Red flags (if any), 4) Recommended next steps.\n- Quote only short snippets when necessary.\n- If non-medical, summarize in plain language anyway.\n- Keep it concise (150-250 words).\n\nExtracted content:\n${combined}`;
 
   // Add the user message immediately so chat updates right away
-  const userMsg = { sender: 'user', text: prompt, ts: now };
-  setMessages(prev => [...prev, userMsg]);
+  // Keep the long extracted content private to the payload; only show a short user message
+  const fileNames = analysis.map(a => a.name).filter(Boolean);
+  const previewNames = fileNames.slice(0, 3).join(', ');
+  const extra = fileNames.length > 3 ? ` and ${fileNames.length - 3} more` : '';
+  const visibleUserText = fileNames.length ? `Please analyze my uploaded file(s): ${previewNames}${extra}.` : 'Please analyze the files I uploaded.';
+  const userMsg = { sender: 'user', text: visibleUserText, ts: now };
+  // Also add a visible placeholder so the user knows the AI is thinking
+  const thinkingTs = now + 1;
+  const thinkingText = 'Analyzing your files and preparing a summary…';
+  setMessages(prev => [...prev, userMsg, { sender: 'ai', text: thinkingText, ts: thinkingTs }]);
 
   // Call the smart assistant directly to obtain an actual AI reply.
   const payload = { messages: [{ role: 'user', content: prompt }] };
@@ -192,36 +190,87 @@ function Assistance() {
         // Abort after 20s to avoid hanging UI
         const controller = new AbortController();
         const timer = setTimeout(() => controller.abort(), 20000);
-        const resp = await fetch(`${API_URL}/api/assistant-smart`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-          signal: controller.signal,
-        }).finally(() => clearTimeout(timer));
-        let data = null;
-        try { data = await resp.json(); } catch (_) { data = null; }
-        aiText = (data && data.reply) ? data.reply : '';
-        if (!resp.ok && !aiText) {
-          aiText = 'The assistant took too long or encountered an error. Here are the extracted details from your files:';
+        async function callOnce() {
+          const resp = await fetch(`${API_URL}/api/assistant-smart`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+            signal: controller.signal,
+          }).finally(() => clearTimeout(timer));
+          let data = null;
+          try { data = await resp.json(); } catch (_) { data = null; }
+          return { resp, data };
+        }
+        let { resp, data } = await callOnce();
+        if (!resp.ok && data && data.error === 'rate_limit_exceeded') {
+          const wait = typeof data.retryAfter === 'number' ? Math.min(45, data.retryAfter) : 20;
+          // one-time retry
+          setMessages(prev => [...prev, { sender: 'ai', text: `Rate limited — retrying in ~${wait}s…`, ts: Date.now() }]);
+          await new Promise(r => setTimeout(r, wait * 1000));
+          const controller2 = new AbortController();
+          setTimeout(() => controller2.abort(), 20000);
+          const r2 = await fetch(`${API_URL}/api/assistant-smart`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload), signal: controller2.signal
+          });
+          let d2 = null; try { d2 = await r2.json(); } catch(_) {}
+          resp = r2; data = d2;
+        }
+        aiText = (data && data.reply) ? data.reply : aiText;
+        if (!resp.ok && !aiText && (!data || data.error !== 'rate_limit_exceeded')) {
+          aiText = 'The assistant took too long or encountered an error. Here is a brief overview of what was extracted.';
         }
       } catch (_) {
-        aiText = 'The assistant request timed out. Here are the extracted details from your files:';
+        aiText = 'The assistant request timed out. Here is a brief overview of what was extracted.';
       }
 
-      // If the AI call failed, at least include the extracted details as an AI echo so the user sees content
-  const aiMsg = { sender: 'ai', text: aiText ? `${aiText}\n\n---\n\n${combined}` : `Here are the extracted details from your files:\n\n${combined}`, ts: Date.now() };
+      // Prepare final AI message: never dump the full transcript; provide a compact overview if needed
+      const fallbackOverview = (() => {
+        // Trim to first ~800 characters across sections to avoid flooding the chat
+        const trimmed = combined.slice(0, 800);
+        return `Preview of extracted content (first part):\n${trimmed}${combined.length > 800 ? '…' : ''}`;
+      })();
+      // Normalize spacing/numbering similar to DoctorAssistant
+      function formatAiMarkdown(text) {
+        if (!text) return text;
+        let t = String(text).replace(/\r/g, '');
+        const lines = t.split('\n');
+        const out = [];
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i].trimEnd();
+          const m = line.match(/^\s*(\d+)\s*[.)]?\s*$/);
+          if (m) {
+            let j = i + 1;
+            while (j < lines.length && lines[j].trim() === '') j++;
+            if (j < lines.length) {
+              out.push(`${m[1]}. ${lines[j].trim()}`);
+              i = j; continue;
+            }
+            out.push(`${m[1]}.`); continue;
+          }
+          out.push(line);
+        }
+        t = out.join('\n').replace(/\n{3,}/g, '\n\n');
+        return t;
+      }
+      const finalText = aiText && aiText.trim() ? formatAiMarkdown(aiText) : fallbackOverview;
+
+      // Replace the thinking placeholder with the final text
+      setMessages(prev => {
+        const next = [...prev];
+        const idx = next.findIndex(m => m.sender === 'ai' && m.ts === thinkingTs && m.text === thinkingText);
+        if (idx >= 0) next[idx] = { sender: 'ai', text: finalText, ts: Date.now() };
+        else next.push({ sender: 'ai', text: finalText, ts: Date.now() });
+        return next;
+      });
 
       if (auth && auth.currentUser) {
         // Persist for signed-in users
         try {
           await addChatMessage({ sender: 'user', text: userMsg.text, tsClient: userMsg.ts });
-          await addChatMessage({ sender: 'ai', text: aiMsg.text, tsClient: Date.now() });
+          await addChatMessage({ sender: 'ai', text: finalText, tsClient: Date.now() });
         } catch (_) { /* ignore */ }
       }
-  // Append AI message (user already added above)
-  setMessages(prev => [...prev, aiMsg]);
-  finished = true;
-  clearTimeout(safetyTimer);
+      finished = true;
     } finally {
       setSendingAnalysis(false);
     }

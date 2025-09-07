@@ -5,6 +5,36 @@ import getApiBase from "../lib/apiBase";
 import { onChatMessages, addChatMessage } from "lib/chatData";
 import { enqueue } from "lib/assistantBus";
 import { auth } from "lib/firebase";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+
+// Tidy AI markdown: merge standalone numbered lines with next line and collapse extra spacing
+function formatAiMarkdown(text) {
+  if (!text) return text;
+  let t = String(text).replace(/\r/g, '');
+  const lines = t.split('\n');
+  const out = [];
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trimEnd();
+    const m = line.match(/^\s*(\d+)\s*[.)]?\s*$/);
+    if (m) {
+      let j = i + 1;
+      while (j < lines.length && lines[j].trim() === '') j++;
+      if (j < lines.length) {
+        out.push(`${m[1]}. ${lines[j].trim()}`);
+        i = j; // skip the consumed line
+        continue;
+      }
+      out.push(`${m[1]}.`);
+      continue;
+    }
+    out.push(line);
+  }
+  t = out.join('\n');
+  // Collapse 3+ consecutive blank lines to 1 empty line
+  t = t.replace(/\n{3,}/g, '\n\n');
+  return t;
+}
 
 
 // Compute API base using helper to work across dev/prod and different host ports
@@ -62,49 +92,36 @@ function DoctorAssistant({ messages: controlledMessages, setMessages: setControl
     setInput("");
     setLoading(true);
     try {
-      // Detect URLs in the user's message and attempt lightweight analysis
-      const urlMatches = (userMessage.text.match(/https?:\/\/\S+/gi) || []).slice(0, 3);
-      let linkSummaries = [];
-      for (const u of urlMatches) {
-        try {
-          const form = new FormData();
-          form.append('url', u);
-          const r = await fetch(`${API_URL}/api/analyze-file`, { method: 'POST', body: form });
-          const d = await r.json();
-          let summary = '';
-          if (d.type === 'url') {
-            const p = d.page || {}; const parts = [];
-            if (p.title) parts.push(`Title: ${p.title}`);
-            if (p.description) parts.push(`Description: ${p.description}`);
-            if (p.text) parts.push(`Content: ${p.text.slice(0, 600)}`);
-            summary = parts.join('\n');
-          } else if (d.type === 'pdf' || d.type === 'text') {
-            summary = (d.content || '').slice(0, 800);
-          } else if (d.type === 'image') {
-            const parts = []; if (d.caption) parts.push(`Image: ${d.caption}`); if (d.ocr) parts.push(`OCR: ${d.ocr.slice(0, 600)}`); summary = parts.join('\n');
-          }
-          if (summary) linkSummaries.push(`URL: ${u}\n${summary}`);
-        } catch (_) { /* ignore link failures */ }
-      }
-
       // Prepare a trimmed chat history for the smart assistant
       const history = [...messages, userMessage].slice(-15).map(m => ({
         role: m.sender === 'user' ? 'user' : 'assistant',
         content: m.text
       }));
-      const response = await fetch(`${API_URL}/api/assistant-smart`, {
+      const attempt = async (once) => {
+        const response = await fetch(`${API_URL}/api/assistant-smart`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: history }),
-      });
-      const data = await response.json();
-      let aiText = data.reply || "Sorry, I couldn't process that.";
-      if (linkSummaries.length) {
-        aiText = `I analyzed the links you shared:\n\n${linkSummaries.join('\n\n')}\n\n---\n${aiText}`;
-      }
+        });
+        const data = await response.json();
+        if (!response.ok && data && data.error === 'rate_limit_exceeded') {
+          const wait = typeof data.retryAfter === 'number' ? Math.min(45, data.retryAfter) : 20;
+          if (!once) {
+            setMessages((prev) => [...prev, { sender: "ai", text: `Rate limited — retrying in ~${wait}s…`, ts: Date.now() }]);
+            await new Promise(r => setTimeout(r, wait * 1000));
+            return attempt(true);
+          }
+          return { text: `We're temporarily rate limited. Please try again in about ${wait} seconds.` };
+        }
+        return { text: data.reply || "Sorry, I couldn't process that.", tool: data.tool };
+      };
+      const { text: aiRaw, tool } = await attempt(false);
+      let aiText = aiRaw;
+  
+  aiText = formatAiMarkdown(aiText);
       // If the assistant used an app tool, emit a DOM event so existing UI can react without UI changes
       try {
-        const tool = data.tool || {};
+        const tool = tool || {};
         if (tool && tool.name) {
           // Normalize payloads
           const detail = tool.result || {};
@@ -190,7 +207,32 @@ function DoctorAssistant({ messages: controlledMessages, setMessages: setControl
                 wordBreak: 'break-word',
                 whiteSpace: 'pre-wrap',
               }}>
-                {msg.text}
+                {msg.sender === 'ai' ? (
+                <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    linkTarget="_blank"
+                    components={{
+                      strong: ({node, ...props}) => <strong style={{fontWeight:800}} {...props} />,
+                      a: ({node, ...props}) => <a style={{color:'#8ab4ff'}} target="_blank" rel="noreferrer" {...props} />,
+                      ul: ({node, ...props}) => <ul style={{paddingLeft: '1.1rem', margin: '0.1rem 0', listStylePosition: 'outside'}} {...props} />,
+                      ol: ({node, ...props}) => <ol style={{paddingLeft: '1.1rem', margin: '0.1rem 0', listStylePosition: 'outside'}} {...props} />,
+                      li: ({node, ...props}) => <li style={{margin: '0.06rem 0'}} {...props} />,
+                      p: ({node, ...props}) => <p style={{margin: 0, lineHeight: 1.35}} {...props} />,
+                      h1: ({node, ...props}) => <h3 style={{margin: '0.15rem 0 0.2rem', fontSize: '1.05rem'}} {...props} />,
+                      h2: ({node, ...props}) => <h4 style={{margin: '0.12rem 0 0.18rem', fontSize: '1rem'}} {...props} />,
+                      h3: ({node, ...props}) => <h5 style={{margin: '0.1rem 0 0.16rem', fontSize: '0.95rem'}} {...props} />,
+                      code: ({inline, ...props}) => inline ? (
+                        <code style={{background: 'rgba(255,255,255,0.08)', padding: '0 4px', borderRadius: 4}} {...props} />
+                      ) : (
+                        <pre style={{background: 'rgba(255,255,255,0.08)', padding: 8, borderRadius: 6, overflowX: 'auto'}}><code {...props} /></pre>
+                      )
+                    }}
+                  >
+                    {msg.text}
+                </ReactMarkdown>
+                ) : (
+                  <span>{msg.text}</span>
+                )}
               </Paper>
             </Tooltip>
           </Box>
