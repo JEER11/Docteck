@@ -91,29 +91,74 @@ function DoctorAssistant({ messages: controlledMessages, setMessages: setControl
   setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setLoading(true);
+    // Watchdog: ensure we never stay stuck on typing
+    let watchdog = setTimeout(() => {
+      setMessages((prev) => [...prev, { sender: 'ai', text: 'Still working on that… please try again in a moment if no reply appears.', ts: Date.now() }]);
+      setLoading(false);
+    }, 35_000);
     try {
       // Prepare a trimmed chat history for the smart assistant
       const history = [...messages, userMessage].slice(-15).map(m => ({
         role: m.sender === 'user' ? 'user' : 'assistant',
         content: m.text
       }));
-      const attempt = async (once) => {
-        const response = await fetch(`${API_URL}/api/assistant-smart`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: history }),
-        });
-        const data = await response.json();
-        if (!response.ok && data && data.error === 'rate_limit_exceeded') {
-          const wait = typeof data.retryAfter === 'number' ? Math.min(45, data.retryAfter) : 20;
-          if (!once) {
-            setMessages((prev) => [...prev, { sender: "ai", text: `Rate limited — retrying in ~${wait}s…`, ts: Date.now() }]);
-            await new Promise(r => setTimeout(r, wait * 1000));
-            return attempt(true);
+      const groqFallback = async (text, base) => {
+        try {
+          const r = await fetch(`${base}/api/groq-assistant`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: text })
+          });
+          if (!r.ok) return null;
+          const dj = await r.json().catch(() => null);
+          return dj && dj.reply ? dj.reply : null;
+        } catch (_) { return null; }
+      };
+
+      const attempt = async (once, base = API_URL) => {
+        // 25s safety timeout so UI never hangs
+        const controller = new AbortController();
+        const t = setTimeout(() => controller.abort(), 25000);
+        try {
+          const response = await fetch(`${base}/api/assistant-smart`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ messages: history }),
+            signal: controller.signal,
+          });
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok && data && data.error === 'rate_limit_exceeded') {
+            const wait = typeof data.retryAfter === 'number' ? Math.min(45, data.retryAfter) : 20;
+            // If server provided a fallback reply, use it immediately instead of waiting
+            if (data && typeof data.reply === 'string' && data.reply.trim()) {
+              return { text: data.reply };
+            }
+            // Try Groq directly once as a backup
+            const gf = await groqFallback(userMessage.text, base);
+            if (gf) return { text: gf };
+            if (!once) {
+              setMessages((prev) => [...prev, { sender: "ai", text: `Rate limited — retrying in ~${wait}s…`, ts: Date.now() }]);
+              await new Promise(r => setTimeout(r, wait * 1000));
+              return attempt(true, base);
+            }
+            return { text: `We're temporarily rate limited. Please try again in about ${wait} seconds.` };
           }
-          return { text: `We're temporarily rate limited. Please try again in about ${wait} seconds.` };
+          return { text: (data && (data.reply || data.message)) || "Sorry, I couldn't process that.", tool: data && data.tool };
+        } catch (err) {
+          // If network error and base is localhost, retry with 127.0.0.1 (and vice versa) once
+          const isLocal = typeof base === 'string' && base.includes('localhost:3001');
+          const is127 = typeof base === 'string' && base.includes('127.0.0.1:3001');
+          // Try Groq fallback before switching host
+          const gf2 = await groqFallback(userMessage.text, base);
+          if (gf2) return { text: gf2 };
+          if (!once && (isLocal || is127)) {
+            const alt = isLocal ? base.replace('localhost', '127.0.0.1') : base.replace('127.0.0.1', 'localhost');
+            return attempt(true, alt);
+          }
+          return { text: "Sorry, there was an error connecting to the Doctor Assistant." };
+        } finally {
+          clearTimeout(t);
         }
-        return { text: data.reply || "Sorry, I couldn't process that.", tool: data.tool };
       };
       const { text: aiRaw, tool } = await attempt(false);
       let aiText = aiRaw;
@@ -121,15 +166,15 @@ function DoctorAssistant({ messages: controlledMessages, setMessages: setControl
   aiText = formatAiMarkdown(aiText);
       // If the assistant used an app tool, emit a DOM event so existing UI can react without UI changes
       try {
-        const tool = tool || {};
-        if (tool && tool.name) {
+        const toolData = tool || {};
+        if (toolData && toolData.name) {
           // Normalize payloads
-          const detail = tool.result || {};
-          if (tool.name === 'add_todo' && detail.todo) enqueue('add_todo', detail.todo);
-          else if (tool.name === 'add_appointment' && detail.appointment) enqueue('add_appointment', detail.appointment);
-          else if (tool.name === 'add_hub_item' && detail.hub) enqueue('add_hub_item', detail.hub);
-          else if (tool.name === 'add_pharmacy' && detail.pharmacy) enqueue('add_pharmacy', detail.pharmacy);
-          else if (tool.name === 'add_prescription' && detail.prescription) enqueue('add_prescription', detail.prescription);
+          const detail = toolData.result || {};
+          if (toolData.name === 'add_todo' && detail.todo) enqueue('add_todo', detail.todo);
+          else if (toolData.name === 'add_appointment' && detail.appointment) enqueue('add_appointment', detail.appointment);
+          else if (toolData.name === 'add_hub_item' && detail.hub) enqueue('add_hub_item', detail.hub);
+          else if (toolData.name === 'add_pharmacy' && detail.pharmacy) enqueue('add_pharmacy', detail.pharmacy);
+          else if (toolData.name === 'add_prescription' && detail.prescription) enqueue('add_prescription', detail.prescription);
         }
       } catch (_) {}
       // Write both messages to Firestore when not controlled and signed in
@@ -140,12 +185,13 @@ function DoctorAssistant({ messages: controlledMessages, setMessages: setControl
         }
       } catch (_) {}
       setMessages((prev) => [...prev, { sender: "ai", text: aiText, ts: Date.now() }]);
-    } catch (e) {
+  } catch (e) {
   const errText = "Sorry, there was an error connecting to the Doctor Assistant.";
   try { if (!isControlled && auth && auth.currentUser) await addChatMessage({ sender: 'ai', text: errText, tsClient: Date.now() }); } catch (_) {}
       setMessages((prev) => [...prev, { sender: "ai", text: errText, ts: Date.now() }]);
     }
-    setLoading(false);
+  clearTimeout(watchdog);
+  setLoading(false);
   };
 
   const handleKeyDown = (e) => {

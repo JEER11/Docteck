@@ -8,7 +8,11 @@ export function getApiBase() {
   if (envUrl) return envUrl;
   if (typeof window !== 'undefined' && window.location) {
     const { hostname, port } = window.location;
-    if ((hostname === 'localhost' || hostname === '127.0.0.1') && port !== '3001') return 'http://localhost:3001';
+    if ((hostname === 'localhost' || hostname === '127.0.0.1') && port !== '3001') {
+      // Use matching host to avoid cross-origin oddities between localhost and 127.0.0.1
+      const host = hostname === '127.0.0.1' ? '127.0.0.1' : 'localhost';
+      return `http://${host}:3001`;
+    }
   }
   return '';
 }

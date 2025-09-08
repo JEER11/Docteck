@@ -96,7 +96,8 @@ function envInfo(req, res) {
     },
     ai: {
       openai: Boolean(process.env.OPENAI_API_KEY),
-      groq: Boolean(process.env.GROQ_API_KEY),
+  groq: Boolean(process.env.GROQ_API_KEY),
+  deepinfra: Boolean(process.env.DEEPINFRA_TOKEN),
     },
     stripe: Boolean(process.env.STRIPE_SECRET_KEY),
     flaskUrl: process.env.FLASK_URL || null,
@@ -488,6 +489,87 @@ function withTimeout(promise, ms, onTimeoutValue = null) {
   ]);
 }
 
+// Very small, safe local fallback so the UI never stays silent.
+function localFallbackReply(userText) {
+  const t = (userText || '').toString().toLowerCase();
+  const tips = [];
+  if (/fever|temperature/.test(t)) tips.push('Stay hydrated and rest. Consider acetaminophen for fever unless contraindicated.');
+  if (/(cough|cold)/.test(t)) tips.push('Warm fluids, rest, and honey (if not allergic) can help a cough.');
+  if (/headache|migraine/.test(t)) tips.push('Hydration and over‑the‑counter pain relief (e.g., acetaminophen) may help.');
+  if (/stomach|nausea|vomit|diarrhea/.test(t)) tips.push('Small sips of clear fluids and bland foods; watch for dehydration.');
+  if (/chest pain|shortness of breath|difficulty breathing|severe/.test(t)) tips.push('If symptoms are severe or sudden, seek urgent medical care.');
+  const base = tips.length
+    ? tips.slice(0, 3).join(' ')
+    : 'Rest, hydrate, and monitor your symptoms. For persistent or worsening issues, consult a healthcare professional.';
+  return `${base} This is a quick offline tip while the AI service resets—ask again in a moment for a fuller answer.`;
+}
+
+// Lightweight Groq fallback (no tool calling). Returns a short reply or null.
+async function groqSimpleChat(messages, sysText) {
+  if (!process.env.GROQ_API_KEY) return null;
+  try {
+    const body = {
+      model: 'llama3-70b-8192',
+      messages: [
+        ...(sysText ? [{ role: 'system', content: sysText }] : []),
+        ...messages
+      ],
+      max_tokens: 250,
+      temperature: 0.4,
+    };
+    const controller = new AbortController();
+    const t = setTimeout(() => controller.abort(), 20_000);
+    const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
+      },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+    clearTimeout(t);
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    return data?.choices?.[0]?.message?.content || null;
+  } catch (_) {
+    return null;
+  }
+}
+
+// DeepInfra fallback (DeepSeek-V3) using OpenAI-compatible Chat Completions.
+async function deepinfraSimpleChat(messages, sysText) {
+  if (!process.env.DEEPINFRA_TOKEN) return null;
+  try {
+    const body = {
+      model: 'deepseek-ai/DeepSeek-V3',
+      messages: [
+        ...(sysText ? [{ role: 'system', content: sysText }] : []),
+        ...messages
+      ],
+      max_tokens: 250,
+      temperature: 0.4,
+    };
+    const controller = new AbortController();
+    const t = setTimeout(() => controller.abort(), 20_000);
+    const resp = await fetch('https://api.deepinfra.com/v1/openai/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.DEEPINFRA_TOKEN}`,
+      },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+    clearTimeout(t);
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    return data?.choices?.[0]?.message?.content || null;
+  } catch (_) {
+    return null;
+  }
+}
+
 app.post('/api/doctor-assistant', async (req, res) => {
   const { message } = req.body;
   if (!message) return res.status(400).json({ error: 'No message provided.' });
@@ -851,6 +933,9 @@ app.post('/api/assistant-smart', async (req, res) => {
   const uid = getUid(req);
   const messages = req.body?.messages || (req.body?.message ? [{ role: 'user', content: req.body.message }] : []);
   if (!messages.length) return res.status(400).json({ error: 'No messages' });
+  // Hoist system prompt so it is available to error-handling fallbacks
+  const sysText = 'You are a concise, action-oriented medical assistant. Prefer calling tools to take actions. When users ask to schedule appointments, call add_appointment (and optionally create_event if appropriate). When they ask to add or remember a task, call add_todo. When they specify a main doctor/hospital/provider for the HUB, call add_hub_item. For pharmacy entries, call add_pharmacy. For medicines to track under Prescriptions, call add_prescription. For general “what is X”, use wiki_summary. Use web_search/web_fetch for current info. For contacting a doctor, call contact_doctor.\n\nWhen the user submits text from files, do NOT repeat long transcripts. Instead, synthesize: 1) What it is, 2) Key points (<=8 bullets), 3) Risks/alerts, 4) Next steps. Quote short snippets only when necessary. Keep replies to ~150-250 words unless the user requests detail.';
+  const sys = { role: 'system', content: sysText };
   try {
     const tools = [
       {
@@ -995,10 +1080,7 @@ app.post('/api/assistant-smart', async (req, res) => {
         }
       }
     ];
-    const sys = {
-      role: 'system',
-      content: 'You are a concise, action-oriented medical assistant. Prefer calling tools to take actions. When users ask to schedule appointments, call add_appointment (and optionally create_event if appropriate). When they ask to add or remember a task, call add_todo. When they specify a main doctor/hospital/provider for the HUB, call add_hub_item. For pharmacy entries, call add_pharmacy. For medicines to track under Prescriptions, call add_prescription. For general “what is X”, use wiki_summary. Use web_search/web_fetch for current info. For contacting a doctor, call contact_doctor.\n\nWhen the user submits text from files, do NOT repeat long transcripts. Instead, synthesize: 1) What it is, 2) Key points (<=8 bullets), 3) Risks/alerts, 4) Next steps. Quote short snippets only when necessary. Keep replies to ~150-250 words unless the user requests detail.'
-    };
+  // sys defined above so catch/fallbacks can reference it too
     // Merge short memory with latest messages
     const memory = recall(uid).slice(-10);
     const first = await withTimeout(
@@ -1095,10 +1177,46 @@ app.post('/api/assistant-smart', async (req, res) => {
     remember(uid, 'assistant', replyText);
     return res.json({ reply: replyText });
   } catch (e) {
-    // Graceful rate-limit handling
-    const status = e?.status || e?.code === 'rate_limit_exceeded' ? 429 : 500;
-    if (status === 429) {
-      try { console.warn('assistant-smart rate limited', e?.error?.message || e?.message); } catch(_) {}
+    // Graceful rate-limit handling with Groq fallback when available
+    const code = e?.error?.code || e?.code;
+    const httpStatus = e?.status || e?.response?.status || 0;
+    const msgText = e?.error?.message || e?.message || '';
+    const isRate = httpStatus === 429 || code === 'rate_limit_exceeded' || /rate limit/i.test(msgText);
+    const isQuota = code === 'insufficient_quota' || /insufficient[_\s-]?quota|exceeded your current quota/i.test(msgText);
+
+    if (isRate || isQuota) {
+      // Try Groq first if available
+      try {
+        if (process.env.GROQ_API_KEY) {
+          const fallback = await withTimeout(
+            groqSimpleChat(messages, sysText),
+            20_000
+          );
+          if (fallback && fallback.trim()) {
+            try { console.log('assistant-smart: responded via Groq fallback'); } catch (_) {}
+            remember(uid, 'user', messages[messages.length - 1]?.content || '');
+            remember(uid, 'assistant', fallback);
+            return res.json({ reply: `${fallback}\n\n(note: replied using backup model due to temporary limits)`, tool: null, fallback: 'groq' });
+          }
+        }
+        // Then DeepInfra if available
+        if (process.env.DEEPINFRA_TOKEN) {
+          const di = await withTimeout(
+            deepinfraSimpleChat(messages, sysText),
+            20_000
+          );
+          if (di && di.trim()) {
+            try { console.log('assistant-smart: responded via DeepInfra fallback'); } catch (_) {}
+            remember(uid, 'user', messages[messages.length - 1]?.content || '');
+            remember(uid, 'assistant', di);
+            return res.json({ reply: `${di}\n\n(note: replied using backup model)`, tool: null, fallback: 'deepinfra' });
+          }
+        }
+      } catch (_) { /* ignore and continue to 429 */ }
+    }
+
+    if (isRate) {
+      try { console.warn('assistant-smart rate limited', msgText); } catch(_) {}
       const headers = e?.headers || {};
       let retryAfter = 20;
       if (headers['retry-after-ms']) {
@@ -1108,14 +1226,25 @@ app.post('/api/assistant-smart', async (req, res) => {
         const sec = parseInt(headers['retry-after'], 10);
         if (!Number.isNaN(sec)) retryAfter = Math.max(1, sec);
       }
+      // Provide a short local reply so the UI still gets something, plus guidance to retry.
+      const lastUser = messages?.[messages.length - 1]?.content || '';
+      const offline = localFallbackReply(lastUser);
       return res.status(429).json({
         error: 'rate_limit_exceeded',
         retryAfter,
-        reply: `The assistant is temporarily rate limited. Please try again in about ${retryAfter} seconds.`
+        reply: offline
       });
     }
-  console.error('assistant-smart error', e);
-  return res.status(500).json({ error: 'assistant_error', reply: 'The assistant is temporarily unavailable. Please try again shortly.' });
+
+    if (isQuota) {
+      // Quota exhausted typically won't reset daily; advise upgrading or switching keys.
+      return res.status(402).json({ error: 'insufficient_quota', reply: 'The AI quota is exhausted for now. Please add billing or try again later.' });
+    }
+
+    console.error('assistant-smart error', e);
+    const lastUser = messages?.[messages.length - 1]?.content || '';
+    const offline = localFallbackReply(lastUser);
+    return res.status(200).json({ reply: offline, fallback: 'local' });
   }
 });
 
