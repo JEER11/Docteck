@@ -10,11 +10,14 @@ import {
 } from "firebase/firestore";
 
 const ensure = () => Boolean(auth && db && auth?.currentUser?.uid);
+export function isTodosAvailable() { return ensure(); }
 const todosCol = (uid) => collection(db, "users", uid, "todos");
 const todoDoc = (uid, id) => doc(db, "users", uid, "todos", id);
 
 export function onTodos(opts, cb) {
-  if (!ensure()) { try { cb([]); } catch(_) {} return () => {}; }
+  // If Firestore or user context isn't available, don't invoke the callback —
+  // let the caller decide how to hydrate (localStorage) so we don't clear UI unexpectedly.
+  if (!ensure()) { return () => {}; }
   let uid = opts?.uid || auth?.currentUser?.uid;
   if (!uid) { try { cb([]); } catch(_) {} return () => {}; }
   const q = query(todosCol(uid), orderBy("date", "asc"));
@@ -38,9 +41,10 @@ export async function addTodoDoc(todo) {
 }
 
 export async function deleteTodoDoc(id) {
-  if (!ensure()) return;
-  const uid = auth?.currentUser?.uid; if (!uid) return;
+  if (!ensure()) return false;
+  const uid = auth?.currentUser?.uid; if (!uid) return false;
   await deleteDoc(todoDoc(uid, id));
+  return true;
 }
 
 export default { onTodos, addTodoDoc, deleteTodoDoc };

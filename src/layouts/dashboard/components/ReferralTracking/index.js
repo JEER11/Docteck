@@ -41,7 +41,8 @@ function ReferralTracking() {
 
 	const handleAddTodo = () => {
 		if (!newLabel.trim()) return;
-		addTodo({ type: newType, label: newLabel.trim(), date: newDate ? new Date(newDate) : null });
+		try { console.debug && console.debug('[ReferralTracking] handleAddTodo calling addTodo', { newType, newLabel, newDate }); } catch(_) {}
+		addTodo({ type: newType, label: newLabel.trim(), date: newDate ? new Date(newDate) : null }, { forceLocal: true });
 		setDialogOpen(false);
 		setNewLabel('');
 		setNewType('medicine');
