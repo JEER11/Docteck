@@ -13,28 +13,27 @@ import {
   writeBatch,
 } from "firebase/firestore";
 
-const ensure = () => {
-  if (!auth || !db) throw new Error("Firebase is not configured.");
-};
+// Don't throw here; return availability so callers can opt-out gracefully.
+const ensure = () => Boolean(auth && db);
 
 const msgsCol = (uid, sessionId = "default") =>
   collection(db, "users", uid, "chatSessions", sessionId, "messages");
 
 export function onChatMessages({ uid, sessionId = "default" }, cb) {
-  ensure();
+  if (!ensure()) return () => {};
   if (!uid) uid = auth?.currentUser?.uid;
-  if (!uid) throw new Error("No user");
+  if (!uid) return () => {};
   const q = query(msgsCol(uid, sessionId), orderBy("ts", "asc"));
   return onSnapshot(q, (snap) => {
     const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-    cb(items);
+    try { cb(items); } catch (_) {}
   });
 }
 
 export async function addChatMessage({ uid, sessionId = "default", sender, text, tsClient }) {
-  ensure();
+  if (!ensure()) return null;
   if (!uid) uid = auth?.currentUser?.uid;
-  if (!uid) throw new Error("No user");
+  if (!uid) return null;
   await addDoc(msgsCol(uid, sessionId), {
     sender,
     text,
@@ -44,9 +43,9 @@ export async function addChatMessage({ uid, sessionId = "default", sender, text,
 }
 
 export async function clearChat({ uid, sessionId = "default" }) {
-  ensure();
+  if (!ensure()) return;
   if (!uid) uid = auth?.currentUser?.uid;
-  if (!uid) throw new Error("No user");
+  if (!uid) return;
   const snap = await getDocs(msgsCol(uid, sessionId));
   const batch = writeBatch(db);
   snap.forEach((d) => batch.delete(d.ref));
