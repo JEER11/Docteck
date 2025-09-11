@@ -8,7 +8,7 @@ function userPrefix(uid) {
 }
 
 export async function uploadUserFile(fileOrBlob, path = "files") {
-  if (!ensure()) throw new Error('Storage not configured');
+  if (!ensure()) return null;
   const uid = auth?.currentUser?.uid || 'guest';
   const key = `${path}/${Date.now()}`;
   const full = `${userPrefix(uid)}/${key}`;
@@ -20,11 +20,12 @@ export async function uploadUserFile(fileOrBlob, path = "files") {
 }
 
 export async function deleteUserFile(key, path = "files") {
-  if (!ensure()) throw new Error('Storage not configured');
+  if (!ensure()) return false;
   const uid = auth?.currentUser?.uid || 'guest';
   const full = `${userPrefix(uid)}/${key.startsWith(path) ? key : `${path}/${key}`}`;
   const r = ref(storage, full);
   await deleteObject(r);
+  return true;
 }
 
 export default { uploadUserFile, deleteUserFile };

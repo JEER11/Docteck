@@ -16,18 +16,18 @@ import {
   orderBy,
 } from "firebase/firestore";
 
-const ensure = () => {
-  if (!auth || !db) throw new Error("Firebase is not configured.");
-};
+// Return true when Firebase services are available. Do not throw here — callers
+// should gracefully handle missing Firebase so the UI remains functional.
+const ensure = () => Boolean(auth && db);
 
 const userSafesCol = (uid) => collection(db, "users", uid, "safes");
 const userSafeDoc = (uid, id) => doc(db, "users", uid, "safes", id);
 
 // Create a new safe entry for a user
 export async function addSafeEntry({ uid, content = "", meta = {} }) {
-  ensure();
+  if (!ensure()) return null;
   if (!uid) uid = auth?.currentUser?.uid;
-  if (!uid) throw new Error("No user");
+  if (!uid) return null;
   const now = serverTimestamp();
   const ref = await addDoc(userSafesCol(uid), {
     content,
@@ -40,35 +40,35 @@ export async function addSafeEntry({ uid, content = "", meta = {} }) {
 
 // Update an existing safe entry
 export async function updateSafeEntry({ uid, id, patch }) {
-  ensure();
+  if (!ensure()) return;
   if (!uid) uid = auth?.currentUser?.uid;
-  if (!uid) throw new Error("No user");
+  if (!uid) return;
   const ref = userSafeDoc(uid, id);
   await updateDoc(ref, { ...patch, updatedAt: serverTimestamp() });
 }
 
 // Delete a safe entry
 export async function deleteSafeEntry({ uid, id }) {
-  ensure();
+  if (!ensure()) return;
   if (!uid) uid = auth?.currentUser?.uid;
-  if (!uid) throw new Error("No user");
+  if (!uid) return;
   await deleteDoc(userSafeDoc(uid, id));
 }
 
 // Get one entry
 export async function getSafeEntry({ uid, id }) {
-  ensure();
+  if (!ensure()) return null;
   if (!uid) uid = auth?.currentUser?.uid;
-  if (!uid) throw new Error("No user");
+  if (!uid) return null;
   const snap = await getDoc(userSafeDoc(uid, id));
   return snap.exists() ? { id: snap.id, ...snap.data() } : null;
 }
 
 // List entries, newest first
 export async function listSafeEntries({ uid }) {
-  ensure();
+  if (!ensure()) return [];
   if (!uid) uid = auth?.currentUser?.uid;
-  if (!uid) throw new Error("No user");
+  if (!uid) return [];
   const q = query(userSafesCol(uid), orderBy("updatedAt", "desc"));
   const snap = await getDocs(q);
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
@@ -76,19 +76,19 @@ export async function listSafeEntries({ uid }) {
 
 // Subscribe to live changes
 export function onSafeEntries({ uid }, callback) {
-  ensure();
+  if (!ensure()) return () => {};
   if (!uid) uid = auth?.currentUser?.uid;
-  if (!uid) throw new Error("No user");
+  if (!uid) return () => {};
   const q = query(userSafesCol(uid), orderBy("updatedAt", "desc"));
   return onSnapshot(q, (snap) => {
     const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-    callback(items);
+    try { callback(items); } catch (_) {}
   });
 }
 
 // Optional: initialize a default entry for new accounts
 export async function seedDefaultSafeIfEmpty(uid) {
-  ensure();
+  if (!ensure()) return;
   if (!uid) uid = auth?.currentUser?.uid;
   if (!uid) return;
   const items = await listSafeEntries({ uid });
