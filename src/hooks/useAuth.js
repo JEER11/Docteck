@@ -72,7 +72,7 @@ export function useAuth() {
 
   // Email/password sign up
   const signup = async (email, password, profile = {}) => {
-    if (!auth) throw new Error("Authentication is not available. Firebase is not configured.");
+    if (!auth) return Promise.reject(new Error("Authentication is not available. Firebase is not configured."));
     const cred = await createUserWithEmailAndPassword(auth, email, password);
     // Best-effort profile seed; don't block sign-up/navigation if this fails (e.g., strict rules)
     if (db) {
@@ -96,13 +96,13 @@ export function useAuth() {
 
   // Email/password sign in
   const signin = (email, password) => {
-    if (!auth) throw new Error("Authentication is not available. Firebase is not configured.");
+    if (!auth) return Promise.reject(new Error("Authentication is not available. Firebase is not configured."));
     return signInWithEmailAndPassword(auth, email, password);
   };
 
   // Google sign in
   const signinWithGoogle = async () => {
-    if (!auth) throw new Error("Authentication is not available. Firebase is not configured.");
+    if (!auth) return Promise.reject(new Error("Authentication is not available. Firebase is not configured."));
     try {
       return await signInWithPopup(auth, googleProvider);
     } catch (err) {
@@ -115,7 +115,7 @@ export function useAuth() {
 
   // Facebook sign in
   const signinWithFacebook = async () => {
-    if (!auth) throw new Error("Authentication is not available. Firebase is not configured.");
+    if (!auth) return Promise.reject(new Error("Authentication is not available. Firebase is not configured."));
     try {
       return await signInWithPopup(auth, facebookProvider);
     } catch (err) {
@@ -128,7 +128,7 @@ export function useAuth() {
 
   // Microsoft sign in
   const signinWithMicrosoft = async () => {
-    if (!auth) throw new Error("Authentication is not available. Firebase is not configured.");
+    if (!auth) return Promise.reject(new Error("Authentication is not available. Firebase is not configured."));
     try {
       return await signInWithPopup(auth, microsoftProvider);
     } catch (err) {
@@ -142,7 +142,7 @@ export function useAuth() {
   // Yahoo sign in
   const yahooProvider = new OAuthProvider('yahoo.com');
   const signinWithYahoo = async () => {
-    if (!auth) throw new Error("Authentication is not available. Firebase is not configured.");
+    if (!auth) return Promise.reject(new Error("Authentication is not available. Firebase is not configured."));
     try {
       return await signInWithPopup(auth, yahooProvider);
     } catch (err) {
@@ -159,7 +159,7 @@ export function useAuth() {
   //  await signInWithPhone('+15551234567', 'recaptcha-container-id');
   //  // then confirm with code: confirmation.confirm('123456')
   const signInWithPhone = async (phoneNumber, reCaptchaContainerId = 'recaptcha-container') => {
-    if (!auth) throw new Error("Authentication is not available. Firebase is not configured.");
+    if (!auth) return Promise.reject(new Error("Authentication is not available. Firebase is not configured."));
     // Create verifier once per session; caller should provide a container div id in the page
     const verifier = new RecaptchaVerifier(auth, reCaptchaContainerId, { size: 'invisible' });
     const confirmation = await signInWithPhoneNumber(auth, phoneNumber, verifier);

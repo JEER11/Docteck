@@ -12,41 +12,42 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 
-const ensure = () => { if (!auth || !db) throw new Error("Firebase is not configured."); };
+// Return a boolean; don't throw here so callers can handle absence gracefully.
+const ensure = () => Boolean(auth && db);
 const apptsCol = (uid) => collection(db, "users", uid, "appointments");
 const apptDoc = (uid, id) => doc(db, "users", uid, "appointments", id);
 
 export function onAppointments({ uid }, cb) {
-  ensure();
+  if (!ensure()) return () => {};
   if (!uid) uid = auth?.currentUser?.uid;
-  if (!uid) throw new Error("No user");
+  if (!uid) return () => {};
   const q = query(apptsCol(uid), orderBy("start", "asc"));
   return onSnapshot(q, (snap) => {
     const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-    cb(items.map(a => ({ ...a, start: new Date(a.start), end: new Date(a.end) })));
+    try { cb(items.map(a => ({ ...a, start: new Date(a.start), end: new Date(a.end) }))); } catch (_) {}
   });
 }
 
 export async function addAppointment({ uid, title, start, end, providerId = null, location = '', reason = '', details = '' }) {
-  ensure();
+  if (!ensure()) return null;
   if (!uid) uid = auth?.currentUser?.uid;
-  if (!uid) throw new Error("No user");
+  if (!uid) return null;
   const payload = { title, start: new Date(start).toISOString(), end: new Date(end).toISOString(), providerId, location, reason, details, createdAt: serverTimestamp(), updatedAt: serverTimestamp() };
   const ref = await addDoc(apptsCol(uid), payload);
   return ref.id;
 }
 
 export async function updateAppointment({ uid, id, patch }) {
-  ensure();
+  if (!ensure()) return;
   if (!uid) uid = auth?.currentUser?.uid;
-  if (!uid) throw new Error("No user");
+  if (!uid) return;
   await updateDoc(apptDoc(uid, id), { ...patch, updatedAt: serverTimestamp() });
 }
 
 export async function deleteAppointment({ uid, id }) {
-  ensure();
+  if (!ensure()) return;
   if (!uid) uid = auth?.currentUser?.uid;
-  if (!uid) throw new Error("No user");
+  if (!uid) return;
   await deleteDoc(apptDoc(uid, id));
 }
 
