@@ -1,3 +1,7 @@
+	// Debug: log todos state
+	useEffect(() => {
+		console.log('[ReferralTracking] Current todos:', todos);
+	}, [todos]);
 import React, { useEffect, useRef, useState } from 'react';
 import { Card, Stack, IconButton, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField } from '@mui/material';
 import VuiBox from 'components/VuiBox';
@@ -40,9 +44,16 @@ function ReferralTracking() {
 	const beginDrag = () => {};
 
 	const handleAddTodo = () => {
-		if (!newLabel.trim()) return;
-		try { console.debug && console.debug('[ReferralTracking] handleAddTodo calling addTodo', { newType, newLabel, newDate }); } catch(_) {}
-		addTodo({ type: newType, label: newLabel.trim(), date: newDate ? new Date(newDate) : null }, { forceLocal: true });
+		const label = newLabel.trim();
+		const finalLabel = label || `New ${newType.charAt(0).toUpperCase() + newType.slice(1)} Task`;
+		const id = `local_${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
+		let dateValue = null;
+		if (newDate) {
+			// Store as ISO string for consistency
+			dateValue = new Date(newDate).toISOString();
+		}
+		try { console.debug && console.debug('[ReferralTracking] handleAddTodo calling addTodo', { newType, label: finalLabel, newDate }); } catch(_) {}
+		addTodo({ id, type: newType, label: finalLabel, date: dateValue }, { forceLocal: true });
 		setDialogOpen(false);
 		setNewLabel('');
 		setNewType('medicine');

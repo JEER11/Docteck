@@ -1,62 +1,75 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useRef } from "react";
 import { auth } from "lib/firebase";
 import { onTodos, addTodoDoc, deleteTodoDoc, isTodosAvailable } from "lib/todoData";
 
 const TodoContext = createContext();
 
 export function TodoProvider({ children }) {
-  const [todos, setTodos] = useState([
-    { type: "medicine", label: "Aspirin 100mg daily", date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000) },
-    { type: "appointment", label: "Schedule blood test", date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000) },
-  ]);
+  const [todos, setTodos] = useState([]);
+  const latestTodosRef = useRef([]);
+  const [hydrated, setHydrated] = useState(false);
+  const [remoteDisabled, setRemoteDisabled] = useState(false);
 
-  // Ensure initial todos are persisted locally so reloads keep them when Firestore unavailable
+  const syncLatest = (next) => { latestTodosRef.current = next; setTodos(next); };
+
+  // Hydration
   React.useEffect(() => {
     try {
-      const key = 'todos';
-      const raw = localStorage.getItem(key);
-      if (!raw) localStorage.setItem(key, JSON.stringify(todos));
-    } catch (_) {}
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+      const raw = localStorage.getItem('todos');
+      if (raw) {
+        const arr = JSON.parse(raw);
+        if (Array.isArray(arr) && arr.length) {
+          const mapped = arr.map(t => ({ ...t, date: t.date ? new Date(t.date) : undefined }));
+          syncLatest(mapped);
+          setHydrated(true);
+          return;
+        }
+      }
+      const seed = [
+        { id: `local_${Date.now()}_seed1`, type: 'medicine', label: 'Aspirin 100mg daily', date: new Date(Date.now()+2*86400000) },
+        { id: `local_${Date.now()}_seed2`, type: 'appointment', label: 'Schedule blood test', date: new Date(Date.now()+5*86400000) }
+      ];
+      syncLatest(seed);
+      localStorage.setItem('todos', JSON.stringify(seed));
+    } catch(_) {}
+    setHydrated(true);
   }, []);
+
+  const persist = (arr) => { try { localStorage.setItem('todos', JSON.stringify(arr)); } catch(_) {} };
 
   // addTodo(todo, options) - options.forceLocal: skip remote persistence and add locally immediately
   const addTodo = async (todo, options = {}) => {
-    try { console.debug && console.debug('[TodoContext] addTodo called', todo, options); } catch(_) {}
     const forceLocal = Boolean(options.forceLocal);
-    // Persist for signed-in users unless forceLocal requested
-    if (!forceLocal && auth?.currentUser) {
+    if (!todo.label || !todo.label.trim()) todo = { ...todo, label: `New ${todo.type ? (todo.type[0].toUpperCase()+todo.type.slice(1)) : 'Task'}` };
+    if (!todo.id) todo = { ...todo, id: `local_${Date.now()}_${Math.random().toString(36).slice(2,8)}` };
+    // optimistic
+    syncLatest([...latestTodosRef.current, todo]);
+    persist([...latestTodosRef.current]);
+    if (!forceLocal && !remoteDisabled && auth?.currentUser) {
       try {
         const res = await addTodoDoc(todo);
-        // If the server returned a created doc, we're done. Otherwise fall back to local state.
-        if (res) {
-          try { console.debug && console.debug('[TodoContext] addTodo: remote add succeeded', res); } catch(_) {}
-          return;
+        if (res && res.id) {
+          const replaced = latestTodosRef.current.map(t => t.id === todo.id ? { ...res } : t);
+          syncLatest(replaced);
+          persist(replaced);
         }
-      } catch(_) {}
+      } catch (err) {
+        // keep optimistic; if auth/permission error mark remote disabled
+        if (String(err?.code||'').includes('permission') || String(err).includes('Missing')) setRemoteDisabled(true);
+      }
     }
-    setTodos((prev) => {
-      const next = [...prev, todo];
-      try { console.debug && console.debug('[TodoContext] addTodo: falling back to local, new todos length', next.length); } catch(_) {}
-      try { localStorage.setItem('todos', JSON.stringify(next)); } catch (_) {}
-      return next;
-    });
   };
   const removeTodo = async (idx) => {
-    try { console.debug && console.debug('[TodoContext] removeTodo called', idx, todos[idx]); } catch(_) {}
-    // If the item has an id and user is signed in, delete in Firestore
-    if (auth?.currentUser && todos[idx]?.id) {
-      try {
-        const ok = await deleteTodoDoc(todos[idx].id);
-        if (ok) return;
-      } catch(_) {}
+    const arr = [...latestTodosRef.current];
+    const target = arr[idx];
+    if (!target) return;
+    // attempt remote delete only if target has real id (not local_) and remote enabled
+    if (!target.id?.startsWith('local_') && !remoteDisabled && auth?.currentUser) {
+      try { await deleteTodoDoc(target.id); } catch(_) {}
     }
-    setTodos((prev) => {
-      const next = prev.filter((_, i) => i !== idx);
-      try { console.debug && console.debug('[TodoContext] removeTodo: removed locally, new length', next.length); } catch(_) {}
-      try { localStorage.setItem('todos', JSON.stringify(next)); } catch (_) {}
-      return next;
-    });
+    const next = arr.filter((_, i) => i !== idx);
+    syncLatest(next);
+    persist(next);
   };
 
   // Listen for assistant-triggered adds without touching UI
@@ -89,35 +102,33 @@ export function TodoProvider({ children }) {
     return () => window.removeEventListener('assistant:add_todo', onAdd);
   }, []);
 
-  // Subscribe to Firestore when it's actually available; otherwise hydrate from localStorage
+  // Firestore subscription
   React.useEffect(() => {
-    const useRemote = isTodosAvailable();
-    if (useRemote) {
-      const unsub = onTodos({}, (items) => {
-        // normalize dates
-        const mapped = items.map(t => ({ ...t, date: t.date ? new Date(t.date) : undefined }));
-        try {
-          // If remote returned no items but we have local items saved, avoid wiping them.
-          const raw = localStorage.getItem('todos');
-          const localArr = raw ? JSON.parse(raw) : null;
-          if (Array.isArray(mapped) && mapped.length === 0 && Array.isArray(localArr) && localArr.length > 0) {
-            // keep local list
-            return;
-          }
-        } catch (_) {}
-        setTodos(mapped);
-      });
-      return () => unsub && unsub();
-    }
-    try {
-      const raw = localStorage.getItem('todos');
-      const arr = raw ? JSON.parse(raw) : null;
-      if (Array.isArray(arr)) setTodos(arr.map(t => ({ ...t, date: t.date ? new Date(t.date) : undefined })));
-    } catch (_) {}
-  }, []);
+    if (!hydrated || remoteDisabled) return;
+    if (!isTodosAvailable()) return; // user not ready
+    const unsub = onTodos({}, (items) => {
+      const mapped = items.map(t => ({ ...t, date: t.date ? new Date(t.date) : undefined }));
+      const current = latestTodosRef.current;
+      if (mapped.length === 0 && current.length > 0) return; // don't wipe
+      // merge optimistic locals not yet in remote
+      const optimistic = current.filter(t => t.id?.startsWith('local_') && !mapped.some(r => r.label === t.label));
+      const merged = [...mapped, ...optimistic];
+      syncLatest(merged);
+      persist(merged);
+    }, (err) => {
+      // On 400 or permission errors disable remote so local persists
+      const msg = String(err?.message || err || '');
+      if (msg.includes('403') || msg.includes('permission') || msg.includes('Missing') || msg.includes('400')) {
+        setRemoteDisabled(true);
+      }
+    });
+    return () => unsub && unsub();
+  }, [hydrated, remoteDisabled]);
 
+  // If Firestore keeps throwing 400s, we rely purely on local state (remoteDisabled=true)
+  // Expose the reactive state array (todos) so components re-render properly.
   return (
-    <TodoContext.Provider value={{ todos, addTodo, removeTodo }}>
+    <TodoContext.Provider value={{ todos, addTodo, removeTodo, remoteDisabled }}>
       {children}
     </TodoContext.Provider>
   );

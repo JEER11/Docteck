@@ -1,4 +1,7 @@
 import { useState, useEffect, useMemo, Suspense } from "react";
+// Runtime diagnostics (temporary) to troubleshoot Firestore 400 errors / missing config
+import { hasFirebaseConfig, auth, db } from 'lib/firebase';
+import { __diagnoseTodosWrite } from 'lib/todoData';
 import { Route, Switch, Redirect, useLocation } from "react-router-dom";
 import FullScreenLoader from "components/FullScreenLoader";
 import RouteChangeLoader from "components/RouteChangeLoader";
@@ -47,6 +50,43 @@ export default function App() {
     }
     return () => document.body.classList.remove("billing-bg");
   }, [pathname]);
+
+  // One-time diagnostics log (safe / no PII) – remove after backend fix
+  useEffect(() => {
+    try {
+      const cfg = (window && window.__FIREBASE_CONFIG__) || {};
+      // Only log once per load
+      if (!window.__FIREBASE_DIAG_LOGGED__) {
+        window.__FIREBASE_DIAG_LOGGED__ = true;
+        console.group('[FirebaseDiag]');
+        console.log('hasFirebaseConfig flag:', hasFirebaseConfig);
+        console.log('Injected window.__FIREBASE_CONFIG__ keys:', Object.keys(cfg));
+        console.log('Missing critical keys?', {
+          apiKey: !cfg.apiKey,
+          projectId: !cfg.projectId,
+          appId: !cfg.appId,
+        });
+        console.log('Auth currentUser UID:', auth?.currentUser?.uid || null);
+        console.log('Firestore instance present:', Boolean(db));
+        console.groupEnd();
+      }
+    } catch (_) { /* ignore */ }
+  }, []);
+
+  // Attempt a single self-test write once a user is present (won't spam). Safe no-op if rules reject.
+  useEffect(() => {
+    let t;
+    function attempt() {
+      if (auth?.currentUser?.uid && !window.__FIREBASE_TODO_TEST__) {
+        window.__FIREBASE_TODO_TEST__ = true;
+        setTimeout(() => { try { __diagnoseTodosWrite(); } catch(_) {} }, 400);
+        return;
+      }
+      t = setTimeout(attempt, 600);
+    }
+    attempt();
+    return () => { if (t) clearTimeout(t); };
+  }, []);
 
   // Helper to render routes
   const getRoutes = (allRoutes) =>
