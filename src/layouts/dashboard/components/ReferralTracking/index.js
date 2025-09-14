@@ -1,8 +1,4 @@
-	// Debug: log todos state
-	useEffect(() => {
-		console.log('[ReferralTracking] Current todos:', todos);
-	}, [todos]);
-import React, { useEffect, useRef, useState } from 'react';
+	import React, { useEffect, useRef, useState } from 'react';
 import { Card, Stack, IconButton, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField } from '@mui/material';
 import VuiBox from 'components/VuiBox';
 import VuiTypography from 'components/VuiTypography';
@@ -12,7 +8,7 @@ import linearGradient from 'assets/theme/functions/linearGradient';
 import CircularProgress from '@mui/material/CircularProgress';
 import { useTodos } from 'context/TodoContext';
 
-function ReferralTracking() {
+function ReferralTracking({ title = 'TODO TRACK' }) {
 	const { info, gradients } = colors;
 
 	// Use todos from context
@@ -42,6 +38,9 @@ function ReferralTracking() {
 	const [floating, setFloating] = useState(false);
 	const [dragging, setDragging] = useState(false);
 	const beginDrag = () => {};
+
+	// Optional: debug log inside component respecting hooks rules
+	useEffect(() => { try { console.debug && console.debug('[ReferralTracking] todos length', todos.length); } catch(_) {} }, [todos]);
 
 	const handleAddTodo = () => {
 		const label = newLabel.trim();
@@ -81,9 +80,9 @@ function ReferralTracking() {
 			>
 				<VuiBox sx={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
 					<VuiBox display='flex' alignItems='center' justifyContent='space-between' sx={{ width: '100%' }} mb='28px'>
-						<VuiTypography variant='lg' color='white' mr='auto' fontWeight='bold'>
-							To do's Track
-						</VuiTypography>
+							<VuiTypography variant='lg' color='white' mr='auto' fontWeight='bold'>
+								{title}
+							</VuiTypography>
 						<VuiBox sx={{ position: 'relative', display: 'inline-flex', alignItems: 'center', mr: 1 }}>
 							<CircularProgress size={36} thickness={5} variant='determinate' value={percent} style={{ color: info.main, background: 'rgba(255,255,255,0.04)', borderRadius: '50%' }} />
 							<VuiBox sx={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -113,21 +112,28 @@ function ReferralTracking() {
 						}}
 					>
 						<Stack spacing={2}>
-							{todos.map((todo, idx) => (
-								<VuiBox key={idx} display='flex' alignItems='center' justifyContent='space-between' sx={{ background: '#23244B', borderRadius: 2, p: 2 }}>
-									<VuiBox>
-										<VuiTypography variant='button' color='white' fontWeight='bold'>
-											{todo.type.charAt(0).toUpperCase() + todo.type.slice(1)}
-										</VuiTypography>
-										<VuiTypography variant='caption' color='text' sx={{ fontSize: 12, display: 'block', mt: 0.5 }}>
-											{todo.date ? new Date(todo.date).toLocaleDateString() : ''}
-										</VuiTypography>
-										<VuiTypography variant='body2' color='white'>
-											{todo.label}
-										</VuiTypography>
-									</VuiBox>
-									<Button size='small' color='success' onClick={() => removeTodo(idx)}>Done</Button>
+							{todos.length === 0 && (
+								<VuiBox display='flex' alignItems='center' justifyContent='center' sx={{ background: '#23244B', borderRadius: 2, p: 4 }}>
+									<VuiTypography variant='button' color='white' fontWeight='regular' sx={{ opacity: 0.7 }}>
+										No todos yet — add one with the + button.
+									</VuiTypography>
 								</VuiBox>
+							)}
+							{todos.map((todo, idx) => (
+								<VuiBox key={todo.id || idx} display='flex' alignItems='center' justifyContent='space-between' sx={{ background: '#23244B', borderRadius: 2, p: 2 }}>
+								<VuiBox>
+									<VuiTypography variant='button' color='white' fontWeight='bold'>
+										{todo.type?.charAt(0).toUpperCase() + todo.type?.slice(1) || 'Task'}
+									</VuiTypography>
+									<VuiTypography variant='caption' color='text' sx={{ fontSize: 12, display: 'block', mt: 0.5 }}>
+										{todo.date ? new Date(todo.date).toLocaleDateString() : ''}
+									</VuiTypography>
+									<VuiTypography variant='body2' color='white'>
+										{todo.label}
+									</VuiTypography>
+								</VuiBox>
+								<Button size='small' color='success' onClick={() => removeTodo(idx)}>Done</Button>
+							</VuiBox>
 							))}
 						</Stack>
 					</VuiBox>

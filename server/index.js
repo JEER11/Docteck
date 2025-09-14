@@ -5,6 +5,7 @@ const { OpenAI } = require('openai');
 const fetch = require('node-fetch');
 const { createProxyMiddleware } = require('http-proxy-middleware');
 const path = require('path');
+const fs = require('fs');
 // Load environment variables with sane precedence:
 // 1) Root .env (real creds typically live here)
 // 2) server/.env (optional per-service overrides; will NOT override existing vars)
@@ -33,8 +34,16 @@ app.use('/api/stripe', stripeRoutes);
 app.use('/api/stripe', stripePayRoutes);
 // Serve uploaded files (optional)
 app.use('/uploads', express.static(require('path').join(__dirname, 'uploads')));
-// Serve static assets (like /calendar/oauth-success.html) from root public folder
-app.use(express.static(path.join(__dirname, '..', 'public')));
+// Serve React static assets. Prefer freshly built assets in /build, else fall back to /public.
+const uiDir = fs.existsSync(path.join(__dirname, '..', 'build')) ? 'build' : 'public';
+app.use(express.static(path.join(__dirname, '..', uiDir)));
+
+// React Router (SPA) fallback so deep links work and live code changes (after rebuild) are picked up
+app.get([ '/app', '/app/*', '/dashboard', '/dashboard/*' ], (req, res, next) => {
+  const indexPath = path.join(__dirname, '..', uiDir, 'index.html');
+  if (fs.existsSync(indexPath)) return res.sendFile(indexPath);
+  return next();
+});
 
 // Proxy to the Flask service using http-proxy-middleware for proper streaming/header handling.
 // Requests to /api/flask/<path> will be forwarded to the Flask server configured by FLASK_URL.
