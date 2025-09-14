@@ -254,9 +254,8 @@ function DoctorAssistant({ messages: controlledMessages, setMessages: setControl
                 whiteSpace: 'pre-wrap',
               }}>
                 {msg.sender === 'ai' ? (
-                <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    linkTarget="_blank"
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm]}
                     components={{
                       strong: ({node, ...props}) => <strong style={{fontWeight:800}} {...props} />,
                       a: ({node, ...props}) => <a style={{color:'#8ab4ff'}} target="_blank" rel="noreferrer" {...props} />,
