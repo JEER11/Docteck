@@ -30,6 +30,10 @@ import AddIcon from "@mui/icons-material/Add";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 
 function Invoices() {
+  const DEMO_PRESCRIPTIONS = [
+    { medicine: 'Lisinopril 10mg', price: '12.00', date: new Date().toISOString().slice(0,10), info: null },
+    { medicine: 'Levothyroxine 50mcg', price: '18.50', date: new Date(Date.now() + 86400000).toISOString().slice(0,10), info: null },
+  ];
   // Match HUB dialog input style (no inner bubbles)
   const fieldSx = {
     width: '100%',
@@ -80,16 +84,37 @@ function Invoices() {
     }));
   };
   // Prescriptions state; subscribe to Firestore when signed-in, fallback to localStorage
-  const [prescriptions, setPrescriptions] = useState([]);
+  const [prescriptions, setPrescriptions] = useState(() => {
+    try {
+      const raw = localStorage.getItem('prescriptions');
+      const list = raw ? JSON.parse(raw) : [];
+      return Array.isArray(list) && list.length ? list : DEMO_PRESCRIPTIONS;
+    } catch(_) { return DEMO_PRESCRIPTIONS; }
+  });
   React.useEffect(() => {
     if (auth && auth.currentUser) {
-      const unsub = onPrescriptions({}, (items) => setPrescriptions(items));
+      const unsub = onPrescriptions({}, (items) => {
+        if (Array.isArray(items) && items.length) setPrescriptions(items);
+      });
       return () => unsub && unsub();
     }
     try {
       const raw = localStorage.getItem('prescriptions');
       const list = raw ? JSON.parse(raw) : [];
-      if (Array.isArray(list)) setPrescriptions(list);
+      if (Array.isArray(list) && list.length) setPrescriptions(list);
+      else {
+        if (!localStorage.getItem('prescriptions_seeded')) {
+          const samples = [
+            { medicine: 'Lisinopril 10mg', price: '12.00', date: new Date().toISOString().slice(0,10), info: null },
+            { medicine: 'Levothyroxine 50mcg', price: '18.50', date: new Date(Date.now() + 86400000).toISOString().slice(0,10), info: null }
+          ];
+          setPrescriptions(samples);
+          try {
+            localStorage.setItem('prescriptions', JSON.stringify(samples));
+            localStorage.setItem('prescriptions_seeded', '1');
+          } catch(_) {}
+        }
+      }
     } catch (_) {}
   }, []);
   const [open, setOpen] = useState(false);
