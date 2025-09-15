@@ -193,6 +193,7 @@ def api_ocr():
  
 
 BUILD_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'build'))
+CACHE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '.index_cache.html'))
 
 # Cache last good React index to avoid flashing the build splash during brief rebuild gaps
 _INDEX_CACHE = { 'mtime': 0, 'html': None }
@@ -219,10 +220,43 @@ def _load_cached_react_index():
                     html = html.replace('</body>', inject + '\n</body>')
                 _INDEX_CACHE['mtime'] = mtime
                 _INDEX_CACHE['html'] = html
+                try:
+                    with open(CACHE_PATH, 'w', encoding='utf-8') as cf:
+                        cf.write(html)
+                except Exception:
+                    pass
         # Return cached html (freshly loaded or previous good version)
-        return _INDEX_CACHE['html']
+        if _INDEX_CACHE['html']:
+            return _INDEX_CACHE['html']
+        # On startup or if in-memory cache is empty, try persisted cache on disk
+        try:
+            if os.path.exists(CACHE_PATH):
+                with open(CACHE_PATH, 'r', encoding='utf-8') as cf:
+                    _INDEX_CACHE['html'] = cf.read()
+                return _INDEX_CACHE['html']
+        except Exception:
+            pass
+        return None
     except Exception:
         return _INDEX_CACHE['html']
+
+_CACHE_WARMED = False
+
+@app.before_request
+def _warm_react_index_cache_once():
+    global _CACHE_WARMED
+    if _CACHE_WARMED:
+        return None
+    try:
+        html = _load_cached_react_index()
+        if not html and os.path.exists(CACHE_PATH):
+            with open(CACHE_PATH, 'r', encoding='utf-8') as cf:
+                _INDEX_CACHE['html'] = cf.read()
+    except Exception:
+        pass
+    finally:
+        _CACHE_WARMED = True
+    return None
 
 # --------- Helpers: load React build CSS to match styling ---------
 def get_react_css_urls():
@@ -402,6 +436,23 @@ def react_index():
             "Pragma": "no-cache",
             "Expires": "0",
         }
+    # If no in-memory cache, try persisted cache on disk explicitly before showing splash
+    try:
+        if os.path.exists(CACHE_PATH):
+            with open(CACHE_PATH, 'r', encoding='utf-8') as cf:
+                html = cf.read()
+            if html:
+                # warm in-memory cache for subsequent requests
+                _INDEX_CACHE['html'] = html
+                _INDEX_CACHE['mtime'] = 0
+                return html, 200, {
+                    "Content-Type": "text/html; charset=utf-8",
+                    "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+                    "Pragma": "no-cache",
+                    "Expires": "0",
+                }
+    except Exception:
+        pass
     # If no cached html yet (first-ever load) and index is missing, show splash once
     index_path = os.path.join(BUILD_DIR, 'index.html')
     if not os.path.exists(index_path):
