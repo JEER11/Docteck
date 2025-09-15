@@ -9,7 +9,36 @@ const AppointmentContext = createContext();
 
 export function AppointmentProvider({ children }) {
   const API = getApiBase();
-  const [appointments, setAppointments] = useState([]);
+  const DEMO_APPOINTMENTS = (() => {
+    const now = new Date();
+    const day2 = new Date(Date.now() + 2*86400000);
+    return [
+      {
+        id: 'demo-appt-1',
+        title: 'Consult: Dr. Emily Carter',
+        start: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 0),
+        end: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 30),
+        location: 'Springfield General Hospital',
+        doctor: { name: 'Dr. Emily Carter', email: 'e.carter@example.com', type: 'Cardiologist', hospital: 'Springfield General', status: 'Active', progress: 'Active' },
+      },
+      {
+        id: 'demo-appt-2',
+        title: 'Follow-up: Dr. Miguel Reyes',
+        start: new Date(day2.getFullYear(), day2.getMonth(), day2.getDate(), 15, 0),
+        end: new Date(day2.getFullYear(), day2.getMonth(), day2.getDate(), 15, 45),
+        location: 'Riverdale Clinic',
+        doctor: { name: 'Dr. Miguel Reyes', email: 'm.reyes@example.com', type: 'Primary Care', hospital: 'Riverdale Clinic', status: 'In Progress', progress: 'In Progress' },
+      }
+    ];
+  })();
+  const [appointments, setAppointments] = useState(() => {
+    try {
+      const raw = localStorage.getItem('appointments') || '[]';
+      const arr = JSON.parse(raw);
+      if (Array.isArray(arr) && arr.length) return arr.map(a => ({ ...a, start: new Date(a.start), end: new Date(a.end) }));
+      return DEMO_APPOINTMENTS;
+    } catch(_) { return DEMO_APPOINTMENTS; }
+  });
   const [providers, setProviders] = useState([]);
   // Also project todos and prescription pickups into calendar events (read-only overlays)
   const { todos = [] } = useTodos?.() || {};
@@ -18,7 +47,9 @@ export function AppointmentProvider({ children }) {
   useEffect(() => {
     // Prefer per-user Firestore persistence when auth is configured
     if (auth && auth.currentUser) {
-      const unsub = onAppts({}, (items) => setAppointments(items));
+      const unsub = onAppts({}, (items) => {
+        if (Array.isArray(items) && items.length) setAppointments(items);
+      });
       // Still load providers from API if available
       (async () => {
         try {
@@ -32,10 +63,48 @@ export function AppointmentProvider({ children }) {
     (async () => {
       try {
         const [ap, pr] = await Promise.all([
-          fetch(`${API}/api/appointments`).then(r => r.json()),
-          fetch(`${API}/api/providers`).then(r => r.json())
+          fetch(`${API}/api/appointments`).then(r => r.json()).catch(() => ({})),
+          fetch(`${API}/api/providers`).then(r => r.json()).catch(() => ({}))
         ]);
-        if (ap?.ok && Array.isArray(ap.appointments)) setAppointments(ap.appointments.map(a => ({ ...a, start: new Date(a.start), end: new Date(a.end) })));
+        if (ap?.ok && Array.isArray(ap.appointments) && ap.appointments.length) {
+          setAppointments(ap.appointments.map(a => ({ ...a, start: new Date(a.start), end: new Date(a.end) })));
+        } else {
+          try {
+            const localRaw = localStorage.getItem('appointments') || '[]';
+            const existing = JSON.parse(localRaw);
+            if (Array.isArray(existing) && existing.length) {
+              setAppointments(existing.map(a => ({ ...a, start: new Date(a.start), end: new Date(a.end) })));
+            } else if (!localStorage.getItem('appointments_seeded')) {
+              const now = new Date();
+              const day2 = new Date(Date.now() + 2*86400000);
+              const samples = [
+                {
+                  id: 'demo-appt-1',
+                  title: 'Consult: Dr. Emily Carter',
+                  start: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 0),
+                  end: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 30),
+                  location: 'Springfield General Hospital',
+                  doctor: { name: 'Dr. Emily Carter', email: 'e.carter@example.com', type: 'Cardiologist', hospital: 'Springfield General', status: 'Active', progress: 'Active' },
+                },
+                {
+                  id: 'demo-appt-2',
+                  title: 'Follow-up: Dr. Miguel Reyes',
+                  start: new Date(day2.getFullYear(), day2.getMonth(), day2.getDate(), 15, 0),
+                  end: new Date(day2.getFullYear(), day2.getMonth(), day2.getDate(), 15, 45),
+                  location: 'Riverdale Clinic',
+                  doctor: { name: 'Dr. Miguel Reyes', email: 'm.reyes@example.com', type: 'Primary Care', hospital: 'Riverdale Clinic', status: 'In Progress', progress: 'In Progress' },
+                }
+              ];
+              setAppointments(samples);
+              try {
+                localStorage.setItem('appointments', JSON.stringify(samples));
+                localStorage.setItem('appointments_seeded', '1');
+              } catch (_) {}
+            } else {
+              setAppointments([]);
+            }
+          } catch (_) { setAppointments([]); }
+        }
         if (pr?.ok && Array.isArray(pr.providers)) setProviders(pr.providers);
       } catch (_) {}
     })();

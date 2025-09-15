@@ -105,8 +105,8 @@ function envInfo(req, res) {
     },
     ai: {
       openai: Boolean(process.env.OPENAI_API_KEY),
-  groq: Boolean(process.env.GROQ_API_KEY),
-  deepinfra: Boolean(process.env.DEEPINFRA_TOKEN),
+      groq: Boolean(process.env.GROQ_API_KEY),
+      deepinfra: Boolean(process.env.DEEPINFRA_TOKEN),
     },
     stripe: Boolean(process.env.STRIPE_SECRET_KEY),
     flaskUrl: process.env.FLASK_URL || null,
@@ -117,7 +117,6 @@ app.get('/health/env', envInfo);
 app.get('/api/health/env', envInfo);
 
 // Support endpoints (Ask / Report) with file uploads
-const fs = require('fs');
 const multer = require('multer');
 
 function ensureDir(dir) {

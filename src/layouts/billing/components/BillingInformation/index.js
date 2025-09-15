@@ -20,8 +20,19 @@ import { onPharmacies, addPharmacy, updatePharmacy, deletePharmacy } from "lib/c
 import { auth } from "lib/firebase";
 
 function BillingInformation() {
-  // Persisted pharmacies list (per user)
-  const [pharmacies, setPharmacies] = useState([]);
+  // Demo samples to show immediately on first render
+  const DEMO_PHARMACIES = [
+    { id: 'demo-ph1', name: 'Walgreens - Downtown', address: '123 Main St, Springfield, IL', email: 'rx@walgreens.com', phone: '(555) 123-4567', prescription: 'Atorvastatin 20mg' },
+    { id: 'demo-ph2', name: 'CVS Pharmacy - Elm Rd', address: '456 Elm Rd, Springfield, IL', email: 'pharmacy@cvs.com', phone: '(555) 987-6543', prescription: 'Metformin 500mg' },
+  ];
+  // Persisted pharmacies list (per user) with immediate demo fallback
+  const [pharmacies, setPharmacies] = useState(() => {
+    try {
+      const raw = localStorage.getItem('pharmacies') || '[]';
+      const arr = JSON.parse(raw);
+      return Array.isArray(arr) && arr.length ? arr : DEMO_PHARMACIES;
+    } catch (_) { return DEMO_PHARMACIES; }
+  });
   useEffect(() => {
     // Prefer Firestore when a user is actually signed in; else load from localStorage
     let unsub = null;
@@ -29,13 +40,29 @@ function BillingInformation() {
       try {
         const raw = localStorage.getItem('pharmacies') || '[]';
         const arr = JSON.parse(raw);
-        setPharmacies(Array.isArray(arr) ? arr : []);
-      } catch (_) { setPharmacies([]); }
+        const list = Array.isArray(arr) ? arr : [];
+        if (!list.length && !localStorage.getItem('pharmacy_seeded')) {
+          const samples = [
+            { id: 'demo-ph1', name: 'Walgreens - Downtown', address: '123 Main St, Springfield, IL', email: 'rx@walgreens.com', phone: '(555) 123-4567', prescription: 'Atorvastatin 20mg' },
+            { id: 'demo-ph2', name: 'CVS Pharmacy - Elm Rd', address: '456 Elm Rd, Springfield, IL', email: 'pharmacy@cvs.com', phone: '(555) 987-6543', prescription: 'Metformin 500mg' },
+          ];
+          setPharmacies(samples);
+          try {
+            localStorage.setItem('pharmacies', JSON.stringify(samples));
+            localStorage.setItem('pharmacy_seeded', '1');
+          } catch(_) {}
+        } else if (list.length) {
+          setPharmacies(list);
+        }
+      } catch (_) { /* keep current demo */ }
     };
     try {
       const uid = auth?.currentUser?.uid;
       if (uid) {
-        unsub = onPharmacies({ uid }, setPharmacies);
+        unsub = onPharmacies({ uid }, (items) => {
+          // Do not overwrite demo with an empty FS list
+          if (Array.isArray(items) && items.length) setPharmacies(items);
+        });
       } else {
         loadLocal();
       }
