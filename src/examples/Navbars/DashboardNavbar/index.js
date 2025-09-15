@@ -2,11 +2,11 @@
 // MIT: Portions © 2021 Creative Tim & Simmmple (Vision UI Free React). See LICENSE.md.
 //
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
 // react-router components
-import { useLocation, Link } from "react-router-dom";
+import { useLocation, Link, useNavigate } from "react-router-dom";
 import { routeLoadingBus } from "components/routeLoadingBus";
 
 // prop-types is a library for typechecking of props.
@@ -23,11 +23,16 @@ import Icon from "@mui/material/Icon";
 import VuiBox from "components/VuiBox";
 import VuiTypography from "components/VuiTypography";
 import VuiInput from "components/VuiInput";
+import Paper from "@mui/material/Paper";
+import List from "@mui/material/List";
+import ListItemButton from "@mui/material/ListItemButton";
+import ListItemText from "@mui/material/ListItemText";
 
 // Vision UI Dashboard React example components
 import Breadcrumbs from "examples/Breadcrumbs";
 import NotificationItem from "examples/Items/NotificationItem";
 import NotificationList from "components/NotificationList";
+import { searchSections } from "lib/globalSearch";
 
 // Custom styles for DashboardNavbar
 import {
@@ -57,6 +62,12 @@ function DashboardNavbar({ absolute, light, isMini }) {
   const { miniSidenav, transparentNavbar, fixedNavbar, openConfigurator } = controller;
   const [openMenu, setOpenMenu] = useState(false);
   const route = useLocation().pathname.split("/").slice(1);
+  const navigate = useNavigate();
+  const [q, setQ] = useState("");
+  const [results, setResults] = useState([]);
+  const [openSearch, setOpenSearch] = useState(false);
+  const [activeIdx, setActiveIdx] = useState(0);
+  const inputRef = useRef(null);
 
   useEffect(() => {
     // Setting the navbar type
@@ -107,6 +118,39 @@ function DashboardNavbar({ absolute, light, isMini }) {
     />
   );
 
+  const onSearchChange = (e) => {
+    const val = e.target.value;
+    setQ(val);
+    const rs = searchSections(val);
+    setResults(rs);
+    setActiveIdx(0);
+    setOpenSearch(rs.length > 0);
+  };
+
+  const onSearchKeyDown = (e) => {
+    if (!openSearch) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setActiveIdx((i) => Math.min(i + 1, results.length - 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setActiveIdx((i) => Math.max(i - 1, 0));
+    } else if (e.key === 'Enter') {
+      const sel = results[activeIdx];
+      if (sel) {
+        routeLoadingBus.start();
+        navigate(sel.path);
+        setOpenSearch(false);
+      }
+    } else if (e.key === 'Escape') {
+      setOpenSearch(false);
+    }
+  };
+
+  const onBlurClose = () => {
+    setTimeout(() => setOpenSearch(false), 150);
+  };
+
   return (
     <AppBar
       position={absolute ? "absolute" : navbarType}
@@ -119,17 +163,40 @@ function DashboardNavbar({ absolute, light, isMini }) {
         </VuiBox>
         {isMini ? null : (
           <VuiBox sx={(theme) => navbarRow(theme, { isMini })}>
-            <VuiBox pr={1}>
+            <VuiBox pr={1} sx={{ position: 'relative' }}>
               <VuiInput
+                inputRef={inputRef}
+                value={q}
+                onChange={onSearchChange}
+                onKeyDown={onSearchKeyDown}
+                onFocus={() => setOpenSearch(results.length > 0)}
+                onBlur={onBlurClose}
                 placeholder={t('navbar.searchPlaceholder', { defaultValue: 'Type here...' })}
                 icon={{ component: "search", direction: "left" }}
                 sx={{
-                  width: "180px",
-                  minWidth: "180px",
-                  maxWidth: "180px",
+                  width: "240px",
+                  minWidth: "200px",
+                  maxWidth: "340px",
                   backgroundColor: "info.main !important",
                 }}
               />
+              {openSearch && results.length > 0 && (
+                <Paper elevation={6} sx={{ position: 'absolute', top: '40px', left: 0, width: '100%', zIndex: 1400, background: 'rgba(25,27,52,0.98)', borderRadius: 2, border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <List dense sx={{ py: 0 }}>
+                    {results.map((r, i) => (
+                      <ListItemButton key={r.path}
+                        selected={i === activeIdx}
+                        onMouseEnter={() => setActiveIdx(i)}
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => { routeLoadingBus.start(); navigate(r.path); setOpenSearch(false); }}
+                        sx={{ '&.Mui-selected': { background: 'rgba(255,255,255,0.08)' }, color: 'white' }}
+                      >
+                        <ListItemText primary={r.title} secondary={r.path.replace('/app/','')} primaryTypographyProps={{ sx: { color: 'white', fontWeight: 600 } }} secondaryTypographyProps={{ sx: { color: 'rgba(255,255,255,0.6)' } }} />
+                      </ListItemButton>
+                    ))}
+                  </List>
+                </Paper>
+              )}
             </VuiBox>
             <VuiBox color={light ? "white" : "inherit"}>
               {/* Removed "Sign in" text next to account icon to declutter header */}
