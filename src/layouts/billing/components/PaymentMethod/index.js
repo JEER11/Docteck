@@ -10,6 +10,10 @@ import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import Alert from "@mui/material/Alert";
 import MenuItem from "@mui/material/MenuItem";
+import IconButton from "@mui/material/IconButton";
+import Tooltip from "@mui/material/Tooltip";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 
 // Vision UI Dashboard React components
 import VuiBox from "components/VuiBox";
@@ -27,7 +31,7 @@ import { CardElement, Elements, useStripe, useElements } from "@stripe/react-str
 import { loadStripe } from "@stripe/stripe-js";
 import { STRIPE_PUBLISHABLE_KEY } from "lib/stripeConfig";
 import { auth } from "lib/firebase";
-import { addPaymentMethodDoc, onPaymentMethods } from "lib/billingData";
+import { addPaymentMethodDoc, onPaymentMethods, updatePaymentMethodDoc, deletePaymentMethodDoc } from "lib/billingData";
 // Stripe form (only rendered within <Elements>)
 function PaymentMethodForm({ billingName, setBillingName, setError, saving, setSaving, handleClose }) {
   const stripe = useStripe();
@@ -105,6 +109,9 @@ function PaymentMethodShell({ stripePromise, ensureStripe }) {
   const [billingName, setBillingName] = useState("");
   const [bankName, setBankName] = useState("");
   const [network, setNetwork] = useState("visa");
+  const [last4, setLast4] = useState("");
+  const [expMonth, setExpMonth] = useState("");
+  const [expYear, setExpYear] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [savedMethods, setSavedMethods] = useState([]);
@@ -116,6 +123,10 @@ function PaymentMethodShell({ stripePromise, ensureStripe }) {
     } catch (_) { return []; }
   });
   const [mode, setMode] = useState('stripe'); // 'stripe' | 'visual'
+  const [hoveredId, setHoveredId] = useState(null);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState(null); // { id, type, ... }
+  const [deleteConfirm, setDeleteConfirm] = useState(null); // { id, paymentMethodId?, type }
 
   useEffect(() => {
     if (!auth || !auth.currentUser) return; // Wait for signed-in user
@@ -128,6 +139,9 @@ function PaymentMethodShell({ stripePromise, ensureStripe }) {
     setBillingName("");
     setBankName("");
     setNetwork("visa");
+    setLast4("");
+    setExpMonth("");
+    setExpYear("");
     setMode('stripe');
     setOpen(true);
   };
@@ -151,6 +165,15 @@ function PaymentMethodShell({ stripePromise, ensureStripe }) {
   const handleAddVisualCard = async () => {
     setError("");
     if (!billingName) { setError('Please enter a name on card'); return; }
+    const l4 = (last4 || '').replace(/\D/g,'');
+    if (l4.length !== 4) { setError('Enter last 4 digits'); return; }
+    let m = parseInt((expMonth || '').toString(), 10);
+    if (!(m >= 1 && m <= 12)) { setError('Enter a valid expiration month (1-12)'); return; }
+    let y = (expYear || '').toString().trim();
+    if (!y) { setError('Enter expiration year'); return; }
+    let yNum = parseInt(y, 10);
+    if (y.length <= 2) yNum = 2000 + yNum; // normalize YY -> 20YY
+    if (!(yNum >= 2000 && yNum <= 2099)) { setError('Enter a valid expiration year'); return; }
     setSaving(true);
     try {
       const payload = {
@@ -158,9 +181,9 @@ function PaymentMethodShell({ stripePromise, ensureStripe }) {
         brand: (network || 'visa').toLowerCase(),
         bankName: bankName || '',
         billingName,
-        last4: '',
-        exp_month: null,
-        exp_year: null,
+        last4: l4,
+        exp_month: m,
+        exp_year: yNum,
       };
       const saveLocal = () => {
         const local = { id: `v-${Date.now()}`, ...payload };
@@ -187,6 +210,78 @@ function PaymentMethodShell({ stripePromise, ensureStripe }) {
         saveLocal();
       }
       handleClose();
+    } catch (e) {
+      setError(String(e.message || e));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const openEdit = (card, isGuest) => {
+    setEditTarget({ ...card, _guest: isGuest });
+    setBillingName(card.billingName || "");
+    setBankName(card.bankName || "");
+    setNetwork((card.brand || 'visa').toLowerCase());
+    setLast4(card.last4 || "");
+    setExpMonth(card.exp_month ? String(card.exp_month).padStart(2,'0') : "");
+    setExpYear(card.exp_year ? String(card.exp_year).toString().slice(-2) : "");
+    setEditOpen(true);
+  };
+
+  const handleSaveEdit = async () => {
+    setError("");
+    if (!editTarget) return;
+    const patch = {
+      billingName,
+      bankName,
+      brand: (network || 'visa').toLowerCase(),
+      last4: (last4 || '').replace(/\D/g,'').slice(0,4),
+      exp_month: parseInt((expMonth||'').toString(), 10) || undefined,
+      exp_year: (()=>{ const y=(expYear||'').toString(); if(!y) return undefined; let n=parseInt(y,10); if(y.length<=2) n=2000+n; return n; })(),
+    };
+    setSaving(true);
+    try {
+      if (editTarget._guest) {
+        setGuestMethods(prev => {
+          const next = prev.map(x => x.id === editTarget.id ? { ...x, ...patch } : x);
+          try { localStorage.setItem('visualPaymentMethods', JSON.stringify(next)); } catch (_) {}
+          return next;
+        });
+      } else if (editTarget.id) {
+        await updatePaymentMethodDoc(editTarget.id, patch);
+      }
+      setEditOpen(false);
+    } catch (e) {
+      setError(String(e.message || e));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const openDelete = (card, isGuest) => {
+    setDeleteConfirm({ id: card.id, paymentMethodId: card.paymentMethodId, _guest: isGuest });
+  };
+
+  const handleDelete = async () => {
+    const t = deleteConfirm;
+    if (!t) return;
+    setSaving(true);
+    setError("");
+    try {
+      if (t._guest) {
+        setGuestMethods(prev => {
+          const next = prev.filter(x => x.id !== t.id);
+          try { localStorage.setItem('visualPaymentMethods', JSON.stringify(next)); } catch (_) {}
+          return next;
+        });
+      } else if (t.id) {
+        // If this card is a real Stripe card and we stored a paymentMethodId, detach in Stripe first
+        if (t.paymentMethodId) {
+          try { await fetch('/api/stripe/delete-card', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ paymentMethodId: t.paymentMethodId }) }); } catch (_) {}
+        }
+        await deletePaymentMethodDoc(t.id);
+      }
+      setDeleteConfirm(null);
     } catch (e) {
       setError(String(e.message || e));
     } finally {
@@ -222,26 +317,85 @@ function PaymentMethodShell({ stripePromise, ensureStripe }) {
                 justifyContent="space-between"
                 alignItems="flex-start"
                 p="22px 20px"
+                onMouseEnter={() => setHoveredId(card.id || idx)}
+                onMouseLeave={() => setHoveredId(null)}
+                sx={{ position: 'relative', transition: 'border-color .2s ease', '&:hover': { borderColor: '#3b3f76' } }}
               >
+                <VuiBox sx={{ position: 'absolute', top: 8, right: 8, display: { xs: 'flex', md: hoveredId === (card.id || idx) ? 'flex' : 'none' }, gap: 0.5 }}>
+                  <Tooltip title="Edit">
+                    <IconButton size="small" onClick={() => openEdit(card, Boolean(card.type === 'visual' || !card.paymentMethodId))} sx={{ color: '#cdd3ea', background: 'rgba(255,255,255,0.06)', '&:hover': { background: 'rgba(255,255,255,0.12)' } }}>
+                      <EditOutlinedIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Delete">
+                    <IconButton size="small" onClick={() => openDelete(card, Boolean(card.type === 'visual' || !card.paymentMethodId))} sx={{ color: '#ff8f8f', background: 'rgba(255,0,0,0.06)', '&:hover': { background: 'rgba(255,0,0,0.12)' } }}>
+                      <DeleteOutlineIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                </VuiBox>
                 <VuiBox display="flex" alignItems="center" width="100%">
                   {String(card.brand || '').toLowerCase() === 'visa' ? <Visa width="25px" /> : <Mastercard width="21px" />}
                   <VuiTypography pl={2} variant="button" color="white" fontWeight="medium">
                     {card.billingName || 'Saved Card'}
-                    <span style={{ color: '#aaa', fontWeight: 400, fontSize: 14, marginLeft: 12 }}>
-                      {card.last4 ? `•••• •••• •••• ${card.last4}` : (card.bankName ? ` · ${card.bankName}` : '')}
+                    <span style={{ color: '#b8bdd9', fontWeight: 500, fontSize: 13, marginLeft: 12 }}>
+                      {card.last4 ? `•••• •••• •••• ${card.last4}` : (card.bankName ? `· ${card.bankName}` : '')}
                     </span>
                   </VuiTypography>
                 </VuiBox>
-                {(card.exp_month && card.exp_year) ? (
-                  <VuiTypography mt={1} pl={String(card.brand || '').toLowerCase() === 'visa' ? 6 : 5} variant="caption" color="white">
-                    EXP: {card.exp_month?.toString().padStart(2,'0')}/{String(card.exp_year || '').toString().slice(-2)}
-                  </VuiTypography>
-                ) : null}
+                <VuiTypography mt={1} pl={String(card.brand || '').toLowerCase() === 'visa' ? 6 : 5} variant="caption" color="white">
+                  {card.last4 ? (
+                    <>
+                      EXP: {(card.exp_month ? String(card.exp_month).padStart(2,'0') : '--')}/{(card.exp_year ? String(card.exp_year).toString().slice(-2) : '--')}
+                      <span style={{ margin: '0 10px', opacity: .4 }}>|</span>
+                      CVV: •••
+                    </>
+                  ) : (
+                    card.bankName ? `Bank: ${card.bankName}` : ''
+                  )}
+                </VuiTypography>
               </VuiBox>
             </Grid>
           ))}
         </Grid>
       </VuiBox>
+      {/* Edit dialog for visual cards or metadata */}
+      <Dialog open={editOpen} onClose={() => setEditOpen(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { background: 'rgba(34, 40, 74, 0.65)', boxShadow: 24, borderRadius: 4, color: 'white', backdropFilter: 'blur(10px)', p: 4 } }}>
+        <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 20 }}>Edit Card</DialogTitle>
+        <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 1 }}>
+          <TextField label="Name on Card" value={billingName} onChange={(e)=>setBillingName(e.target.value)} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx }} />
+          <TextField label="Bank Name (optional)" value={bankName} onChange={(e)=>setBankName(e.target.value)} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx }} />
+          <TextField label="Network" value={network} onChange={(e)=>setNetwork(e.target.value)} select fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, '& .MuiSelect-select': { color: '#e7e9f3', py: 1 } }}>
+            <MenuItem value="visa">Visa</MenuItem>
+            <MenuItem value="mastercard">Mastercard</MenuItem>
+            <MenuItem value="amex">American Express</MenuItem>
+            <MenuItem value="discover">Discover</MenuItem>
+          </TextField>
+          <Grid container spacing={1}>
+            <Grid item xs={6}>
+              <TextField label="Last 4 digits" value={last4} onChange={(e)=>setLast4(e.target.value.replace(/\D/g,'').slice(0,4))} inputProps={{ maxLength: 4 }} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx }} />
+            </Grid>
+            <Grid item xs={3}>
+              <TextField label="MM" value={expMonth} onChange={(e)=>setExpMonth(e.target.value.replace(/\D/g,'').slice(0,2))} inputProps={{ maxLength: 2 }} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx }} />
+            </Grid>
+            <Grid item xs={3}>
+              <TextField label="YY" value={expYear} onChange={(e)=>setExpYear(e.target.value.replace(/\D/g,'').slice(0,4))} inputProps={{ maxLength: 4 }} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx }} />
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={()=>setEditOpen(false)} sx={{ color: '#bfc6e0' }}>Cancel</Button>
+          <Button onClick={handleSaveEdit} variant="contained" color="info" disabled={saving} sx={{ borderRadius: 2, px: 3, fontWeight: 600 }}>{saving ? <CircularProgress size={18} sx={{ color: 'white' }} /> : 'Save'}</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete confirmation */}
+      <Dialog open={Boolean(deleteConfirm)} onClose={() => setDeleteConfirm(null)} maxWidth="xs" fullWidth PaperProps={{ sx: { background: 'rgba(34, 40, 74, 0.9)', color: 'white', p: 2 } }}>
+        <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 18 }}>Remove payment method?</DialogTitle>
+        <DialogActions>
+          <Button onClick={()=>setDeleteConfirm(null)} sx={{ color: '#bfc6e0' }}>Cancel</Button>
+          <Button onClick={handleDelete} color="error" variant="contained" disabled={saving}>{saving ? <CircularProgress size={18} sx={{ color: 'white' }} /> : 'Delete'}</Button>
+        </DialogActions>
+      </Dialog>
       <Dialog
         open={open}
         onClose={handleClose}
@@ -310,6 +464,17 @@ function PaymentMethodShell({ stripePromise, ensureStripe }) {
                 <MenuItem value="amex">American Express</MenuItem>
                 <MenuItem value="discover">Discover</MenuItem>
               </TextField>
+              <Grid container spacing={1} sx={{ mt: 0.5 }}>
+                <Grid item xs={6}>
+                  <TextField label="Last 4 digits" value={last4} onChange={(e)=>setLast4(e.target.value.replace(/\D/g,''))} inputProps={{ maxLength: 4 }} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx }} />
+                </Grid>
+                <Grid item xs={3}>
+                  <TextField label="MM" value={expMonth} onChange={(e)=>setExpMonth(e.target.value.replace(/\D/g,'').slice(0,2))} inputProps={{ maxLength: 2 }} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx }} />
+                </Grid>
+                <Grid item xs={3}>
+                  <TextField label="YY" value={expYear} onChange={(e)=>setExpYear(e.target.value.replace(/\D/g,'').slice(0,4))} inputProps={{ maxLength: 4 }} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx }} />
+                </Grid>
+              </Grid>
               <DialogActions sx={{ background: 'transparent', px: 0, pb: 0, pt: 2, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
                 <Button onClick={handleClose} sx={{ color: '#bfc6e0' }}>Cancel</Button>
                 <Button onClick={handleAddVisualCard} variant="contained" color="info" disabled={saving || !billingName} sx={{ borderRadius: 2, px: 3, fontWeight: 600 }}>

@@ -124,6 +124,20 @@ export async function addPaymentMethodDoc(data, uid) {
   return ref.id;
 }
 
+export async function updatePaymentMethodDoc(id, patch, uid) {
+  if (!ensure()) return;
+  if (!uid) uid = auth?.currentUser?.uid;
+  if (!uid) return;
+  await updateDoc(paymentMethodDoc(uid, id), { ...patch, updatedAt: serverTimestamp() });
+}
+
+export async function deletePaymentMethodDoc(id, uid) {
+  if (!ensure()) return;
+  if (!uid) uid = auth?.currentUser?.uid;
+  if (!uid) return;
+  await deleteDoc(paymentMethodDoc(uid, id));
+}
+
 export function onPaymentMethods(opts = {}, cb) {
   try {
     if (!ensure()) { try { cb([]); } catch (_) {} return () => {}; }
@@ -144,6 +158,8 @@ export default {
   deleteInsuranceCard,
   onInsuranceCards,
   addPaymentMethodDoc,
+  updatePaymentMethodDoc,
+  deletePaymentMethodDoc,
   onPaymentMethods,
 };
 

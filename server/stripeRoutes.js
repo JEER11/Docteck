@@ -44,4 +44,16 @@ router.post('/save-card', async (req, res) => {
   }
 });
 
+// Detach a payment method from Stripe customer (and optionally unset default)
+router.post('/delete-card', async (req, res) => {
+  const { paymentMethodId } = req.body;
+  if (!paymentMethodId) return res.status(400).json({ error: 'Missing paymentMethodId' });
+  try {
+    await stripe.paymentMethods.detach(paymentMethodId);
+    return res.json({ success: true });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;
