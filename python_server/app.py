@@ -194,6 +194,36 @@ def api_ocr():
 
 BUILD_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'build'))
 
+# Cache last good React index to avoid flashing the build splash during brief rebuild gaps
+_INDEX_CACHE = { 'mtime': 0, 'html': None }
+
+def _load_cached_react_index():
+    """
+    Load and cache build/index.html, rewriting asset paths for /app and injecting config.
+    Returns cached HTML when build/index.html is temporarily missing (e.g., during CRA cleanup).
+    """
+    try:
+        index_path = os.path.join(BUILD_DIR, 'index.html')
+        if os.path.exists(index_path):
+            mtime = os.path.getmtime(index_path)
+            if mtime != _INDEX_CACHE['mtime']:
+                with open(index_path, 'r', encoding='utf-8') as f:
+                    html = f.read()
+                html = _rewrite_react_index_paths(html)
+                inject = f"""
+                <script id=\"flask-config\" type=\"application/json\">{json.dumps({'apiBase': get_api_base()})}</script>
+                <script>window.__FIREBASE_CONFIG__ = {json.dumps(firebase_env_config())};</script>
+                <script src=\"/static/bridge.js\"></script>
+                """
+                if '</body>' in html:
+                    html = html.replace('</body>', inject + '\n</body>')
+                _INDEX_CACHE['mtime'] = mtime
+                _INDEX_CACHE['html'] = html
+        # Return cached html (freshly loaded or previous good version)
+        return _INDEX_CACHE['html']
+    except Exception:
+        return _INDEX_CACHE['html']
+
 # --------- Helpers: load React build CSS to match styling ---------
 def get_react_css_urls():
     manifest_path = os.path.join(BUILD_DIR, 'asset-manifest.json')
@@ -363,10 +393,18 @@ def classic_pets():
 # ---------- React app (served under /app) ----------
 @app.route('/app')
 def react_index():
+    # Attempt to serve current index.html; if missing, serve cached good version
+    cached = _load_cached_react_index()
+    if cached:
+        return cached, 200, {
+            "Content-Type": "text/html; charset=utf-8",
+            "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+            "Pragma": "no-cache",
+            "Expires": "0",
+        }
+    # If no cached html yet (first-ever load) and index is missing, show splash once
     index_path = os.path.join(BUILD_DIR, 'index.html')
     if not os.path.exists(index_path):
-        # During an in-progress CRA build, index.html can be briefly missing.
-        # Always show a lightweight auto-reload page to avoid a blank screen.
         return (
             """<!doctype html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>UI is building…</title>
             <style>html,body{height:100%;margin:0}body{display:flex;align-items:center;justify-content:center;background:#0b1020;color:#e8ecff;font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif} .card{background:#0f1630;border:1px solid #1f2b56;border-radius:14px;padding:22px 26px;box-shadow:0 12px 30px rgba(5,10,40,.35)} h2{margin:0 0 6px 0;font-weight:700;font-size:20px} p{margin:6px 0 0 0;opacity:.85}</style></head>
@@ -375,34 +413,19 @@ def react_index():
             200,
             {"Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store"}
         )
-    try:
-        with open(index_path, 'r', encoding='utf-8') as f:
-            html = f.read()
-        # Rewrite asset paths for /app
-        html = _rewrite_react_index_paths(html)
-        # Inject a small config and bridge loader before </body>
-        inject = f"""
-        <script id=\"flask-config\" type=\"application/json\">{json.dumps({'apiBase': get_api_base()})}</script>
-        <script>window.__FIREBASE_CONFIG__ = {json.dumps(firebase_env_config())};</script>
-        <script src=\"/static/bridge.js\"></script>
-        """
-        if '</body>' in html:
-            html = html.replace('</body>', inject + '\n</body>')
-        # Send with dev-friendly no-cache headers to avoid stale shell during active changes
-        return html, 200, {
-            "Content-Type": "text/html; charset=utf-8",
-            "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
-            "Pragma": "no-cache",
-            "Expires": "0",
-        }
-    except Exception:
-        # Fallback to static send if anything goes wrong
-        return send_from_directory(BUILD_DIR, 'index.html')
+    # If the file exists but not yet cached, load it now and return
+    html = _load_cached_react_index()
+    return html or send_from_directory(BUILD_DIR, 'index.html')
 
 @app.route('/app/<path:path>')
 def react_static(path):
     file_path = os.path.join(BUILD_DIR, path)
     if os.path.isfile(file_path):
+        try:
+            # Touch cache so next /app serves the latest index
+            _load_cached_react_index()
+        except Exception:
+            pass
         return send_from_directory(BUILD_DIR, path)
     # SPA fallback: delegate to react_index to ensure consistent behavior
     return react_index()
