@@ -24,7 +24,7 @@ export default function TodoTracker() {
   <Card sx={{ height: 420, display: 'flex', flexDirection: 'column', p: { xs: 2, md: 3 }, color: 'white' }}>
       <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
         <VuiTypography variant="button" color="white" fontWeight="bold">
-          To do's Track
+          NOTES
         </VuiTypography>
         <Box display="flex" alignItems="center" gap={2}>
           <VuiTypography variant="button" color="white" fontWeight="bold">
