@@ -6,7 +6,7 @@ import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
 // react-router components
-import { useLocation, Link, useNavigate } from "react-router-dom";
+import { useLocation, Link, useHistory } from "react-router-dom";
 import { routeLoadingBus } from "components/routeLoadingBus";
 
 // prop-types is a library for typechecking of props.
@@ -62,7 +62,7 @@ function DashboardNavbar({ absolute, light, isMini }) {
   const { miniSidenav, transparentNavbar, fixedNavbar, openConfigurator } = controller;
   const [openMenu, setOpenMenu] = useState(false);
   const route = useLocation().pathname.split("/").slice(1);
-  const navigate = useNavigate();
+  const history = useHistory();
   const [q, setQ] = useState("");
   const [results, setResults] = useState([]);
   const [openSearch, setOpenSearch] = useState(false);
@@ -139,7 +139,7 @@ function DashboardNavbar({ absolute, light, isMini }) {
       const sel = results[activeIdx];
       if (sel) {
         routeLoadingBus.start();
-        navigate(sel.path);
+        history.push(sel.path);
         setOpenSearch(false);
       }
     } else if (e.key === 'Escape') {
@@ -188,7 +188,7 @@ function DashboardNavbar({ absolute, light, isMini }) {
                         selected={i === activeIdx}
                         onMouseEnter={() => setActiveIdx(i)}
                         onMouseDown={(e) => e.preventDefault()}
-                        onClick={() => { routeLoadingBus.start(); navigate(r.path); setOpenSearch(false); }}
+                        onClick={() => { routeLoadingBus.start(); history.push(r.path); setOpenSearch(false); }}
                         sx={{ '&.Mui-selected': { background: 'rgba(255,255,255,0.08)' }, color: 'white' }}
                       >
                         <ListItemText primary={r.title} secondary={r.path.replace('/app/','')} primaryTypographyProps={{ sx: { color: 'white', fontWeight: 600 } }} secondaryTypographyProps={{ sx: { color: 'rgba(255,255,255,0.6)' } }} />
