@@ -104,6 +104,19 @@ function Dashboard() {
     }).format(date);
   };
 
+  // Create a concise subtitle for the next appointment (doctor or short reason)
+  const formatAppointmentSubtitle = (appt) => {
+    if (!appt) return null;
+    const title = (appt.title || '').trim();
+    if (!title) return null;
+    // Prefer doctor name after 'Dr.' or 'with', else use first 24 chars of title
+    const drMatch = title.match(/(Dr\.?\s+[A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)?)/);
+    if (drMatch) return drMatch[1];
+    const withMatch = title.match(/with\s+([^,-]+)/i);
+    if (withMatch) return withMatch[1].trim();
+    return title.length > 24 ? `${title.slice(0, 24)}…` : title;
+  };
+
   const { payments } = useBilling();
   // Find the latest insurance payment (or use logic as needed)
   const latestInsurance = payments.filter(p => p.type === 'insurance').sort((a, b) => new Date(b.date) - new Date(a.date))[0];
@@ -286,13 +299,17 @@ function Dashboard() {
             <Grid item xs={12} md={6} xl={3}>
               <MiniStatisticsCard
                 title={{ text: "Next Appointment" }}
+                countVariant="subtitle2"
+                percentageVariant="button"
+                countProps={{ sx: { fontSize: '1.02rem' }, noWrap: true }}
+                percentageProps={{ lineClamp: 1, sx: { maxWidth: '95%', fontSize: '0.86rem' } }}
                 count={nextAppointment ? formatAppointmentDate(nextAppointment.start) : "-"}
                 percentage={
                   nextAppointment
                     ? {
                         color: "primary",
                         hexColor: "#A58AFF",
-                        text: nextAppointment.title
+                        text: formatAppointmentSubtitle(nextAppointment) || nextAppointment.title
                       }
                     : { color: "secondary", text: "No Upcoming Appt." }
                 }
