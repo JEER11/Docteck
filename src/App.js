@@ -41,6 +41,11 @@ export default function App() {
     if (document.scrollingElement) document.scrollingElement.scrollTop = 0;
   }, [direction, pathname]);
 
+  // Expose routes at runtime for global search indexing (avoids require loops)
+  useEffect(() => {
+    try { window.__APP_ROUTES__ = routes; } catch (_) {}
+  }, []);
+
   // Add/remove a special background on billing route only
   useEffect(() => {
     if (pathname.startsWith("/billing")) {

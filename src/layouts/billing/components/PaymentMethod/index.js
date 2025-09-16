@@ -29,7 +29,7 @@ import Visa from "examples/Icons/Visa";
 import React, { useEffect, useState } from "react";
 import { CardElement, Elements, useStripe, useElements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
-import { STRIPE_PUBLISHABLE_KEY } from "lib/stripeConfig";
+import { STRIPE_PUBLISHABLE_KEY, hasStripeKey } from "lib/stripeConfig";
 import { auth } from "lib/firebase";
 import { addPaymentMethodDoc, onPaymentMethods, updatePaymentMethodDoc, deletePaymentMethodDoc } from "lib/billingData";
 // Stripe form (only rendered within <Elements>)
@@ -493,7 +493,7 @@ function PaymentMethodShell({ stripePromise, ensureStripe }) {
 function PaymentMethod() {
   const [stripePromise, setStripePromise] = React.useState(null);
   const ensureStripe = () => {
-    if (stripePromise || !STRIPE_PUBLISHABLE_KEY) return;
+    if (stripePromise || !hasStripeKey) return;
     try { setStripePromise(loadStripe(STRIPE_PUBLISHABLE_KEY)); } catch (_) {}
   };
   return <PaymentMethodShell stripePromise={stripePromise} ensureStripe={ensureStripe} />;

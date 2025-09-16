@@ -11,7 +11,7 @@ import VuiBox from "components/VuiBox";
 import VuiTypography from "components/VuiTypography";
 import colors from "assets/theme/base/colors";
 
-function MiniStatisticsCard({ bgColor, title, count, percentage, icon, direction }) {
+function MiniStatisticsCard({ bgColor, title, count, percentage, icon, direction, countVariant = "subtitle1", percentageVariant = "button", countProps = {}, percentageProps = {} }) {
   const { info } = colors;
 
   return (
@@ -47,13 +47,22 @@ function MiniStatisticsCard({ bgColor, title, count, percentage, icon, direction
                 >
                   {title.text}
                 </VuiTypography>
-                <VuiTypography variant="subtitle1" fontWeight="bold" color="white">
+                <VuiTypography variant={countVariant} fontWeight="bold" color="white" {...countProps} noWrap={!!(countProps && countProps.noWrap)}>
                   {count}{" "}
                   <VuiTypography
-                    variant="button"
+                    variant={percentageVariant}
                     color={percentage.color}
                     fontWeight="bold"
-                    sx={percentage.hexColor ? { color: percentage.hexColor } : undefined}
+                    sx={{
+                      ...(percentage.hexColor ? { color: percentage.hexColor } : {}),
+                      display: '-webkit-box',
+                      WebkitLineClamp: (percentageProps && percentageProps.lineClamp) ? percentageProps.lineClamp : 1,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      ...(percentageProps && percentageProps.sx ? percentageProps.sx : {}),
+                    }}
+                    {...percentageProps}
                   >
                     {percentage.text}
                   </VuiTypography>

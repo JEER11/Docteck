@@ -22,23 +22,16 @@ const manualSections = [
   { title: 'Report Problems', path: '/app/profile', keywords: ['report', 'problems', 'support'] },
 ];
 
-// Derive entries from the app routes config (src/routes.js)
-let derivedSections = [];
-try {
-  // Lazy import to avoid circular deps at module init
-  const routesMod = require('../routes');
-  const routes = routesMod && routesMod.default ? routesMod.default : routesMod;
-  if (Array.isArray(routes)) {
-    derivedSections = routes
-      .filter(r => r && typeof r === 'object' && typeof r.name === 'string' && typeof r.route === 'string' && r.route)
-      .map(r => ({
-        title: r.name,
-        path: `/app${r.route.startsWith('/') ? r.route : '/' + r.route}`,
-        keywords: [(r.key || r.name || '').toString().toLowerCase()],
-      }));
-  }
-} catch (_) {
-  // best-effort; ignore if not available during certain builds
+// Lazy-derived entries from routes provided at runtime via window.__APP_ROUTES__
+function deriveFromRoutes(routes) {
+  if (!Array.isArray(routes)) return [];
+  return routes
+    .filter(r => r && typeof r === 'object' && typeof r.name === 'string' && typeof r.route === 'string' && r.route)
+    .map(r => ({
+      title: r.name,
+      path: `/app${r.route.startsWith('/') ? r.route : '/' + r.route}`,
+      keywords: [(r.key || r.name || '').toString().toLowerCase()],
+    }));
 }
 
 // Additional in-page targets for quick access
@@ -51,20 +44,24 @@ const inPageTargets = [
   { title: 'Profile Settings', path: '/app/profile', keywords: ['settings', 'account', 'preferences'] },
 ];
 
-// Merge unique by path+title
-const byKey = new Map();
-[...manualSections, ...derivedSections, ...inPageTargets].forEach(item => {
-  if (!item || !item.title || !item.path) return;
-  const key = `${item.path}|${item.title}`;
-  if (!byKey.has(key)) byKey.set(key, { ...item, keywords: Array.from(new Set(item.keywords || [])) });
-  else {
-    const existing = byKey.get(key);
-    existing.keywords = Array.from(new Set([...(existing.keywords || []), ...(item.keywords || [])]));
-    byKey.set(key, existing);
-  }
-});
-
-const sections = Array.from(byKey.values());
+let sectionsCache = null;
+function ensureIndexed() {
+  if (sectionsCache) return sectionsCache;
+  const derived = (typeof window !== 'undefined' && window.__APP_ROUTES__) ? deriveFromRoutes(window.__APP_ROUTES__) : [];
+  const byKey = new Map();
+  [...manualSections, ...derived, ...inPageTargets].forEach(item => {
+    if (!item || !item.title || !item.path) return;
+    const key = `${item.path}|${item.title}`;
+    if (!byKey.has(key)) byKey.set(key, { ...item, keywords: Array.from(new Set(item.keywords || [])) });
+    else {
+      const existing = byKey.get(key);
+      existing.keywords = Array.from(new Set([...(existing.keywords || []), ...(item.keywords || [])]));
+      byKey.set(key, existing);
+    }
+  });
+  sectionsCache = Array.from(byKey.values());
+  return sectionsCache;
+}
 
 function norm(s) {
   return (s || '').toString().toLowerCase();
@@ -73,6 +70,7 @@ function norm(s) {
 export function searchSections(q, limit = 8) {
   const query = norm(q);
   if (!query) return [];
+  const sections = ensureIndexed();
   const scored = [];
   for (const item of sections) {
     const haystack = [item.title, ...(item.keywords || [])].map(norm);
@@ -89,5 +87,5 @@ export function searchSections(q, limit = 8) {
 }
 
 export function getAllSections() {
-  return sections.slice();
+  return ensureIndexed().slice();
 }

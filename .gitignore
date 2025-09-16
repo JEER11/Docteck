@@ -2,6 +2,7 @@
 .env
 server/.env
 python_server/.env
+python_server/.index_cache.html
 
 # Node
 node_modules/
