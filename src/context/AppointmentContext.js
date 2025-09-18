@@ -155,39 +155,74 @@ export function AppointmentProvider({ children }) {
   }, [rxDates]);
 
   const addAppointment = async (appointment) => {
-  if (auth && auth.currentUser) {
+    // Normalize minimal fields
+    const norm = {
+      title: (appointment.title && String(appointment.title).trim()) || (appointment.doctor ? `Visit with ${appointment.doctor}` : 'Appointment'),
+      start: appointment.start instanceof Date ? appointment.start : new Date(appointment.start || Date.now()),
+      end: appointment.end instanceof Date ? appointment.end : new Date(appointment.end || (Date.now() + 30 * 60000)),
+      providerId: appointment.providerId || null,
+      location: appointment.location || '',
+      reason: appointment.reason || '',
+      details: appointment.details || ''
+    };
+    // Optimistic add so the calendar updates immediately
+    const tempId = 'local-' + Date.now().toString(36);
+    setAppointments(prev => {
+      const next = [...prev, { id: tempId, ...norm }];
+      try { localStorage.setItem('appointments', JSON.stringify(next.map(x => ({ ...x, start: (x.start instanceof Date ? x.start : new Date(x.start)).toISOString(), end: (x.end instanceof Date ? x.end : new Date(x.end)).toISOString() })))); } catch(_) {}
+      try { console.debug('[Appt] Optimistic add', { tempId, ...norm }); } catch(_) {}
+      return next;
+    });
+    const replaceTemp = (real) => {
+      if (!real) return;
+      setAppointments(prev => {
+        const next = prev.map(x => (x.id === tempId ? { ...x, ...real, start: new Date(real.start || x.start), end: new Date(real.end || x.end) } : x));
+        try { localStorage.setItem('appointments', JSON.stringify(next.map(x => ({ ...x, start: (x.start instanceof Date ? x.start : new Date(x.start)).toISOString(), end: (x.end instanceof Date ? x.end : new Date(x.end)).toISOString() })))); } catch(_) {}
+        return next;
+      });
+    };
+    if (auth && auth.currentUser) {
       try {
         await addAppt({
-          title: appointment.title,
-          start: appointment.start,
-          end: appointment.end,
-          providerId: appointment.providerId || null,
-          location: appointment.location || '',
-          reason: appointment.reason || '',
-          details: appointment.details || ''
+          title: norm.title,
+          start: norm.start,
+          end: norm.end,
+          providerId: norm.providerId,
+          location: norm.location,
+          reason: norm.reason,
+          details: norm.details
         });
-        return;
+        try { console.debug('[Appt] Saved to Firestore'); } catch(_) {}
+        return { status: 'firestore', id: tempId };
       } catch (_) {}
     }
     // Fallback to existing API
     try {
       const payload = {
-        title: appointment.title,
-        start: appointment.start instanceof Date ? appointment.start.toISOString() : appointment.start,
-        end: appointment.end instanceof Date ? appointment.end.toISOString() : appointment.end,
-        providerId: appointment.providerId || null,
-        location: appointment.location || '',
-        reason: appointment.reason || '',
-        details: appointment.details || ''
+        title: norm.title,
+        start: norm.start instanceof Date ? norm.start.toISOString() : norm.start,
+        end: norm.end instanceof Date ? norm.end.toISOString() : norm.end,
+        providerId: norm.providerId,
+        location: norm.location,
+        reason: norm.reason,
+        details: norm.details
       };
       const res = await fetch(`${API}/api/appointments`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-      const data = await res.json();
+      // Treat non-2xx as failure to ensure UI still updates
+      if (!res.ok) throw new Error('request_failed');
+      const data = await res.json().catch(() => ({}));
       if (data?.ok && data.appointment) {
         const a = data.appointment;
-        setAppointments(prev => [...prev, { ...a, start: new Date(a.start), end: new Date(a.end) }]);
+        replaceTemp({ ...a, start: new Date(a.start), end: new Date(a.end) });
+        try { console.debug('[Appt] Saved to backend', a); } catch(_) {}
+        return { status: 'server', id: a.id };
       }
+      // Backend responded but not ok: fall back to local state
+      throw new Error('backend_rejected');
     } catch (_) {
-      setAppointments(prev => [...prev, appointment]);
+      // keep optimistic local event as-is
+      try { console.warn('[Appt] Backend save failed; kept local only'); } catch(_) {}
+      return { status: 'local', id: tempId };
     }
   };
 
