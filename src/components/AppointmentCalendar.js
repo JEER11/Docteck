@@ -157,7 +157,7 @@ function AppointmentCalendar() {
       end = new Date(start.getTime() + 60 * 60 * 1000);
     }
     const payload = {
-      title: form.title,
+      title: (form.title && String(form.title).trim()) || (form.doctor ? `Visit with ${form.doctor}` : (form.reason || 'Appointment')),
       start,
       end,
       allDay: false,
