@@ -6,6 +6,8 @@ import {
   ToggleButton,
   ToggleButtonGroup,
   IconButton,
+  Snackbar,
+  Alert
 } from "@mui/material";
 import { Calendar, momentLocalizer, Views } from "react-big-calendar";
 import moment from "moment";
@@ -24,6 +26,23 @@ function AppointmentCalendar() {
   // Defensive: fallback to empty object if context is undefined
   const context = useAppointments() || {};
   const appointments = Array.isArray(context.appointments) ? context.appointments : [];
+  // Safety net: also read persisted local appointments in case context didn't refresh yet
+  const persistedAppointments = React.useMemo(() => {
+    try {
+      const raw = localStorage.getItem('appointments') || '[]';
+      const arr = JSON.parse(raw);
+      if (!Array.isArray(arr)) return [];
+      return arr.map(a => ({ ...a, start: new Date(a.start), end: new Date(a.end) }));
+    } catch (_) { return []; }
+  }, [appointments.length]);
+  const mergedAppointments = React.useMemo(() => {
+    const key = (a) => (a.id ? `id:${a.id}` : `t:${new Date(a.start).toISOString()}`);
+    const map = new Map();
+    [...appointments, ...persistedAppointments].forEach(a => { try { map.set(key(a), a); } catch(_) {} });
+    const list = Array.from(map.values());
+    try { console.debug('[Cal] merged appointments', { ctx: appointments.length, persisted: persistedAppointments.length, merged: list.length }); } catch(_) {}
+    return list;
+  }, [appointments, persistedAppointments]);
   // Overlays
   const { todos = [] } = useTodos?.() || {};
   const [rxList, setRxList] = React.useState([]);
@@ -64,32 +83,80 @@ function AppointmentCalendar() {
   const addAppointment = context.addAppointment || (() => {});
   const [view, setView] = useState(Views.MONTH);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [toast, setToast] = useState({ open: false, message: '', severity: 'info' });
+  const [localAdds, setLocalAdds] = useState([]);
+
+  const persistLocal = (evt) => {
+    try {
+      const raw = localStorage.getItem('appointments') || '[]';
+      const arr = Array.isArray(JSON.parse(raw)) ? JSON.parse(raw) : [];
+      const key = (e) => (e.id ? `id:${e.id}` : `t:${new Date(e.start).toISOString()}:${e.title||''}`);
+      const seen = new Set(arr.map(a => key(a)));
+      const payload = { ...evt, start: (evt.start instanceof Date ? evt.start : new Date(evt.start)).toISOString(), end: (evt.end instanceof Date ? evt.end : new Date(evt.end)).toISOString() };
+      if (!seen.has(key(evt))) arr.push(payload);
+      localStorage.setItem('appointments', JSON.stringify(arr));
+    } catch(_) {}
+  };
 
   // Handle new appointments
   const handleSelect = ({ start, end }) => {
+    try { console.log('[Cal] handleSelect', start, end); } catch(_) {}
     const title = window.prompt("Enter appointment title:");
     if (title) {
+      // Month view often returns start===end; ensure non-zero duration
+      const s = new Date(start);
+      const e = end && new Date(end) > s ? new Date(end) : new Date(s.getTime() + 60 * 60000);
       const newAppointment = {
         title,
-        start,
-        end,
+        start: s,
+        end: e,
         allDay: false,
       };
-      addAppointment(newAppointment);
+      try { console.log('[Cal] addAppointment from select', newAppointment); } catch(_) {}
+      // Local UI fallback first
+      const uiEvent = { id: 'ui-'+Date.now().toString(36), ...newAppointment };
+      setLocalAdds((prev) => [...prev, uiEvent]);
+      persistLocal(uiEvent);
+      Promise.resolve(addAppointment(newAppointment)).then((res) => {
+        const status = res?.status || 'local';
+        const message = status === 'firestore' ? 'Saved to Firestore' : status === 'server' ? 'Saved to server' : 'Saved locally';
+        try { console.log('[Cal] add result', res); } catch(_) {}
+        setToast({ open: true, message, severity: 'success' });
+      }).catch(() => setToast({ open: true, message: 'Saved locally', severity: 'warning' }));
     }
   };
 
   // Manual add via + button
   const handleAddClick = () => {
+    try { console.log('[Cal] handleAddClick: open dialog'); } catch(_) {}
     setDialogOpen(true);
   };
 
   const handleDialogClose = () => setDialogOpen(false);
   const handleDialogSubmit = (form) => {
+    try { console.log('[Cal] handleDialogSubmit(raw)', form); } catch(_) {}
     // Convert form to appointment object
-    const start = form.date && form.from ? new Date(`${form.date}T${form.from}`) : new Date();
-    const end = form.date && form.to ? new Date(`${form.date}T${form.to}`) : new Date(start.getTime() + 60 * 60 * 1000);
-    addAppointment({
+    let start;
+    let end;
+    if (form.date) {
+      if (form.from) {
+        start = new Date(`${form.date}T${form.from}`);
+        if (form.to) {
+          end = new Date(`${form.date}T${form.to}`);
+        } else {
+          end = new Date(start.getTime() + 60 * 60 * 1000);
+        }
+      } else {
+        // No times provided — default to 09:00–10:00 on that date
+        start = new Date(`${form.date}T09:00`);
+        end = new Date(`${form.date}T10:00`);
+      }
+    } else {
+      // No date provided — use now -> +1h
+      start = new Date();
+      end = new Date(start.getTime() + 60 * 60 * 1000);
+    }
+    const payload = {
       title: form.title,
       start,
       end,
@@ -99,7 +166,18 @@ function AppointmentCalendar() {
       location: form.location,
       reason: form.reason,
       details: form.details
-    });
+    };
+    try { console.log('[Cal] addAppointment from dialog', payload); } catch(_) {}
+    // Local UI fallback first
+    const uiEvent = { id: 'ui-'+Date.now().toString(36), ...payload };
+    setLocalAdds((prev) => [...prev, uiEvent]);
+    persistLocal(uiEvent);
+    Promise.resolve(addAppointment(payload)).then((res) => {
+      const status = res?.status || 'local';
+      const message = status === 'firestore' ? 'Saved to Firestore' : status === 'server' ? 'Saved to server' : 'Saved locally';
+      try { console.log('[Cal] add result', res); } catch(_) {}
+      setToast({ open: true, message, severity: 'success' });
+    }).catch(() => setToast({ open: true, message: 'Saved locally', severity: 'warning' }));
     setDialogOpen(false);
   };
 
@@ -180,7 +258,7 @@ function AppointmentCalendar() {
           </Box>
           <Calendar
             localizer={localizer}
-            events={[...appointments, ...overlayEvents]}
+            events={[...mergedAppointments, ...localAdds, ...overlayEvents]}
             startAccessor="start"
             endAccessor="end"
             style={{ height: '100%', minHeight: 320, width: "100%", minWidth: 0, fontSize: 13 }}
@@ -221,6 +299,11 @@ function AppointmentCalendar() {
         </Box>
       </Card>
       <AppointmentDialog open={dialogOpen} onClose={handleDialogClose} onSubmit={handleDialogSubmit} />
+      <Snackbar open={toast.open} autoHideDuration={2500} onClose={() => setToast(t => ({ ...t, open: false }))} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
+        <Alert onClose={() => setToast(t => ({ ...t, open: false }))} severity={toast.severity} sx={{ width: '100%' }}>
+          {toast.message}
+        </Alert>
+      </Snackbar>
     </>
   );
 }
