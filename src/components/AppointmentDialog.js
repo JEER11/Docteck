@@ -52,7 +52,9 @@ export default function AppointmentDialog({ open, onClose, onSubmit }) {
 
   const handleSubmit = () => {
     const providerId = (providers || []).find(p => p.name === form.doctor)?.id || null;
-    onSubmit({ ...form, providerId });
+    // Ensure a non-empty title so the event is visible in the calendar
+    const safeTitle = (form.title && form.title.trim()) || (form.doctor ? `Visit with ${form.doctor}` : (form.reason ? form.reason : 'Appointment'));
+    onSubmit({ ...form, title: safeTitle, providerId });
     setForm({
       title: "",
       date: "",
