@@ -465,7 +465,11 @@ def react_static(path):
         except Exception:
             pass
         return send_from_directory(BUILD_DIR, path)
-    # SPA fallback: delegate to react_index to ensure consistent behavior
+    # If the request targets hashed static assets that no longer exist after a rebuild,
+    # return 404 so the browser doesn't try to execute HTML as JS.
+    if path.startswith(('static/', 'locales/')) or path in ('favicon.png','apple-icon.png','manifest.json'):
+        return '', 404
+    # Otherwise, SPA fallback to index for client-side routing paths
     return react_index()
 
 # Friendly path for brand icon used in SPA Sidenav
