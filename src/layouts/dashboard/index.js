@@ -284,6 +284,7 @@ function Dashboard() {
               <MiniStatisticsCard
                 title={{ text: "Insurance Monthly Bill", fontWeight: "regular" }}
                 count={insuranceBill}
+                countProps={{ noWrap: true }}
                 percentage={{ color: "primary", hexColor: "#A58AFF", text: insuranceDaysText }}
                 icon={{ color: "info", component: <FaFileInvoiceDollar size="22px" color="rgba(33,150,243,0.5)" /> }}
               />
@@ -292,6 +293,7 @@ function Dashboard() {
               <MiniStatisticsCard
                 title={{ text: "Due Bill" }}
                 count={dueBill}
+                countProps={{ noWrap: true }}
                 percentage={{ color: "primary", hexColor: "#A58AFF", text: dueBillDate }}
                 icon={{ color: "info", component: <FaMoneyCheckAlt size="22px" color="rgba(33,150,243,0.5)" /> }}
               />
@@ -299,11 +301,8 @@ function Dashboard() {
             <Grid item xs={12} md={6} xl={3}>
               <MiniStatisticsCard
                 title={{ text: "Next Appointment" }}
-                countVariant="subtitle2"
-                percentageVariant="button"
-                countProps={{ sx: { fontSize: '1.02rem' }, noWrap: true }}
-                percentageProps={{ lineClamp: 1, sx: { maxWidth: '95%', fontSize: '0.86rem' } }}
                 count={nextAppointment ? formatAppointmentDate(nextAppointment.start) : "-"}
+                countProps={{ noWrap: true }}
                 percentage={
                   nextAppointment
                     ? {
@@ -311,7 +310,7 @@ function Dashboard() {
                         hexColor: "#A58AFF",
                         text: formatAppointmentSubtitle(nextAppointment) || nextAppointment.title
                       }
-                    : { color: "secondary", text: "No Upcoming Appt." }
+                    : { color: "secondary", text: "— No Upcoming Appt." }
                 }
                 icon={{ color: "info", component: <FaCalendarCheck size="22px" color="rgba(33,150,243,0.5)" /> }}
               />
@@ -320,6 +319,7 @@ function Dashboard() {
               <MiniStatisticsCard
                 title={{ text: "Next Todo" }}
                 count={closestTodo ? nextTodo : "-"}
+                countProps={{ noWrap: true }}
                 percentage={
                   closestTodo
                     ? { color: "primary", hexColor: "#A58AFF", text: `${daysUntil} days` }
