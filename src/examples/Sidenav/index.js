@@ -131,19 +131,17 @@ function Sidenav({ color, brandName, routes, ...rest }) {
         </VuiTypography>
       );
     } else if (type === "divider") {
-      // Render as a full-width list item (li) so it spans the menu width reliably
+      // Use MUI Divider as a list item to ensure consistent rendering
       returnValue = (
-        <VuiBox
+        <Divider
           key={key}
           component="li"
+          variant="fullWidth"
           sx={{
             my: 1.25,
             mx: 2.5,
-            height: "1px",
-            width: "auto",
-            bgcolor: "rgba(255,255,255,0.6)",
-            borderRadius: "1px",
-            listStyle: "none",
+            borderColor: "rgba(255,255,255,0.9)",
+            opacity: 1,
           }}
         />
       );
