@@ -612,10 +612,10 @@ app.post('/api/groq-assistant', async (req, res) => {
       body: JSON.stringify({
         model: 'llama3-70b-8192',
         messages: [
-          { role: 'system', content: 'You are a professional, friendly medical assistant. Always reply in 1-2 sentences, never more. Be direct, simple, and to the point. Vary your greetings and acknowledgements (e.g., "I see", "Understood", "Alright", etc.). If greeted, reply with a short, natural greeting and offer help. If symptoms are described, give a likely cause and a medicine or recovery method right away, using different phrasing each time. If the user follows up, continue the conversation naturally and contextually. Never be verbose or repeat the same phrases.' },
+          { role: 'system', content: 'You are a professional, friendly medical assistant. Keep replies to 1–2 sentences, concise and varied. Capabilities: 1) infer likely common illnesses from symptoms (be cautious, not diagnostic), 2) suggest OTC medicines and dosing ranges (if safe) or note when to avoid, 3) recommend simple home care (rest, fluids, warm bath, humidity, etc.), 4) suggest which kind of doctor/specialist to see and urgency, 5) help medical students study by explaining topics clearly and stepwise, 6) create quick quizzes with 1–3 questions and then explain answers briefly on request. Always include a brief safety note for red flags or uncertainty and tell users to seek professional care for severe/worsening symptoms.' },
           { role: 'user', content: message }
         ],
-        max_tokens: 150,
+        max_tokens: 180,
         temperature: 0.7,
       })
     });
@@ -942,7 +942,7 @@ app.post('/api/assistant-smart', async (req, res) => {
   const messages = req.body?.messages || (req.body?.message ? [{ role: 'user', content: req.body.message }] : []);
   if (!messages.length) return res.status(400).json({ error: 'No messages' });
   // Hoist system prompt so it is available to error-handling fallbacks
-  const sysText = 'You are a concise, action-oriented medical assistant. Prefer calling tools to take actions. When users ask to schedule appointments, call add_appointment (and optionally create_event if appropriate). When they ask to add or remember a task, call add_todo. When they specify a main doctor/hospital/provider for the HUB, call add_hub_item. For pharmacy entries, call add_pharmacy. For medicines to track under Prescriptions, call add_prescription. For general “what is X”, use wiki_summary. Use web_search/web_fetch for current info. For contacting a doctor, call contact_doctor.\n\nWhen the user submits text from files, do NOT repeat long transcripts. Instead, synthesize: 1) What it is, 2) Key points (<=8 bullets), 3) Risks/alerts, 4) Next steps. Quote short snippets only when necessary. Keep replies to ~150-250 words unless the user requests detail.';
+  const sysText = 'You are a concise, action-oriented medical assistant. Capabilities: (A) infer likely common illnesses from symptoms (not a diagnosis), (B) recommend safe OTC medicines with general dosing ranges and contraindication notes, (C) suggest home care (hydration, rest, warm bath/shower, humidifier, salt-water gargle, etc.), (D) recommend which kind of doctor/specialist to see and urgency, (E) help medical students study with stepwise explanations, mnemonics, and comparisons, (F) create brief quizzes (1–5 questions) and then explain answers on request. Always include short safety guidance for red flags and advise seeking professional care for severe or worsening symptoms. Prefer calling tools to take actions. When users ask to schedule appointments, call add_appointment (and optionally create_event if appropriate). When they ask to add or remember a task, call add_todo. When they specify a main doctor/hospital/provider for the HUB, call add_hub_item. For pharmacy entries, call add_pharmacy. For medicines to track under Prescriptions, call add_prescription. For general “what is X”, use wiki_summary. Use web_search/web_fetch for current info. For contacting a doctor, call contact_doctor.\n\nWhen the user submits text from files, do NOT repeat long transcripts. Instead, synthesize: 1) What it is, 2) Key points (<=8 bullets), 3) Risks/alerts, 4) Next steps. Quote short snippets only when necessary. Keep replies to ~150–250 words unless the user requests detail.';
   const sys = { role: 'system', content: sysText };
   try {
     const tools = [
@@ -1100,67 +1100,82 @@ app.post('/api/assistant-smart', async (req, res) => {
     }
     const msg = first.choices[0].message;
     if (msg.tool_calls && msg.tool_calls.length > 0) {
-      const call = msg.tool_calls[0];
-      const name = call.function.name;
-      const args = JSON.parse(call.function.arguments || '{}');
-      let toolResult = null;
-      if (name === 'web_search') toolResult = await webSearch(args.query || '');
-      else if (name === 'web_fetch') toolResult = await webFetchAndSummarize(args.url || '', openai);
-      else if (name === 'create_event') toolResult = await createCalendarEvent(uid, args);
-      else if (name === 'list_upcoming') toolResult = await listUpcoming(uid);
-      else if (name === 'wiki_summary') toolResult = await wikiSummary(args.query || '');
-      else if (name === 'contact_doctor') {
-        try {
-          const transporter = await getTransport();
-          const info = await transporter.sendMail({
-            from: process.env.SMTP_FROM || 'no-reply@docteck.local',
-            to: process.env.DOCTOR_EMAIL || process.env.SMTP_TO || 'docteck@example.com',
-            subject: args.subject || 'Message from Docteck Assistant',
-            text: args.message || ''
-          });
-          const preview = nodemailer.getTestMessageUrl(info);
-          toolResult = { ok: true, previewUrl: preview };
-        } catch (e) {
-          toolResult = { ok: false, error: 'send_failed' };
+      async function executeTool(name, args) {
+        if (name === 'web_search') return await webSearch(args.query || '');
+        if (name === 'web_fetch') return await webFetchAndSummarize(args.url || '', openai);
+        if (name === 'create_event') return await createCalendarEvent(uid, args);
+        if (name === 'list_upcoming') return await listUpcoming(uid);
+        if (name === 'wiki_summary') return await wikiSummary(args.query || '');
+        if (name === 'contact_doctor') {
+          try {
+            const transporter = await getTransport();
+            const info = await transporter.sendMail({
+              from: process.env.SMTP_FROM || 'no-reply@docteck.local',
+              to: process.env.DOCTOR_EMAIL || process.env.SMTP_TO || 'docteck@example.com',
+              subject: args.subject || 'Message from Docteck Assistant',
+              text: args.message || ''
+            });
+            const preview = nodemailer.getTestMessageUrl(info);
+            return { ok: true, previewUrl: preview };
+          } catch (e) {
+            return { ok: false, error: 'send_failed' };
+          }
         }
-      } else if (name === 'add_todo') {
-        toolResult = { ok: true, todo: { text: args.text || '', date: args.date || null } };
-      } else if (name === 'add_appointment') {
-        toolResult = { ok: true, appointment: {
-          title: args.title || args.doctor || 'Appointment',
-          startTime: args.startTime || args.date || '',
-          durationMinutes: typeof args.durationMinutes === 'number' ? args.durationMinutes : 30,
-          doctor: args.doctor || null,
-          hospital: args.hospital || null,
-          location: args.location || null
-        }};
-      } else if (name === 'add_hub_item') {
-        const doctors = Array.isArray(args.doctors) ? args.doctors : (args.doctor ? [args.doctor] : []);
-        toolResult = { ok: true, hub: {
-          hospital: args.hospital || 'Hospital',
-          doctors,
-          bill: args.bill || '$',
-          completion: typeof args.completion === 'number' ? args.completion : 0
-        }};
-      } else if (name === 'add_pharmacy') {
-        toolResult = { ok: true, pharmacy: {
-          name: args.name || '',
-          address: args.address || '',
-          email: args.email || '',
-          phone: args.phone || '',
-          prescription: args.prescription || ''
-        }};
-      } else if (name === 'add_prescription') {
-        toolResult = { ok: true, prescription: {
-          medicine: args.medicine || '',
-          price: args.price || '',
-          date: args.date || ''
-        }};
+        if (name === 'add_todo') {
+          return { ok: true, todo: { text: args.text || '', date: args.date || null } };
+        }
+        if (name === 'add_appointment') {
+          return { ok: true, appointment: {
+            title: args.title || args.doctor || 'Appointment',
+            startTime: args.startTime || args.date || '',
+            durationMinutes: typeof args.durationMinutes === 'number' ? args.durationMinutes : 30,
+            doctor: args.doctor || null,
+            hospital: args.hospital || null,
+            location: args.location || null
+          }};
+        }
+        if (name === 'add_hub_item') {
+          const doctors = Array.isArray(args.doctors) ? args.doctors : (args.doctor ? [args.doctor] : []);
+          return { ok: true, hub: {
+            hospital: args.hospital || 'Hospital',
+            doctors,
+            bill: args.bill || '$',
+            completion: typeof args.completion === 'number' ? args.completion : 0
+          }};
+        }
+        if (name === 'add_pharmacy') {
+          return { ok: true, pharmacy: {
+            name: args.name || '',
+            address: args.address || '',
+            email: args.email || '',
+            phone: args.phone || '',
+            prescription: args.prescription || ''
+          }};
+        }
+        if (name === 'add_prescription') {
+          return { ok: true, prescription: {
+            medicine: args.medicine || '',
+            price: args.price || '',
+            date: args.date || ''
+          }};
+        }
+        return { ok: false, error: 'unknown_tool' };
       }
+
+      const toolMessages = [];
+      for (const call of msg.tool_calls) {
+        const name = call.function?.name;
+        let args = {};
+        try { args = JSON.parse(call.function?.arguments || '{}'); } catch (_) { args = {}; }
+        const result = await executeTool(name, args);
+        const content = typeof result === 'string' ? result : JSON.stringify(result);
+        toolMessages.push({ role: 'tool', tool_call_id: call.id, content });
+      }
+
       const follow = await withTimeout(
         openai.chat.completions.create({
           model: 'gpt-4o-mini',
-          messages: [sys, ...messages, msg, { role: 'tool', tool_call_id: call.id, content: JSON.stringify(toolResult) }],
+          messages: [sys, ...messages, msg, ...toolMessages],
           temperature: 0.4,
           max_tokens: 250,
         }),
@@ -1168,17 +1183,18 @@ app.post('/api/assistant-smart', async (req, res) => {
       );
       if (!follow) {
         // If we fetched content already (e.g., web_fetch) but can’t get model to finalize, return the tool content directly.
-        if (name === 'web_fetch' && typeof toolResult === 'string' && toolResult.trim()) {
+        const lastFetch = toolMessages.findLast ? toolMessages.findLast(m => m && typeof m.content === 'string') : toolMessages[toolMessages.length - 1];
+        if (lastFetch && typeof lastFetch.content === 'string' && lastFetch.content.trim()) {
           remember(uid, 'user', messages[messages.length - 1]?.content || '');
-          remember(uid, 'assistant', toolResult);
-          return res.json({ reply: toolResult, tool: { name, result: toolResult }, fallback: true });
+          remember(uid, 'assistant', lastFetch.content);
+          return res.json({ reply: lastFetch.content, tool: null, fallback: true });
         }
-        return res.status(504).json({ error: 'upstream_timeout', reply: 'Action performed. The assistant reply timed out. Please ask again if needed.', tool: { name, result: toolResult } });
+        return res.status(504).json({ error: 'upstream_timeout', reply: 'Action performed. The assistant reply timed out. Please ask again if needed.' });
       }
       const replyText = follow.choices[0].message.content;
       remember(uid, 'user', messages[messages.length - 1]?.content || '');
       remember(uid, 'assistant', replyText);
-      return res.json({ reply: replyText, tool: { name, result: toolResult } });
+      return res.json({ reply: replyText });
     }
     const replyText = msg.content;
     remember(uid, 'user', messages[messages.length - 1]?.content || '');
