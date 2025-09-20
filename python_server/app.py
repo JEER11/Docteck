@@ -285,6 +285,9 @@ def _rewrite_react_index_paths(html: str) -> str:
         for path in ('/favicon.png','/apple-icon.png','/manifest.json','/billing-background.css','/billing-background-fix.css'):
             html = html.replace(f' href="{path}"', f' href="/app{path}"')
             html = html.replace(f' src="{path}"', f' src="/app{path}"')
+        # Map hashed main bundle to a stable 'latest' path so rebuilds never 404
+        html = html.replace(' src="/app/static/js/main.', ' src="/app/static/js/main.latest.js" data-orig="/app/static/js/main.')
+        html = html.replace(' href="/app/static/css/main.', ' href="/app/static/css/main.latest.css" data-orig="/app/static/css/main.')
         # Handle CRA placeholders from public/index.html when build isn't ready
         # Replace %PUBLIC_URL%/* with /app/* so assets load under the SPA prefix
         html = html.replace('%PUBLIC_URL%/', '/app/')
@@ -458,6 +461,27 @@ def react_index():
 @app.route('/app/<path:path>')
 def react_static(path):
     file_path = os.path.join(BUILD_DIR, path)
+    # Serve stable 'latest' bundle aliases
+    if path == 'static/js/main.latest.js':
+        js_dir = os.path.join(BUILD_DIR, 'static', 'js')
+        try:
+            names = [n for n in os.listdir(js_dir) if n.startswith('main.') and n.endswith('.js')]
+            names.sort(reverse=True)
+            if names:
+                return send_from_directory(js_dir, names[0])
+        except Exception:
+            pass
+        return '', 404
+    if path == 'static/css/main.latest.css':
+        css_dir = os.path.join(BUILD_DIR, 'static', 'css')
+        try:
+            names = [n for n in os.listdir(css_dir) if n.startswith('main.') and n.endswith('.css')]
+            names.sort(reverse=True)
+            if names:
+                return send_from_directory(css_dir, names[0])
+        except Exception:
+            pass
+        return '', 404
     if os.path.isfile(file_path):
         try:
             # Touch cache so next /app serves the latest index
@@ -466,8 +490,28 @@ def react_static(path):
             pass
         return send_from_directory(BUILD_DIR, path)
     # If the request targets hashed static assets that no longer exist after a rebuild,
-    # return 404 so the browser doesn't try to execute HTML as JS.
+    # try to provide a graceful fallback for main.* bundles so the app can still boot.
     if path.startswith(('static/', 'locales/')) or path in ('favicon.png','apple-icon.png','manifest.json'):
+        try:
+            # Fallback: if the missing file is main.* bundle, serve the latest main.* if available
+            if path.startswith('static/js/main.') and path.endswith('.js'):
+                js_dir = os.path.join(BUILD_DIR, 'static', 'js')
+                if os.path.isdir(js_dir):
+                    candidates = [n for n in os.listdir(js_dir) if n.startswith('main.') and n.endswith('.js')]
+                    # Prefer the longest/most recent looking filename
+                    candidates.sort(reverse=True)
+                    if candidates:
+                        return send_from_directory(js_dir, candidates[0])
+            if path.startswith('static/css/main.') and path.endswith('.css'):
+                css_dir = os.path.join(BUILD_DIR, 'static', 'css')
+                if os.path.isdir(css_dir):
+                    candidates = [n for n in os.listdir(css_dir) if n.startswith('main.') and n.endswith('.css')]
+                    candidates.sort(reverse=True)
+                    if candidates:
+                        return send_from_directory(css_dir, candidates[0])
+        except Exception:
+            pass
+        # Otherwise, return 404 so the browser doesn't try to execute HTML as JS.
         return '', 404
     # Otherwise, SPA fallback to index for client-side routing paths
     return react_index()
