@@ -100,6 +100,8 @@ const routes = [
     component: Pets,
     noCollapse: true,
   },
+  // Divider between account profile items and authentication links
+  { type: "divider", key: "account-auth-divider" },
   {
     type: "collapse",
     name: "Sign In",

@@ -131,7 +131,22 @@ function Sidenav({ color, brandName, routes, ...rest }) {
         </VuiTypography>
       );
     } else if (type === "divider") {
-      returnValue = <Divider light key={key} />;
+      // Render as a full-width list item (li) so it spans the menu width reliably
+      returnValue = (
+        <VuiBox
+          key={key}
+          component="li"
+          sx={{
+            my: 1.25,
+            mx: 2.5,
+            height: "1px",
+            width: "auto",
+            bgcolor: "rgba(255,255,255,0.6)",
+            borderRadius: "1px",
+            listStyle: "none",
+          }}
+        />
+      );
     }
 
     return returnValue;
