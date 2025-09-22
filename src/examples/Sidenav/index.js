@@ -140,7 +140,7 @@ function Sidenav({ color, brandName, routes, ...rest }) {
           sx={{
             my: 1.25,
             mx: 2.5,
-            borderColor: "rgba(255,255,255,0.9)",
+            borderColor: "rgba(255,255,255,0.08)",
             opacity: 1,
           }}
         />
