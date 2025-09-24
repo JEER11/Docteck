@@ -193,11 +193,72 @@ def api_ocr():
  
 
 BUILD_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'build'))
-# In-memory cache only; do not persist to disk to avoid leaking injected config
-CACHE_PATH = None
+# Persist a sanitized last-good index for resilience during rebuild windows
+CACHE_PATH = os.path.join(BUILD_DIR, '.index-cache.html')
 
 # Cache last good React index to avoid flashing the build splash during brief rebuild gaps
 _INDEX_CACHE = { 'mtime': 0, 'html': None }
+
+# Cache for resolving hashed main bundles so alias endpoints never 404 between builds
+_BUNDLE_CACHE = {
+    'manifest_mtime': 0,
+    'js': None,
+    'css': None,
+}
+
+def _manifest_mtime():
+    try:
+        p = os.path.join(BUILD_DIR, 'asset-manifest.json')
+        return os.path.getmtime(p) if os.path.exists(p) else 0
+    except Exception:
+        return 0
+
+def _resolve_main_bundle(kind: str):
+    """
+    Resolve the current main.*.{js,css} filename reliably using a cached value
+    tied to asset-manifest mtime, with directory scan fallback. Returns a tuple
+    (filename or None, absolute_dir) where absolute_dir is the folder to serve from.
+    """
+    try:
+        # If manifest unchanged, prefer cached value
+        mtime = _manifest_mtime()
+        if _BUNDLE_CACHE.get('manifest_mtime') == mtime and _BUNDLE_CACHE.get(kind):
+            folder = os.path.join(BUILD_DIR, 'static', 'js' if kind == 'js' else 'css')
+            return _BUNDLE_CACHE.get(kind), folder
+
+        # Try manifest first
+        manifest_path = os.path.join(BUILD_DIR, 'asset-manifest.json')
+        name = None
+        if os.path.exists(manifest_path):
+            try:
+                with open(manifest_path, 'r', encoding='utf-8') as f:
+                    m = json.load(f)
+                files = m.get('files') or {}
+                key = 'main.js' if kind == 'js' else 'main.css'
+                path = files.get(key)
+                if isinstance(path, str):
+                    base = path.split('/')[-1]
+                    if base.startswith('main.') and base.endswith('.' + kind):
+                        name = base
+            except Exception:
+                name = None
+        # Fallback to directory scan
+        folder = os.path.join(BUILD_DIR, 'static', 'js' if kind == 'js' else 'css')
+        if not name and os.path.isdir(folder):
+            try:
+                candidates = [n for n in os.listdir(folder) if n.startswith('main.') and n.endswith('.' + kind)]
+                candidates.sort(reverse=True)
+                if candidates:
+                    name = candidates[0]
+            except Exception:
+                name = None
+        # Update cache if we found a name
+        if name:
+            _BUNDLE_CACHE['manifest_mtime'] = mtime
+            _BUNDLE_CACHE[kind] = name
+        return name, folder
+    except Exception:
+        return None, os.path.join(BUILD_DIR, 'static', 'js' if kind == 'js' else 'css')
 
 def _load_cached_react_index():
     """
@@ -221,7 +282,12 @@ def _load_cached_react_index():
                     html = html.replace('</body>', inject + '\n</body>')
                 _INDEX_CACHE['mtime'] = mtime
                 _INDEX_CACHE['html'] = html
-                # Do not write the injected HTML to disk; keep in memory only
+                # Persist to disk so server restarts or brief rebuild gaps can still serve UI
+                try:
+                    with open(CACHE_PATH, 'w', encoding='utf-8') as cf:
+                        cf.write(html)
+                except Exception:
+                    pass
         # Return cached html (freshly loaded or previous good version)
         if _INDEX_CACHE['html']:
             return _INDEX_CACHE['html']
@@ -428,7 +494,7 @@ def react_index():
         }
     # If no in-memory cache, try persisted cache on disk explicitly before showing splash
     try:
-        if os.path.exists(CACHE_PATH):
+        if CACHE_PATH and os.path.exists(CACHE_PATH):
             with open(CACHE_PATH, 'r', encoding='utf-8') as cf:
                 html = cf.read()
             if html:
@@ -463,25 +529,53 @@ def react_static(path):
     file_path = os.path.join(BUILD_DIR, path)
     # Serve stable 'latest' bundle aliases
     if path == 'static/js/main.latest.js':
-        js_dir = os.path.join(BUILD_DIR, 'static', 'js')
+        target, js_dir = _resolve_main_bundle('js')
+        if target:
+            try:
+                resp = send_from_directory(js_dir, target)
+                resp.headers['Cache-Control'] = 'no-store'
+                return resp
+            except Exception:
+                # If cached target vanished, force re-resolve once and retry
+                _BUNDLE_CACHE['js'] = None
+                target, js_dir = _resolve_main_bundle('js')
+                if target:
+                    resp = send_from_directory(js_dir, target)
+                    try:
+                        resp.headers['Cache-Control'] = 'no-store'
+                    except Exception:
+                        pass
+                    return resp
+        # Serve a tiny retry script to avoid blank screen during brief build gaps
         try:
-            names = [n for n in os.listdir(js_dir) if n.startswith('main.') and n.endswith('.js')]
-            names.sort(reverse=True)
-            if names:
-                return send_from_directory(js_dir, names[0])
+            from flask import Response
+            script = """/* main.latest.js pending */\nconsole.warn('UI build is updating… retrying shortly');\nsetTimeout(function(){ location.reload(); }, 1200);\n"""
+            return Response(script, mimetype='application/javascript', headers={'Cache-Control': 'no-store'})
         except Exception:
-            pass
-        return '', 404
+            return ('', 404, {'Cache-Control': 'no-store'})
     if path == 'static/css/main.latest.css':
-        css_dir = os.path.join(BUILD_DIR, 'static', 'css')
+        target, css_dir = _resolve_main_bundle('css')
+        if target:
+            try:
+                resp = send_from_directory(css_dir, target)
+                resp.headers['Cache-Control'] = 'no-store'
+                return resp
+            except Exception:
+                _BUNDLE_CACHE['css'] = None
+                target, css_dir = _resolve_main_bundle('css')
+                if target:
+                    resp = send_from_directory(css_dir, target)
+                    try:
+                        resp.headers['Cache-Control'] = 'no-store'
+                    except Exception:
+                        pass
+                    return resp
         try:
-            names = [n for n in os.listdir(css_dir) if n.startswith('main.') and n.endswith('.css')]
-            names.sort(reverse=True)
-            if names:
-                return send_from_directory(css_dir, names[0])
+            from flask import Response
+            css = "/* main.latest.css pending */"
+            return Response(css, mimetype='text/css', headers={'Cache-Control': 'no-store'})
         except Exception:
-            pass
-        return '', 404
+            return ('', 404, {'Cache-Control': 'no-store'})
     if os.path.isfile(file_path):
         try:
             # Touch cache so next /app serves the latest index
