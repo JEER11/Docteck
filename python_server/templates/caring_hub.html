@@ -48,7 +48,10 @@
         <div class="card" style="margin-bottom:20px;">
           <div style="display:flex; align-items:center;">
             <h3 style="margin:0; flex:1;">Appointments</h3>
-            <button class="btn" id="add-appointment">Add Appointment</button>
+            <div style="display:flex; gap:0; align-items:center;">
+              <button class="btn" id="view-all-appointments" style="border-top-right-radius:0;border-bottom-right-radius:0;opacity:.7;background:rgba(32,34,64,0.7);">VIEW ALL</button>
+              <button class="btn" id="add-appointment" style="border-top-left-radius:0;border-bottom-left-radius:0;opacity:.7;background:rgba(32,34,64,0.7);display:flex;align-items:center;justify-content:center;min-width:36px;padding:6px 10px;">+</button>
+            </div>
           </div>
           <div style="height:10px"></div>
           <table>
@@ -64,9 +67,12 @@
         <div class="card" style="margin-bottom:20px;">
           <div style="display:flex; align-items:center;">
             <h3 style="margin:0; flex:1;">HUB</h3>
-            <div style="display:flex; gap:10px;">
+            <div style="display:flex; gap:10px; align-items:center;">
+              <div style="display:flex; gap:0; align-items:center;">
+                <button class="btn" id="view-all-hub" style="border-top-right-radius:0;border-bottom-right-radius:0;opacity:.7;background:rgba(32,34,64,0.7);">VIEW ALL</button>
+                <button class="btn" id="add-info" style="border-top-left-radius:0;border-bottom-left-radius:0;opacity:.7;background:rgba(32,34,64,0.7);display:flex;align-items:center;justify-content:center;min-width:36px;padding:6px 10px;">+</button>
+              </div>
               <button class="btn" id="search-providers">Search Providers</button>
-              <button class="btn" id="add-info">Add Info</button>
             </div>
           </div>
           <div style="height:10px"></div>
@@ -183,6 +189,32 @@
       });
       document.getElementById('add-info')?.addEventListener('click', () => {
         alert('Add info dialog coming soon');
+      });
+
+      // View All placeholders
+      document.getElementById('view-all-appointments')?.addEventListener('click', async (e) => {
+        e.preventDefault();
+        try{
+          const r = await fetch((API_BASE||'') + '/api/appointments');
+          const j = await r.json().catch(()=>({}));
+          const items = Array.isArray(j?.appointments) ? j.appointments : (Array.isArray(j?.items) ? j.items : []);
+          const list = items.map(a => {
+            const name = (a.doctor && a.doctor.name) || a.title || 'Doctor';
+            const when = a.start ? new Date(a.start).toLocaleString() : (a.date||'');
+            return `• ${name} — ${when}`;
+          }).join('\n');
+          alert(list || 'No appointments yet.');
+        }catch(_){ alert('No appointments yet.'); }
+      });
+      document.getElementById('view-all-hub')?.addEventListener('click', async (e) => {
+        e.preventDefault();
+        try{
+          const r = await fetch((API_BASE||'') + '/api/providers');
+          const j = await r.json().catch(()=>({}));
+          const items = Array.isArray(j?.providers) ? j.providers : [];
+          const list = items.slice(0,25).map(p => `• ${p.name||p.hospital||'Provider'}${p.city?` — ${p.city}`:''}`).join('\n');
+          alert(list || 'No providers');
+        }catch(_){ alert('No providers'); }
       });
     </script>
   </body>

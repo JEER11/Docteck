@@ -19,6 +19,7 @@ import VuiTypography from "components/VuiTypography";
 import VuiProgress from "components/VuiProgress";
 import VuiBadge from "components/VuiBadge";
 import VuiAvatar from "components/VuiAvatar";
+import VuiButton from "components/VuiButton";
 
 // Vision UI Dashboard React example components
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
@@ -41,6 +42,7 @@ import { dateFnsLocalizer } from "react-big-calendar";
 import Invoices from "layouts/billing/components/Invoices";
 import BillingInformation from "layouts/billing/components/BillingInformation";
 import SearchIcon from "@mui/icons-material/Search";
+import AddIcon from "@mui/icons-material/Add";
 import getApiBase from "../../lib/apiBase";
 
 function Tables() {
@@ -66,6 +68,7 @@ function Tables() {
     date: ""
   });
   const [editApptIdx, setEditApptIdx] = useState(null);
+  const [viewAllApptOpen, setViewAllApptOpen] = useState(false);
 
   // Provider search (HUB box)
   const [provQuery, setProvQuery] = useState("");
@@ -75,6 +78,7 @@ function Tables() {
   const [provLoading, setProvLoading] = useState(false);
   const [provResults, setProvResults] = useState([]);
   const [hubProvDialogOpen, setHubProvDialogOpen] = useState(false);
+  const [viewAllHubOpen, setViewAllHubOpen] = useState(false);
   const runProviderSearch = async () => {
     setProvLoading(true);
     try {
@@ -138,6 +142,10 @@ function Tables() {
     handleDelete(menuProjectId);
     handleMenuClose();
   };
+
+  // Placeholder handlers for "View All" actions
+  const handleViewAllAppointments = () => setViewAllApptOpen(true);
+  const handleViewAllHub = () => setViewAllHubOpen(true);
 
   // Unified TextField styles (no inner blue bubble). Match Account Settings inputs.
   const fieldSx = {
@@ -371,14 +379,54 @@ function Tables() {
               <VuiTypography variant="lg" color="white">
                 Appointments
               </VuiTypography>
-              <Button 
-                variant="contained" 
-                color="primary" 
-                onClick={handleOpenApptAdd} 
-                sx={{ ml: 2, background: 'rgba(44, 50, 90, 0.65)', boxShadow: 'none', '&:hover': { background: 'rgba(44, 50, 90, 0.85)' } }}
-              >
-                Add Appointment
-              </Button>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: 0, alignItems: 'center', marginRight: 12 }}>
+                  <VuiButton
+                    variant="contained"
+                    color="info"
+                    size="small"
+                    onClick={handleViewAllAppointments}
+                    style={{
+                      borderTopRightRadius: 0,
+                      borderBottomRightRadius: 0,
+                      minWidth: 36,
+                      padding: '6px 14px',
+                      fontWeight: 600,
+                      letterSpacing: 0.5,
+                      fontSize: 13,
+                      opacity: 0.7,
+                      background: 'rgba(32,34,64,0.7)',
+                      color: '#e0e0e0',
+                      boxShadow: 'none',
+                      height: 36,
+                    }}
+                  >
+                    VIEW ALL
+                  </VuiButton>
+                  <VuiButton
+                    variant="contained"
+                    color="info"
+                    size="small"
+                    onClick={handleOpenApptAdd}
+                    style={{
+                      borderTopLeftRadius: 0,
+                      borderBottomLeftRadius: 0,
+                      minWidth: 36,
+                      padding: 0,
+                      opacity: 0.7,
+                      background: 'rgba(32,34,64,0.7)',
+                      color: '#e0e0e0',
+                      boxShadow: 'none',
+                      height: 36,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <AddIcon />
+                  </VuiButton>
+                </div>
+              </Box>
             </VuiBox>
             <VuiBox
               sx={{
@@ -423,22 +471,60 @@ function Tables() {
             <VuiTypography variant="lg" color="white">
               HUB
             </VuiTypography>
-            <Box>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: 0, alignItems: 'center', marginRight: 12 }}>
+                <VuiButton
+                  variant="contained"
+                  color="info"
+                  size="small"
+                  onClick={handleViewAllHub}
+                  style={{
+                    borderTopRightRadius: 0,
+                    borderBottomRightRadius: 0,
+                    minWidth: 36,
+                    padding: '6px 14px',
+                    fontWeight: 600,
+                    letterSpacing: 0.5,
+                    fontSize: 13,
+                    opacity: 0.7,
+                    background: 'rgba(32,34,64,0.7)',
+                    color: '#e0e0e0',
+                    boxShadow: 'none',
+                    height: 36,
+                  }}
+                >
+                  VIEW ALL
+                </VuiButton>
+                <VuiButton
+                  variant="contained"
+                  color="info"
+                  size="small"
+                  onClick={handleOpenAdd}
+                  style={{
+                    borderTopLeftRadius: 0,
+                    borderBottomLeftRadius: 0,
+                    minWidth: 36,
+                    padding: 0,
+                    opacity: 0.7,
+                    background: 'rgba(32,34,64,0.7)',
+                    color: '#e0e0e0',
+                    boxShadow: 'none',
+                    height: 36,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <AddIcon />
+                </VuiButton>
+              </div>
               <Button 
                 variant="contained" 
                 color="info" 
                 onClick={() => setHubProvDialogOpen(true)}
-                sx={{ mr: 1.5, background: 'rgba(44, 50, 90, 0.65)', boxShadow: 'none', '&:hover': { background: 'rgba(44, 50, 90, 0.85)' } }}
-              >
-                Search Providers
-              </Button>
-              <Button 
-                variant="contained" 
-                color="primary" 
-                onClick={handleOpenAdd} 
                 sx={{ background: 'rgba(44, 50, 90, 0.65)', boxShadow: 'none', '&:hover': { background: 'rgba(44, 50, 90, 0.85)' } }}
               >
-                Add Info
+                Search Providers
               </Button>
             </Box>
           </VuiBox>
@@ -535,6 +621,141 @@ function Tables() {
             <Button onClick={handleClose} sx={{ color: '#bfc6e0', mr: 1 }}>Cancel</Button>
             <Button onClick={handleSubmit} variant="contained" color="info" sx={{ borderRadius: 2, px: 3, fontWeight: 600 }}>{editId ? "Save" : "Add"}</Button>
           </Box>
+        </DialogActions>
+      </Dialog>
+
+      {/* View All Appointments */}
+      <Dialog
+        open={!!viewAllApptOpen}
+        onClose={() => setViewAllApptOpen(false)}
+        maxWidth="lg"
+        fullWidth
+        PaperProps={{
+          sx: {
+            background: 'rgba(34, 40, 74, 0.65)',
+            boxShadow: 24,
+            borderRadius: 4,
+            color: 'white',
+            backdropFilter: 'blur(10px)',
+            maxHeight: '88vh'
+          }
+        }}
+      >
+        <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 22, pb: 1.25 }}>All Appointments</DialogTitle>
+        <DialogContent sx={{ px: 2, pt: 0.5, pb: 2 }}>
+          <Box sx={{
+            maxHeight: '80vh',
+            overflowY: 'auto',
+            border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: 1.5,
+          }}>
+            <Box sx={{ display:'flex', alignItems:'center', px: 2, py: 1, position:'sticky', top:0, background:'rgba(22,24,48,.9)', borderBottom:'1px solid rgba(255,255,255,.08)' }}>
+              <VuiTypography variant="caption" color="text" sx={{ flex: 1.6 }}>Doctor</VuiTypography>
+              <VuiTypography variant="caption" color="text" sx={{ flex: 1.3 }}>Function</VuiTypography>
+              <VuiTypography variant="caption" color="text" sx={{ width: 120, textAlign:'center' }}>Status</VuiTypography>
+              <VuiTypography variant="caption" color="text" sx={{ width: 180, textAlign:'center' }}>Date</VuiTypography>
+              <VuiTypography variant="caption" color="text" sx={{ width: 100, textAlign:'right' }}>Actions</VuiTypography>
+            </Box>
+            {appointments.length === 0 && (
+              <VuiTypography variant="caption" color="text" sx={{ p: 2, display:'block' }}>No appointments yet.</VuiTypography>
+            )}
+            {appointments.map((appt, idx) => {
+              const doctor = appt.doctor || {};
+              const name = doctor.name || appt.title || 'Doctor';
+              const email = doctor.email || appt.email || '';
+              const type = doctor.type || appt.type || '';
+              const hospital = doctor.hospital || appt.hospital || '';
+              const dateStr = appt.start ? new Date(appt.start).toLocaleString() : '';
+              const progress = doctor.progress || appt.status || 'In Progress';
+              let statusColor = 'info';
+              if (progress === 'Inactive') statusColor = 'secondary';
+              else if (progress === 'Active') statusColor = 'success';
+              else if (progress === 'Coming Soon') statusColor = 'warning';
+              else if (progress === 'Completed') statusColor = 'primary';
+              return (
+                <Box key={(appt.id || idx) + '-row'} sx={{ display:'flex', alignItems:'center', px: 2, py: 1.1, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                  <Box sx={{ flex: 1.6, display:'flex', alignItems:'center', gap: 1.25, minWidth: 240 }}>
+                    <VuiAvatar src={doctor.avatar} alt={name} size="sm" variant="rounded" />
+                    <Box sx={{ display:'flex', flexDirection:'column' }}>
+                      <VuiTypography variant="button" color="white" fontWeight="medium">{name}</VuiTypography>
+                      <VuiTypography variant="caption" color="text">{email || '-'}</VuiTypography>
+                    </Box>
+                  </Box>
+                  <Box sx={{ flex: 1.3, minWidth: 240, display:'flex', flexDirection:'column' }}>
+                    <VuiTypography variant="caption" fontWeight="medium" color="white">{type || '-'}</VuiTypography>
+                    <VuiTypography variant="caption" color="text">{hospital || ''}</VuiTypography>
+                  </Box>
+                  <Box sx={{ width: 120, display:'flex', justifyContent:'center' }}>
+                    <VuiBadge variant="standard" badgeContent={progress} color={statusColor} size="xs" container />
+                  </Box>
+                  <VuiTypography variant="caption" color="white" fontWeight="medium" sx={{ width: 180, textAlign:'center' }}>{dateStr}</VuiTypography>
+                  <Box sx={{ width: 100, textAlign:'right' }}>
+                    <Button size="small" color="info" variant="outlined" onClick={() => handleOpenApptEdit(appt, idx)} sx={{ borderRadius: 2 }}>Edit</Button>
+                  </Box>
+                </Box>
+              );
+            })}
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ px: 2, pb: 2 }}>
+          <Button onClick={() => setViewAllApptOpen(false)} sx={{ color: '#bfc6e0' }}>Close</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* View All HUB */}
+      <Dialog
+        open={!!viewAllHubOpen}
+        onClose={() => setViewAllHubOpen(false)}
+        maxWidth="lg"
+        fullWidth
+        PaperProps={{
+          sx: {
+            background: 'rgba(34, 40, 74, 0.65)',
+            boxShadow: 24,
+            borderRadius: 4,
+            color: 'white',
+            backdropFilter: 'blur(10px)',
+            maxHeight: '88vh'
+          }
+        }}
+      >
+        <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 22, pb: 1.25 }}>All HUB Items</DialogTitle>
+        <DialogContent sx={{ px: 2, pt: 0.5, pb: 2 }}>
+          <Box sx={{
+            maxHeight: '80vh',
+            overflowY: 'auto',
+            border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: 1.5,
+          }}>
+            <Box sx={{ display:'flex', alignItems:'center', px: 2, py: 1, position:'sticky', top:0, background:'rgba(22,24,48,.9)', borderBottom:'1px solid rgba(255,255,255,.08)' }}>
+              <VuiTypography variant="caption" color="text" sx={{ flex: 1.5 }}>Hospital</VuiTypography>
+              <VuiTypography variant="caption" color="text" sx={{ flex: 1.4 }}>Doctors</VuiTypography>
+              <VuiTypography variant="caption" color="text" sx={{ width: 80, textAlign:'center' }}>Bill</VuiTypography>
+              <VuiTypography variant="caption" color="text" sx={{ width: 120, textAlign:'center' }}>Status</VuiTypography>
+              <VuiTypography variant="caption" color="text" sx={{ width: 140, textAlign:'center' }}>Completion</VuiTypography>
+              <VuiTypography variant="caption" color="text" sx={{ width: 100, textAlign:'right' }}>Actions</VuiTypography>
+            </Box>
+            {projects.length === 0 && (
+              <VuiTypography variant="caption" color="text" sx={{ p: 2, display:'block' }}>No items yet.</VuiTypography>
+            )}
+            {projects.map((p) => (
+              <Box key={p.id} sx={{ display:'flex', alignItems:'center', px: 2, py: 1.1, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                <VuiTypography variant="button" color="white" fontWeight="medium" sx={{ flex: 1.5, minWidth: 200 }}>{p.hospital}</VuiTypography>
+                <VuiTypography variant="caption" color="text" sx={{ flex: 1.4, minWidth: 220 }}>{Array.isArray(p.doctors) ? p.doctors.join(', ') : p.doctors}</VuiTypography>
+                <VuiTypography variant="caption" color="white" fontWeight="medium" sx={{ width: 80, textAlign:'center' }}>{p.bill || '$'}</VuiTypography>
+                <Box sx={{ width: 120, display:'flex', justifyContent:'center' }}>
+                  <VuiBadge variant="standard" badgeContent={p.status || 'Working'} color={'info'} size="xs" container />
+                </Box>
+                <VuiTypography variant="caption" color="text" sx={{ width: 140, textAlign:'center' }}>{typeof p.completion === 'number' ? `${p.completion}%` : ''}</VuiTypography>
+                <Box sx={{ width: 100, textAlign:'right' }}>
+                  <Button size="small" color="info" variant="outlined" onClick={() => handleOpenEdit(p)} sx={{ borderRadius: 2 }}>Edit</Button>
+                </Box>
+              </Box>
+            ))}
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ px: 2, pb: 2 }}>
+          <Button onClick={() => setViewAllHubOpen(false)} sx={{ color: '#bfc6e0' }}>Close</Button>
         </DialogActions>
       </Dialog>
       <Dialog 
