@@ -16,14 +16,33 @@
         } catch(_) { return false; }
       }
       function onError(ev){
-        if (shouldReload(ev)) {
-          if (!sessionStorage.getItem('spa-chunk-reload')) {
+        if (!shouldReload(ev)) return;
+        try { console.warn('[Bridge] Detected dynamic import/chunk error', ev && (ev.message || ev.reason)); } catch(_) {}
+        const lastTs = Number(sessionStorage.getItem('spa-last-reload-ts')||'0');
+        const now = Date.now();
+        const elapsed = now - lastTs;
+        if (!sessionStorage.getItem('spa-chunk-reload') || elapsed > 15000) {
+          // Mark attempt + timestamp
             sessionStorage.setItem('spa-chunk-reload','1');
+            sessionStorage.setItem('spa-last-reload-ts', String(now));
+            try { console.log('[Bridge] Reloading once to recover missing chunk'); } catch(_) {}
             location.reload();
             return;
-          }
-          sessionStorage.removeItem('spa-chunk-reload');
         }
+        // Already reloaded recently; surface a visible banner instead of looping.
+        sessionStorage.removeItem('spa-chunk-reload');
+        (function showBanner(){
+          try {
+            var el = document.getElementById('reload-loop-banner');
+            if (!el) {
+              el = document.createElement('div');
+              el.id = 'reload-loop-banner';
+              el.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#7f1d1d;color:#fee2e2;font:13px system-ui;padding:10px 14px;box-shadow:0 2px 6px rgba(0,0,0,.3)';
+              el.textContent = 'A new version failed to load a script chunk. Hard refresh (Ctrl+Shift+R) or clear cache to continue.';
+              document.body && document.body.appendChild(el);
+            }
+          } catch(_){}
+        })();
       }
       window.addEventListener('error', onError, true);
       window.addEventListener('unhandledrejection', onError);

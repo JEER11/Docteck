@@ -4,6 +4,7 @@ import "./i18n";
 import { createRoot} from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import App from "App";
+import AppErrorBoundary from "components/AppErrorBoundary";
 
 // Docteck Dashboard React Context Provider
 import { VisionUIControllerProvider } from "context";
@@ -32,7 +33,9 @@ root.render(
   <BrowserRouter basename="/app">
     <VisionUIControllerProvider>
       <AppProviders>
-  <App />
+        <AppErrorBoundary>
+          <App />
+        </AppErrorBoundary>
       </AppProviders>
     </VisionUIControllerProvider>
   </BrowserRouter>
