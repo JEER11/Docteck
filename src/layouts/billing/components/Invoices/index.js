@@ -281,7 +281,7 @@ function Invoices() {
   // Document Dialog
   const DocDialog = (
     <Dialog open={docModalOpen} onClose={handleDocModalClose} maxWidth="sm" fullWidth
-      PaperProps={{ sx: { background: 'rgba(34, 40, 74, 0.65)', boxShadow: 24, borderRadius: 4, color: 'white', backdropFilter: 'blur(10px)', p: 4, minWidth: 400, maxWidth: 640 } }}
+      PaperProps={{ sx: { background: 'rgba(34, 40, 74, 0.65)', boxShadow: 24, borderRadius: 4, color: 'white', backdropFilter: 'blur(10px)', p: 4, minWidth: 400, maxWidth: 640, height: '80vh', maxHeight: '80vh', mt: '5vh' } }}
     >
       <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 22, pb: 2, pr: 5 }}>
         Prescription Document
@@ -289,7 +289,7 @@ function Invoices() {
           <CloseRoundedIcon />
         </IconButton>
       </DialogTitle>
-      <DialogContent sx={{ pt: 1, background: 'transparent', color: 'white', px: 2, minWidth: 400 }}>
+      <DialogContent sx={{ pt: 1, background: 'transparent', color: 'white', px: 2, minWidth: 400, maxHeight: 'calc(80vh - 140px)', overflowY: 'auto' }}>
         {docModalFile ? (
           // If docModalFile is a File, use URL.createObjectURL; if it's an object with url, use that
           (docModalFile instanceof File ? (docModalFile.type || '').startsWith('image') : (docModalFile.type || '').startsWith('image')) ? (
@@ -317,10 +317,10 @@ function Invoices() {
 
   const AddDialog = (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth
-      PaperProps={{ sx: { background: 'rgba(34, 40, 74, 0.65)', boxShadow: 24, borderRadius: 4, color: 'white', backdropFilter: 'blur(10px)', p: 4, minWidth: 400, maxWidth: 600 } }}
+      PaperProps={{ sx: { background: 'rgba(34, 40, 74, 0.65)', boxShadow: 24, borderRadius: 4, color: 'white', backdropFilter: 'blur(10px)', p: 4, minWidth: 400, maxWidth: 600, height: '80vh', maxHeight: '80vh', mt: '5vh' } }}
     >
       <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 22, pb: 2 }}>Add Prescription</DialogTitle>
-      <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 1, background: 'transparent', color: 'white', px: 2, minWidth: 400 }}>
+  <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 1, background: 'transparent', color: 'white', px: 2, minWidth: 400, maxHeight: 'calc(80vh - 140px)', overflowY: 'auto' }}>
         <TextField label="Medicine Name & mg" name="medicine" value={newPrescription.medicine} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mt: 1, mb: 1 }} inputProps={{ list: 'medicine-options' }} />
         <datalist id="medicine-options">
           {medicineOptions.map((name, i) => (<option value={name} key={i} />))}
@@ -341,10 +341,10 @@ function Invoices() {
 
   const EditDialog = (
     <Dialog open={editIdx !== null} onClose={handleEditClose} maxWidth="sm" fullWidth
-      PaperProps={{ sx: { background: 'rgba(34, 40, 74, 0.65)', boxShadow: 24, borderRadius: 4, color: 'white', backdropFilter: 'blur(10px)', p: 4, minWidth: 400, maxWidth: 600 } }}
+      PaperProps={{ sx: { background: 'rgba(34, 40, 74, 0.65)', boxShadow: 24, borderRadius: 4, color: 'white', backdropFilter: 'blur(10px)', p: 4, minWidth: 400, maxWidth: 600, height: '80vh', maxHeight: '80vh', mt: '5vh' } }}
     >
       <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 22, pb: 2 }}>Edit Prescription</DialogTitle>
-      <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 1, background: 'transparent', color: 'white', px: 2, minWidth: 400 }}>
+  <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 1, background: 'transparent', color: 'white', px: 2, minWidth: 400, maxHeight: 'calc(80vh - 140px)', overflowY: 'auto' }}>
         <TextField label="Medicine Name & mg" name="medicine" value={editPrescription.medicine} onChange={handleEditChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mt: 1, mb: 1 }} inputProps={{ list: 'medicine-options' }} />
         <datalist id="medicine-options">
           {medicineOptions.map((name, i) => (<option value={name} key={i} />))}
@@ -364,8 +364,8 @@ function Invoices() {
   );
 
   const ViewAllDialog = (
-    <Dialog open={viewAllOpen} onClose={handleViewAllClose} maxWidth="sm" fullWidth
-      PaperProps={{ sx: { background: 'rgba(34, 40, 74, 0.65)', boxShadow: 24, borderRadius: 4, color: 'white', backdropFilter: 'blur(10px)', p: 4, minWidth: 400, maxWidth: 640 } }}
+    <Dialog open={viewAllOpen} onClose={handleViewAllClose} maxWidth="md" fullWidth
+      PaperProps={{ sx: { background: 'rgba(34, 40, 74, 0.65)', boxShadow: 24, borderRadius: 4, color: 'white', backdropFilter: 'blur(10px)', p: 4, minWidth: 400, maxWidth: 900, height: '80vh', maxHeight: '80vh', mt: '5vh' } }}
     >
       <DialogTitle
         sx={{
@@ -398,8 +398,8 @@ function Invoices() {
           Add
         </Button>
       </DialogTitle>
-      <DialogContent sx={{ pt: 1, background: 'transparent', color: 'white', px: 2, minWidth: 400 }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <DialogContent sx={{ pt: 1, background: 'transparent', color: 'white', px: 2, minWidth: 400, maxHeight: 'calc(80vh - 140px)', overflowY: 'auto' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, paddingRight: 4 }}>
           {prescriptions.map((rx, idx) => (
             <div key={rx.medicine + rx.date + idx} style={{ display: 'flex', alignItems: 'center', width: '100%', minHeight: 40 }}>
               <div style={{ flex: 1 }}>

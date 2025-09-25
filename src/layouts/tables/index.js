@@ -472,7 +472,22 @@ function Tables() {
               HUB
             </VuiTypography>
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <div style={{ display: 'flex', gap: 0, alignItems: 'center', marginRight: 12 }}>
+              {/* Search Providers now on the left */}
+              <Button
+                variant="contained"
+                color="info"
+                onClick={() => setHubProvDialogOpen(true)}
+                sx={{
+                  mr: 1.5,
+                  background: 'rgba(44, 50, 90, 0.65)',
+                  boxShadow: 'none',
+                  '&:hover': { background: 'rgba(44, 50, 90, 0.85)' }
+                }}
+              >
+                Search Providers
+              </Button>
+              {/* View All + group moved to far right */}
+              <div style={{ display: 'flex', gap: 0, alignItems: 'center' }}>
                 <VuiButton
                   variant="contained"
                   color="info"
@@ -518,14 +533,6 @@ function Tables() {
                   <AddIcon />
                 </VuiButton>
               </div>
-              <Button 
-                variant="contained" 
-                color="info" 
-                onClick={() => setHubProvDialogOpen(true)}
-                sx={{ background: 'rgba(44, 50, 90, 0.65)', boxShadow: 'none', '&:hover': { background: 'rgba(44, 50, 90, 0.85)' } }}
-              >
-                Search Providers
-              </Button>
             </Box>
           </VuiBox>
           <VuiBox sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
@@ -637,14 +644,16 @@ function Tables() {
             borderRadius: 4,
             color: 'white',
             backdropFilter: 'blur(10px)',
-            maxHeight: '88vh'
+            height: '92vh',
+            maxHeight: '92vh',
+            mt: '2vh'
           }
         }}
       >
         <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 22, pb: 1.25 }}>All Appointments</DialogTitle>
         <DialogContent sx={{ px: 2, pt: 0.5, pb: 2 }}>
           <Box sx={{
-            maxHeight: '80vh',
+            maxHeight: 'calc(92vh - 140px)', // nearly full-height scroll
             overflowY: 'auto',
             border: '1px solid rgba(255,255,255,0.08)',
             borderRadius: 1.5,
@@ -715,14 +724,16 @@ function Tables() {
             borderRadius: 4,
             color: 'white',
             backdropFilter: 'blur(10px)',
-            maxHeight: '88vh'
+            height: '92vh',
+            maxHeight: '92vh',
+            mt: '2vh'
           }
         }}
       >
         <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 22, pb: 1.25 }}>All HUB Items</DialogTitle>
         <DialogContent sx={{ px: 2, pt: 0.5, pb: 2 }}>
           <Box sx={{
-            maxHeight: '80vh',
+            maxHeight: 'calc(92vh - 140px)',
             overflowY: 'auto',
             border: '1px solid rgba(255,255,255,0.08)',
             borderRadius: 1.5,

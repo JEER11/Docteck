@@ -64,6 +64,71 @@
       });
     })();
 
+    // Early watchdog: if the main React bundle never executes (blank screen with only index shell), attempt one cache-busting reload then show diagnostics overlay.
+    (function reactBootWatchdog(){
+      try {
+        // Record script load failures (resource errors) for later diagnostics
+        window.addEventListener('error', function(e){
+          if (e && e.target && e.target.tagName === 'SCRIPT' && e.target.src) {
+            try {
+              (window.__FAILED_SCRIPTS__ = window.__FAILED_SCRIPTS__ || []).push(e.target.src);
+            } catch(_) {}
+          }
+        }, true);
+
+        function showBootOverlay(msg){
+          if (document.getElementById('boot-failure-overlay')) return;
+          var div = document.createElement('div');
+          div.id = 'boot-failure-overlay';
+          var failed = (window.__FAILED_SCRIPTS__||[]).map(function(u){ return ' - ' + u; }).join('\n');
+          var info = 'Path: ' + location.pathname + '\nHas __APP_READY__: ' + (window.__APP_READY__?'yes':'no') + '\nFailed scripts:\n' + (failed||'(none captured)');
+          div.innerHTML = '<div style="max-width:820px;margin:0 auto;padding:32px 34px;font:14px system-ui,Segoe UI,Roboto,sans-serif;">'
+            + '<h2 style="margin:0 0 10px;font:600 24px system-ui;letter-spacing:.5px;">App did not initialize</h2>'
+            + '<p style="margin:0 0 14px;opacity:.85;line-height:1.5;">'+ msg +' The main application script appears not to have run. This can happen right after a deployment when the cached index.html references outdated hashed filenames. A hard refresh (Ctrl+Shift+R) usually fixes it. Below are diagnostics you can share.</p>'
+            + '<pre style="background:#1e223f;padding:14px 16px;border:1px solid #303861;border-radius:8px;max-height:260px;overflow:auto;font-size:12px;line-height:1.45;color:#e2e8f0;white-space:pre-wrap;">'+ info +'</pre>'
+            + '<div style="margin-top:14px;display:flex;gap:12px;flex-wrap:wrap;">'
+            + '  <button id="boot-overlay-retry" style="background:#2563eb;color:#fff;border:0;padding:9px 18px;font-weight:600;border-radius:6px;cursor:pointer;">Retry Now</button>'
+            + '  <button id="boot-overlay-clear" style="background:#475569;color:#fff;border:0;padding:9px 18px;font-weight:600;border-radius:6px;cursor:pointer;">Clear Cache Hint</button>'
+            + '</div>'
+            + '</div>';
+          Object.assign(div.style, { position:'fixed', inset:0, background:'radial-gradient(circle at 50% 20%, #1a1d34 0%, #0d0f1e 90%)', color:'#f1f5f9', zIndex:999998, overflowY:'auto' });
+          document.body.appendChild(div);
+          var retry = document.getElementById('boot-overlay-retry');
+            retry && retry.addEventListener('click', function(){ try { sessionStorage.removeItem('spa-main-recover'); } catch(_){}; location.reload(); });
+          var clear = document.getElementById('boot-overlay-clear');
+            clear && clear.addEventListener('click', function(){ try { localStorage.clear(); sessionStorage.clear(); } catch(_){}; location.reload(); });
+        }
+
+        // If after 2500ms the app isn't ready and root is empty, attempt recovery.
+        setTimeout(function(){
+          try {
+            if (window.__APP_READY__) return; // React started
+            var rootEl = document.getElementById('root');
+            var hasContent = rootEl && rootEl.childNodes && rootEl.childNodes.length > 0;
+            if (hasContent) return; // Something rendered (maybe loading overlay) – let React watchdog handle it
+            // No content: likely main bundle failed to load.
+            var tried = sessionStorage.getItem('spa-main-recover');
+            if (!tried) {
+              sessionStorage.setItem('spa-main-recover','1');
+              // Append a cache-busting query once
+              var url = location.pathname + location.search + location.hash;
+              if (!/v=/.test(location.search)) {
+                var sep = location.search ? '&' : '?';
+                location.replace(location.pathname + location.search + sep + 'v=' + Date.now() + location.hash);
+              } else {
+                location.reload();
+              }
+              return;
+            }
+            // Already retried: show overlay
+            showBootOverlay('Automatic recovery attempt did not succeed.');
+          } catch(err) {
+            try { console.error('[Bridge] Boot watchdog failure', err); } catch(_){}
+          }
+        }, 2500);
+      } catch(_){}
+    })();
+
     // Ensure the sidebar brand uses the desired icon
     (function ensureBrandIcon(){
       var tries = 0; var maxTries = 40; // ~4s
