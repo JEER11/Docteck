@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, Suspense } from "react";
+import { markAppReady } from './index';
 // Runtime diagnostics (temporary) to troubleshoot Firestore 400 errors / missing config
 import { hasFirebaseConfig, auth, db } from 'lib/firebase';
 import { __diagnoseTodosWrite } from 'lib/todoData';
@@ -113,6 +114,13 @@ export default function App() {
       </Switch>
     </Suspense>
   );
+
+  // Mark readiness once first paint effects run
+  useEffect(() => {
+    // Allow next tick so initial Suspense fallback also counts as mounted
+    const t = setTimeout(() => { markAppReady(); }, 0);
+    return () => clearTimeout(t);
+  }, []);
 
   return direction === "rtl" ? (
     <CacheProvider value={rtlCache}>
