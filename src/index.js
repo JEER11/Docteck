@@ -44,7 +44,7 @@ const root = createRoot(rootElement);
       div.innerHTML = '<div style="font:14px system-ui,Segoe UI,Roboto,sans-serif;max-width:780px;margin:0 auto;padding:24px 28px;">\n  <h2 style="margin:0 0 6px;font:600 22px system-ui;letter-spacing:.4px;">Loading is taking longer than expected</h2>\n  <p style="margin:4px 0 12px;opacity:.85;line-height:1.4">The app JavaScript hasn\'t finished initializing. This can happen right after a new deploy or if a script chunk failed to load. Try a hard refresh (Ctrl+Shift+R). If it persists, copy the diagnostics below.</p>\n  <pre style="background:#1e223f;padding:12px 14px;border-radius:6px;border:1px solid #303861;max-height:220px;overflow:auto;font-size:11px;line-height:1.45;color:#dbe4ff;">' + JSON.stringify(window.__APP_BOOT_STEPS__, null, 2) + '</pre>\n  <button id="retry-app-btn" style="margin-top:10px;background:#2563eb;color:#fff;border:0;padding:8px 16px;border-radius:6px;font-weight:600;cursor:pointer">Retry</button>\n</div>';
       Object.assign(div.style, { position:'fixed', inset:0, background:'radial-gradient(circle at 50% 20%, #1a1d34 0%, #0d0f1e 90%)', color:'#f1f5f9', zIndex: 999999, overflowY:'auto' });
       document.body.appendChild(div);
-      document.getElementById('retry-app-btn')?.addEventListener('click', () => { try { sessionStorage.removeItem('spa-chunk-reload'); } catch(_) {}; location.reload(); });
+    document.getElementById('retry-app-btn')?.addEventListener('click', () => { try { sessionStorage.removeItem('spa-chunk-reload'); } catch(_) {}; window.location.reload(); });
     }, 4000);
     // Global error capture before React paints
     window.addEventListener('error', (e) => {
