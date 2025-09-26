@@ -27,6 +27,9 @@ import Stack from "@mui/material/Stack";
 import Switch from "@mui/material/Switch";
 import Tooltip from "@mui/material/Tooltip";
 import InputAdornment from "@mui/material/InputAdornment";
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
+import MenuItem from '@mui/material/MenuItem';
 
 import LocalHospitalOutlinedIcon from "@mui/icons-material/LocalHospitalOutlined";
 import LocalPharmacyOutlinedIcon from "@mui/icons-material/LocalPharmacyOutlined";
@@ -125,13 +128,15 @@ export default function Family() {
     }
   };
 
-  // Shared styling for dialogs to match Account Settings popups exactly
+  // Enhanced glassy popup styling (unified across pages)
   const popupPaperSx = {
-    backgroundColor: 'rgba(30, 32, 60, 0.7)',
-    boxShadow: 24,
-    borderRadius: 3,
-    color: 'white',
-    backdropFilter: 'blur(4px)'
+    background: 'linear-gradient(145deg, rgba(20,22,40,0.90), rgba(24,26,47,0.94))',
+    backdropFilter: 'blur(18px) saturate(140%)',
+    borderRadius: 5,
+    boxShadow: '0 18px 60px -4px rgba(0,0,0,0.65), 0 4px 18px rgba(0,0,0,0.4)',
+    border: '1.5px solid rgba(90,98,160,0.35)',
+    color: '#fff',
+    overflow: 'hidden'
   };
 
   const sectionCardSx = {
@@ -142,19 +147,65 @@ export default function Family() {
     mb: 2,
   };
 
-  // TextField styles cloned from Account Settings password dialog (consistent inputs)
+  // Unified enhanced input styling (matches Medical Profile popups)
   const inputSx = {
     width: '100%',
     ml: 0,
-    background: '#181a2f',
-    borderRadius: 1.5,
-    '& .MuiOutlinedInput-notchedOutline': { border: '1px solid #23244a' },
-    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#2f3570' },
-    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#6a6afc' },
-    '& .MuiInputBase-input': { color: '#e7e9f3', fontSize: 14, py: 1 },
-    '& .MuiInputAdornment-positionEnd': { mr: -1.25 },
-    '& .MuiFormLabel-root': { color: '#aeb3d5', fontSize: 12 }
+    '& .MuiOutlinedInput-root': {
+      background: 'linear-gradient(180deg, rgba(34,36,65,0.9) 0%, rgba(30,32,58,0.9) 100%)',
+      borderRadius: 2.2,
+      border: '1px solid #2b2d55',
+      color: '#fff',
+      cursor: 'pointer',
+      '& fieldset': { borderColor: 'transparent' },
+      '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.18)' },
+      '&.Mui-focused fieldset': { borderColor: '#3b3df2', boxShadow: '0 0 0 1px #3b3df255' }
+    },
+    '& .MuiInputBase-input': { color: '#e7e9f3', fontSize: 14, fontWeight: 400, padding: '10px 12px', cursor: 'pointer' },
+    '& .MuiOutlinedInput-input': { '::placeholder': { color: '#95a0d4', opacity: 1 } },
+    '& .MuiInputAdornment-root': { color: '#aeb3d5' },
+    '& .MuiInputLabel-root': { color: '#aeb3d5', fontSize: 12, fontWeight: 600 },
+    '& .MuiInputLabel-root.Mui-focused': { color: '#e7e9f3' },
+    '& .MuiSelect-select': { pr: '36px !important', cursor: 'pointer' },
+    '& .MuiSvgIcon-root': { color: '#9fa5cb' }
   };
+
+  // Select Menu theme override (mirrors Medical Profile)
+  const selectProps = {
+    IconComponent: ExpandMoreRoundedIcon,
+    MenuProps: {
+      PaperProps: {
+        sx: {
+          bgcolor: 'rgba(30,32,55,0.96)',
+          backdropFilter: 'blur(12px)',
+          border: '1px solid rgba(255,255,255,0.08)',
+          '& .MuiMenuItem-root': { fontSize: 14 }
+        }
+      }
+    }
+  };
+
+  // Reusable date field with custom calendar icon + full-surface click
+  const QuickDateField = ({ label = 'Date', value, onChange }) => (
+    <TextField
+      size='small'
+      label={label}
+      type='date'
+      value={value || ''}
+      onChange={(e)=> onChange && onChange(e.target.value)}
+      sx={{
+        ...inputSx,
+        '& input[type="date"]::-webkit-calendar-picker-indicator': { opacity: 0, display: 'none' },
+        '& input[type="date"]': { cursor: 'pointer' },
+      }}
+      InputLabelProps={{ shrink: true }}
+      InputProps={{ endAdornment: (<InputAdornment position='end'><CalendarTodayIcon sx={{ fontSize: 18, color: '#9fa5cb' }} /></InputAdornment>) }}
+      onMouseDown={(e)=> {
+        const input = e.currentTarget.querySelector('input');
+        if (input && input.showPicker) { e.preventDefault(); input.showPicker(); }
+      }}
+    />
+  );
 
   const smallActionBtnSx = {
     fontSize: 14,
@@ -337,7 +388,7 @@ export default function Family() {
       <VuiBox mt={5} mb={3}>
         <Grid container spacing={3}>
           <Grid item xs={12}>
-            <CarInformations />
+            <CarInformations popupVariant='settings' />
           </Grid>
         </Grid>
       </VuiBox>
@@ -366,27 +417,17 @@ export default function Family() {
               ))}
             </VuiBox>
             {/* Popup Dialog for each button */}
-            <Dialog
-              open={!!openPopup}
-              onClose={() => setOpenPopup(null)}
-              maxWidth="md"
-              fullWidth
-              PaperProps={{ sx: popupPaperSx }}
-            >
-              <DialogTitle sx={{ position: 'relative', px: 4, pt: 3, pb: 2 }}>
-                <VuiTypography variant="lg" fontWeight="bold" color="white" sx={{ fontSize: 22 }}>
+            <Dialog open={!!openPopup} onClose={() => setOpenPopup(null)} maxWidth='md' fullWidth PaperProps={{ sx: popupPaperSx }}>
+              <DialogTitle sx={{ position: 'relative', px: 5, pt: 3.25, pb: 2.25 }}>
+                <VuiTypography variant='lg' fontWeight='bold' color='white' sx={{ fontSize: 23, letterSpacing: 0.3 }}>
                   {openPopup}
                 </VuiTypography>
-                <IconButton
-                  aria-label="close"
-                  onClick={() => setOpenPopup(null)}
-                  sx={{ position: 'absolute', right: 12, top: 10, color: '#9fa3c1', '&:hover': { color: '#fff', background: 'rgba(255,255,255,0.06)' } }}
-                >
+                <IconButton aria-label='close' onClick={() => setOpenPopup(null)} sx={{ position: 'absolute', right: 14, top: 12, color: '#9fa3c1', '&:hover': { color: '#fff', background: 'rgba(255,255,255,0.08)' } }}>
                   <CloseRoundedIcon />
                 </IconButton>
               </DialogTitle>
               <Divider sx={{ borderColor: '#23244a' }} />
-              <DialogContent sx={{ px: 4, py: 3 }}>
+              <DialogContent sx={{ px: 5, py: 3.5 }}>
                 {openPopup === 'Insurance' && (
                   <>
                     <VuiTypography color="text" variant="button" mb={1.5} sx={{ fontSize: 16 }}>
@@ -476,10 +517,10 @@ export default function Family() {
                     <VuiBox mb={2} sx={sectionCardSx}>
                       <Grid container spacing={1.5} alignItems="center">
                         <Grid item xs={12} sm={4} md={3}>
-                          <TextField size="small" variant="outlined" placeholder="Family Member" fullWidth sx={inputSx} />
+                          <TextField size='small' variant='outlined' placeholder='Family Member' fullWidth sx={inputSx} />
                         </Grid>
                         <Grid item xs={12} sm={4} md={3}>
-                          <TextField size="small" variant="outlined" placeholder="Date" type="date" fullWidth sx={inputSx} InputLabelProps={{ shrink: true }} />
+                          <QuickDateField label='Date' />
                         </Grid>
                         <Grid item xs={12} sm={4} md={4}>
                           <TextField size="small" variant="outlined" placeholder="Reason" fullWidth sx={inputSx} />
@@ -505,7 +546,7 @@ export default function Family() {
                     <VuiBox mb={2} sx={sectionCardSx}>
                       <Grid container spacing={1.5} alignItems="center">
                         <Grid item xs={12} sm={5} md={6}>
-                          <TextField size="small" variant="outlined" placeholder="Doctor name or Specialty (e.g., cardiology)" value={provQuery} onChange={(e)=>setProvQuery(e.target.value)} fullWidth sx={inputSx} InputProps={{ startAdornment: (<InputAdornment position="start"><SearchIcon sx={{ color: '#aeb3d5' }} /></InputAdornment>) }} />
+                          <TextField size='small' variant='outlined' placeholder='Doctor name or Specialty (e.g., cardiology)' value={provQuery} onChange={(e)=>setProvQuery(e.target.value)} fullWidth sx={inputSx} InputProps={{ startAdornment: (<InputAdornment position='start'><SearchIcon sx={{ color: '#aeb3d5' }} /></InputAdornment>) }} />
                         </Grid>
                         <Grid item xs={6} sm={3} md={2.5}>
                           <TextField size="small" variant="outlined" placeholder="City" value={provLoc.city} onChange={(e)=>setProvLoc(v=>({...v, city:e.target.value}))} fullWidth sx={inputSx} />
@@ -561,9 +602,9 @@ export default function Family() {
                   </>
                 )}
               </DialogContent>
-              <Divider sx={{ borderColor: '#23244a' }} />
-              <DialogActions sx={{ px: 4, py: 2, display: 'flex', justifyContent: 'flex-end' }}>
-                <Button onClick={() => setOpenPopup(null)} sx={{ color: '#a259ec', textTransform: 'none', fontWeight: 600 }}>Close</Button>
+              <Divider sx={{ borderColor: '#23244a', mt: 0.5 }} />
+              <DialogActions sx={{ px: 5, py: 2.4 }}>
+                <Button onClick={() => setOpenPopup(null)} sx={{ color: '#fff', borderRadius: 2, textTransform: 'none', fontWeight: 600, px: 2.2, py: 1, background: 'rgba(255,255,255,0.04)', '&:hover': { background: 'rgba(255,255,255,0.08)' } }}>Close</Button>
               </DialogActions>
             </Dialog>
           </Card>
@@ -623,25 +664,17 @@ export default function Family() {
         </Grid>
       </Grid>
       {/* Modal for viewing and editing members */}
-      <Dialog 
-        open={!!openModal} 
-        onClose={handleCloseModal} 
-        maxWidth="sm" 
-        fullWidth
-        PaperProps={{ sx: popupPaperSx }}
-      >
-        <DialogTitle sx={{ position: 'relative', px: 4, pt: 3, pb: 2 }}>
-          {openModal ? `${openModal.charAt(0).toUpperCase() + openModal.slice(1)} Members` : ''}
-          <IconButton
-            aria-label="close"
-            onClick={handleCloseModal}
-            sx={{ position: 'absolute', right: 12, top: 10, color: '#9fa3c1', '&:hover': { color: '#fff', background: 'rgba(255,255,255,0.06)' } }}
-          >
+      <Dialog open={!!openModal} onClose={handleCloseModal} maxWidth='sm' fullWidth PaperProps={{ sx: popupPaperSx }}>
+        <DialogTitle sx={{ position: 'relative', px: 5, pt: 3.25, pb: 2.25 }}>
+          <VuiTypography variant='lg' fontWeight='bold' color='white' sx={{ fontSize: 23, letterSpacing: 0.3 }}>
+            {openModal ? `${openModal.charAt(0).toUpperCase() + openModal.slice(1)} Members` : ''}
+          </VuiTypography>
+          <IconButton aria-label='close' onClick={handleCloseModal} sx={{ position: 'absolute', right: 14, top: 12, color: '#9fa3c1', '&:hover': { color: '#fff', background: 'rgba(255,255,255,0.08)' } }}>
             <CloseRoundedIcon />
           </IconButton>
         </DialogTitle>
         <Divider sx={{ borderColor: '#23244a' }} />
-        <DialogContent sx={{ px: 4, py: 3 }}>
+        <DialogContent sx={{ px: 5, py: 3.5 }}>
           {openModal && editIndex === null && (
             <>
               <ul style={{ color: '#fff', paddingLeft: 18, marginBottom: 16, fontSize: 15 }}>
@@ -668,11 +701,11 @@ export default function Family() {
             </form>
           )}
         </DialogContent>
-        <Divider sx={{ borderColor: '#23244a' }} />
-        <DialogActions sx={{ px: 4, py: 2, display: 'flex', justifyContent: 'space-between' }}>
-          <Button onClick={handleCloseModal} sx={{ color: '#a259ec', textTransform: 'none', fontWeight: 600 }}>Close</Button>
+        <Divider sx={{ borderColor: '#23244a', mt: 0.5 }} />
+        <DialogActions sx={{ px: 5, py: 2.4 }}>
+          <Button onClick={handleCloseModal} sx={{ color: '#fff', borderRadius: 2, textTransform: 'none', fontWeight: 600, px: 2.2, py: 1, background: 'rgba(255,255,255,0.04)', '&:hover': { background: 'rgba(255,255,255,0.08)' } }}>Close</Button>
           {openModal && editIndex !== null && (
-            <Button onClick={editIndex < members[openModal].length ? handleSaveEdit : handleSaveAdd} sx={{ color: '#fff', background: 'linear-gradient(90deg, #3a8dde 0%, #6f7cf7 100%)', textTransform: 'none', fontWeight: 700, px: 2.5 }}>
+            <Button onClick={editIndex < members[openModal].length ? handleSaveEdit : handleSaveAdd} sx={{ color: '#fff', borderRadius: 2.2, textTransform: 'none', fontWeight: 700, px: 2.7, py: 1.05, background: 'linear-gradient(90deg,#5353f6,#7d7dfc)', boxShadow: '0 4px 14px -2px #5353f666', '&:hover': { background: 'linear-gradient(90deg,#7d7dfc,#5353f6)' } }}>
               Save
             </Button>
           )}

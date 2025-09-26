@@ -15,6 +15,10 @@ import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
+import InputAdornment from '@mui/material/InputAdornment';
+import MenuItem from '@mui/material/MenuItem';
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
 import Avatar from "@mui/material/Avatar";
 import Chip from "@mui/material/Chip";
 import Stack from "@mui/material/Stack";
@@ -216,7 +220,7 @@ export default function Pets() {
       <VuiBox mt={5} mb={3}>
         <Grid container spacing={3}>
           <Grid item xs={12}>
-            <CarInformations />
+            <CarInformations popupVariant='settings' />
           </Grid>
         </Grid>
       </VuiBox>
@@ -254,24 +258,25 @@ export default function Pets() {
             <Dialog open={openSettings} onClose={handleCloseSettings} maxWidth="md" fullWidth
               PaperProps={{
                 sx: {
-                  backgroundColor: 'rgba(30, 32, 60, 0.7)',
-                  boxShadow: 24,
-                  borderRadius: 3,
-                  color: 'white',
+                  background: 'linear-gradient(145deg, rgba(20,22,40,0.90), rgba(24,26,47,0.94))',
+                  backdropFilter: 'blur(18px) saturate(140%)',
+                  borderRadius: 5,
+                  boxShadow: '0 18px 60px -4px rgba(0,0,0,0.65), 0 4px 18px rgba(0,0,0,0.4)',
+                  border: '1.5px solid rgba(90,98,160,0.35)',
+                  color: '#fff',
                   minWidth: 500,
                   maxWidth: 900,
-                  backdropFilter: 'blur(6px)',
-                  border: '1px solid #23244a',
+                  overflow: 'hidden'
                 },
               }}
             >
-              <DialogTitle sx={{ fontSize: 22, fontWeight: 800, color: '#fff', pb: 0 }}>Pet Settings</DialogTitle>
+              <DialogTitle sx={{ position: 'relative', px: 5, pt: 3.25, pb: 1.25, fontSize: 23, fontWeight: 800, letterSpacing: 0.3 }}>Pet Settings</DialogTitle>
               <Tabs
                 value={activeTab}
                 onChange={(e, v) => setActiveTab(v)}
                 variant="scrollable"
                 scrollButtons="auto"
-                sx={{ px: 2, mt: 1, borderBottom: '1px solid #23244a',
+                sx={{ px: 2, mt: 0.5, borderBottom: '1px solid #23244a',
                   '& .MuiTab-root': { color: '#b0b3c0', textTransform: 'none', fontWeight: 700, minHeight: 44 },
                   '& .Mui-selected': { color: '#fff' },
                   '& .MuiTabs-indicator': { backgroundColor: '#6a6afc', height: 3 }
@@ -284,7 +289,7 @@ export default function Pets() {
                 <Tab value="search" label="Search Provider" />
                 <Tab value="tests" label="Test Results" />
               </Tabs>
-              <DialogContent sx={{ pt: 2 }}>
+              <DialogContent sx={{ px: 5, py: 3.25 }}>
                 {activeTab === 'insurance' && (
                   <>
                     <VuiTypography color="text" variant="button" mb={2} sx={{ fontSize: 16 }}>Search and assign insurance companies for each pet.</VuiTypography>
@@ -334,8 +339,8 @@ export default function Pets() {
                   </>
                 )}
               </DialogContent>
-              <DialogActions>
-                <Button onClick={handleCloseSettings} color="primary" sx={{ fontSize: 15, fontWeight: 600, px: 3, py: 1 }}>Close</Button>
+              <DialogActions sx={{ px: 5, py: 2.4 }}>
+                <Button onClick={handleCloseSettings} sx={{ color: '#fff', borderRadius: 2, textTransform: 'none', fontWeight: 600, px: 2.2, py: 1, background: 'rgba(255,255,255,0.04)', '&:hover': { background: 'rgba(255,255,255,0.08)' } }}>Close</Button>
               </DialogActions>
             </Dialog>
           </Card>
@@ -391,58 +396,64 @@ export default function Pets() {
         </Grid>
       </Grid>
       {/* Modal for viewing and editing pets */}
-      <Dialog 
-        open={!!openModal} 
-        onClose={handleCloseModal} 
-        maxWidth="sm" 
+      <Dialog
+        open={!!openModal}
+        onClose={handleCloseModal}
+        maxWidth="md"
         fullWidth
         PaperProps={{
           sx: {
-            background: 'rgba(20, 22, 40, 0.7)',
-            backdropFilter: 'blur(16px)',
-            borderRadius: 4,
-            boxShadow: '0 8px 40px #0008',
-            border: '1.5px solid #23244a',
+            background: 'linear-gradient(145deg, rgba(20,22,40,0.9), rgba(26,28,50,0.94))',
+            backdropFilter: 'blur(20px) saturate(140%)',
+            borderRadius: 5,
+            boxShadow: '0 18px 60px -6px rgba(0,0,0,0.65), 0 4px 18px rgba(0,0,0,0.4)',
+            border: '1.5px solid rgba(90,98,160,0.35)',
             color: '#fff',
             p: 0,
+            width: { xs: '100%', sm: 600, md: 660 },
+            minHeight: 440,
+            overflow: 'hidden'
           }
         }}
       >
-        <DialogTitle sx={{ background: 'transparent', color: '#fff', fontWeight: 700, fontSize: 20, px: 4, pt: 3, pb: 1, borderBottom: '1px solid #23244a' }}>
+        <DialogTitle sx={{ background: 'transparent', color: '#fff', fontWeight: 800, letterSpacing: 0.4, fontSize: 22, px: 5, pt: 3.25, pb: 1.25, borderBottom: '1px solid #23244a' }}>
           {openModal ? `${openModal.charAt(0).toUpperCase() + openModal.slice(1)} Pets` : ''}
         </DialogTitle>
-        <DialogContent sx={{ background: 'transparent', color: '#fff', px: 4, pt: 2, pb: 1 }}>
+        <DialogContent sx={{ background: 'transparent', color: '#fff', px: 5, pt: 2.5, pb: 2 }}>
           {openModal && editIndex === null && (
             <>
               <VuiBox>
                 {pets[openModal].map((p, i) => (
                   <RowContainer key={`view-${openModal}-${i}`}>
                     {renderPetRowBase(p)}
-                    <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} sx={{ alignItems: 'center', width: '100%', justifyContent: 'flex-end' }}>
-                      <VuiTypography color="text" sx={{ fontSize: 13 }}>Breed: {p.breed} • Age: {p.age}</VuiTypography>
-                      <VuiTypography color="text" sx={{ fontSize: 13 }}>Medical: {p.medical}</VuiTypography>
-                      <Button size="small" sx={{ color: '#6a6afc', textTransform: 'none', fontWeight: 700 }} onClick={() => handleEdit(openModal, i)}>Edit</Button>
+                    <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.25} sx={{ alignItems: 'flex-start', width: '100%', justifyContent: 'space-between', flex: 1, flexWrap: 'wrap' }}>
+                      <Stack spacing={0.25} sx={{ minWidth: { xs: '100%', md: 220 }, flex: 1 }}>
+                        <VuiTypography color="text" sx={{ fontSize: 13, lineHeight: 1.3 }}>Breed: <span style={{ color: '#d5d8f5' }}>{p.breed}</span></VuiTypography>
+                        <VuiTypography color="text" sx={{ fontSize: 13, lineHeight: 1.3 }}>Age: <span style={{ color: '#d5d8f5' }}>{p.age}</span></VuiTypography>
+                        <VuiTypography color="text" sx={{ fontSize: 13, lineHeight: 1.3, maxWidth: 280 }}>Medical: <span style={{ color: '#d5d8f5' }}>{p.medical}</span></VuiTypography>
+                      </Stack>
+                      <Button size="small" sx={{ color: '#6a6afc', textTransform: 'none', fontWeight: 700, alignSelf: 'flex-start' }} onClick={() => handleEdit(openModal, i)}>Edit</Button>
                     </Stack>
                   </RowContainer>
                 ))}
               </VuiBox>
-              <Button variant="contained" sx={{ mt: 1, background: 'linear-gradient(90deg,#6a6afc,#8b8bfc)', color: '#fff', borderRadius: 2, fontWeight: 600, textTransform: 'none', px: 3, py: 1, boxShadow: '0 2px 8px #6a6afc33' }} onClick={handleAddPet}>Add Pet</Button>
+              <Button variant="contained" sx={{ mt: 1.25, background: 'linear-gradient(90deg,#5353f6,#7d7dfc)', color: '#fff', borderRadius: 2.2, fontWeight: 700, textTransform: 'none', px: 3.2, py: 1, boxShadow: '0 4px 14px -2px #5353f655' }} onClick={handleAddPet}>Add Pet</Button>
             </>
           )}
           {openModal && editIndex !== null && (
             <form>
-              <TextField label="Name" name="name" value={editPet.name} onChange={handleEditChange} fullWidth sx={{ mb: 2, input: { color: '#fff' }, label: { color: '#bdbdfc' }, '& .MuiOutlinedInput-root': { background: 'rgba(40,42,70,0.5)', borderRadius: 2 } }} />
-              <TextField label="Species" name="species" value={editPet.species} onChange={handleEditChange} fullWidth sx={{ mb: 2, input: { color: '#fff' }, label: { color: '#bdbdfc' }, '& .MuiOutlinedInput-root': { background: 'rgba(40,42,70,0.5)', borderRadius: 2 } }} />
-              <TextField label="Breed" name="breed" value={editPet.breed} onChange={handleEditChange} fullWidth sx={{ mb: 2, input: { color: '#fff' }, label: { color: '#bdbdfc' }, '& .MuiOutlinedInput-root': { background: 'rgba(40,42,70,0.5)', borderRadius: 2 } }} />
-              <TextField label="Age" name="age" value={editPet.age} onChange={handleEditChange} fullWidth sx={{ mb: 2, input: { color: '#fff' }, label: { color: '#bdbdfc' }, '& .MuiOutlinedInput-root': { background: 'rgba(40,42,70,0.5)', borderRadius: 2 } }} />
-              <TextField label="Medical Info" name="medical" value={editPet.medical} onChange={handleEditChange} fullWidth sx={{ mb: 2, input: { color: '#fff' }, label: { color: '#bdbdfc' }, '& .MuiOutlinedInput-root': { background: 'rgba(40,42,70,0.5)', borderRadius: 2 } }} />
+              <TextField label="Name" name="name" value={editPet.name} onChange={handleEditChange} fullWidth sx={{ mb: 2, input: { color: '#fff' }, label: { color: '#bdbdfc' }, '& .MuiOutlinedInput-root': { background: 'linear-gradient(180deg, rgba(34,36,65,0.9) 0%, rgba(30,32,58,0.9) 100%)', borderRadius: 2.2, border: '1px solid #2b2d55', '& fieldset': { borderColor: 'transparent' } } }} />
+              <TextField label="Species" name="species" value={editPet.species} onChange={handleEditChange} fullWidth sx={{ mb: 2, input: { color: '#fff' }, label: { color: '#bdbdfc' }, '& .MuiOutlinedInput-root': { background: 'linear-gradient(180deg, rgba(34,36,65,0.9) 0%, rgba(30,32,58,0.9) 100%)', borderRadius: 2.2, border: '1px solid #2b2d55', '& fieldset': { borderColor: 'transparent' } } }} />
+              <TextField label="Breed" name="breed" value={editPet.breed} onChange={handleEditChange} fullWidth sx={{ mb: 2, input: { color: '#fff' }, label: { color: '#bdbdfc' }, '& .MuiOutlinedInput-root': { background: 'linear-gradient(180deg, rgba(34,36,65,0.9) 0%, rgba(30,32,58,0.9) 100%)', borderRadius: 2.2, border: '1px solid #2b2d55', '& fieldset': { borderColor: 'transparent' } } }} />
+              <TextField label="Age" name="age" value={editPet.age} onChange={handleEditChange} fullWidth sx={{ mb: 2, input: { color: '#fff' }, label: { color: '#bdbdfc' }, '& .MuiOutlinedInput-root': { background: 'linear-gradient(180deg, rgba(34,36,65,0.9) 0%, rgba(30,32,58,0.9) 100%)', borderRadius: 2.2, border: '1px solid #2b2d55', '& fieldset': { borderColor: 'transparent' } } }} />
+              <TextField label="Medical Info" name="medical" value={editPet.medical} onChange={handleEditChange} fullWidth multiline minRows={2} sx={{ mb: 2, input: { color: '#fff' }, label: { color: '#bdbdfc' }, '& .MuiOutlinedInput-root': { background: 'linear-gradient(180deg, rgba(34,36,65,0.9) 0%, rgba(30,32,58,0.9) 100%)', borderRadius: 2.2, border: '1px solid #2b2d55', '& fieldset': { borderColor: 'transparent' } } }} />
             </form>
           )}
         </DialogContent>
-        <DialogActions sx={{ background: 'transparent', px: 4, pb: 3, pt: 1 }}>
-          <Button onClick={handleCloseModal} sx={{ color: '#fff', borderRadius: 2, textTransform: 'none', fontWeight: 600, px: 2, py: 1, background: 'rgba(40,42,70,0.3)', '&:hover': { background: 'rgba(40,42,70,0.5)' } }}>Close</Button>
+        <DialogActions sx={{ background: 'transparent', px: 5, pb: 3.2, pt: 1.2 }}>
+          <Button onClick={handleCloseModal} sx={{ color: '#fff', borderRadius: 2, textTransform: 'none', fontWeight: 600, px: 2.2, py: 1, background: 'rgba(255,255,255,0.05)', '&:hover': { background: 'rgba(255,255,255,0.09)' } }}>Close</Button>
           {openModal && editIndex !== null && (
-            <Button onClick={editIndex < pets[openModal].length ? handleSaveEdit : handleSaveAdd} sx={{ color: '#fff', borderRadius: 2, textTransform: 'none', fontWeight: 600, px: 2, py: 1, background: 'linear-gradient(90deg,#6a6afc,#8b8bfc)', boxShadow: '0 2px 8px #6a6afc33', '&:hover': { background: 'linear-gradient(90deg,#8b8bfc,#6a6afc)' } }}>
+            <Button onClick={editIndex < pets[openModal].length ? handleSaveEdit : handleSaveAdd} sx={{ color: '#fff', borderRadius: 2.2, textTransform: 'none', fontWeight: 700, px: 2.7, py: 1.05, background: 'linear-gradient(90deg,#5353f6,#7d7dfc)', boxShadow: '0 4px 14px -2px #5353f666', '&:hover': { background: 'linear-gradient(90deg,#7d7dfc,#5353f6)' } }}>
               Save
             </Button>
           )}
