@@ -6,9 +6,10 @@ import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
+import Grid from "@mui/material/Grid";
+import IconButton from '@mui/material/IconButton';
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
-import IconButton from "@mui/material/IconButton";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import Tooltip from "@mui/material/Tooltip";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
@@ -315,50 +316,106 @@ function Invoices() {
     "Atorvastatin 20mg", "Lisinopril 10mg", "Metformin 500mg", "Levothyroxine 50mcg", "Amlodipine 5mg", "Simvastatin 40mg", "Omeprazole 20mg", "Losartan 50mg", "Gabapentin 300mg", "Hydrochlorothiazide 25mg", "Sertraline 50mg", "Furosemide 40mg", "Metoprolol 50mg", "Pantoprazole 40mg", "Escitalopram 10mg", "Rosuvastatin 10mg", "Tamsulosin 0.4mg", "Alprazolam 0.5mg", "Citalopram 20mg", "Ciprofloxacin 500mg", "Duloxetine 30mg", "Fluoxetine 20mg", "Atenolol 50mg", "Clopidogrel 75mg", "Doxycycline 100mg", "Enalapril 10mg", "Glipizide 5mg", "Insulin Glargine 100U/mL", "Lamotrigine 100mg", "Lansoprazole 30mg", "Levetiracetam 500mg", "Levocetirizine 5mg", "Loratadine 10mg", "Meloxicam 15mg", "Montelukast 10mg", "Naproxen 500mg", "Olmesartan 20mg", "Paroxetine 20mg", "Pioglitazone 30mg", "Pravastatin 40mg", "Prednisone 20mg", "Pregabalin 75mg", "Propranolol 40mg", "Quetiapine 100mg", "Ranitidine 150mg", "Rivaroxaban 20mg", "Sitagliptin 100mg", "Spironolactone 25mg", "Trazodone 50mg", "Valsartan 80mg", "Venlafaxine 75mg", "Warfarin 5mg", "Zolpidem 10mg", "Amoxicillin 500mg", "Azithromycin 250mg", "Baclofen 10mg", "Bisoprolol 5mg", "Budesonide 200mcg", "Carvedilol 12.5mg", "Cetirizine 10mg", "Chlorthalidone 25mg", "Clonazepam 1mg", "Clonidine 0.1mg", "Colchicine 0.6mg", "Desvenlafaxine 50mg", "Diazepam 5mg", "Digoxin 0.25mg", "Diphenhydramine 25mg", "Divalproex 250mg", "Donepezil 10mg", "Dulcolax 5mg", "Empagliflozin 10mg", "Esomeprazole 40mg", "Famotidine 20mg", "Finasteride 5mg", "Fluticasone 50mcg", "Folic Acid 1mg", "Gliclazide 80mg", "Glyburide 5mg", "Hydralazine 25mg", "Hydroxyzine 25mg", "Indapamide 2.5mg", "Irbesartan 150mg", "Isosorbide 30mg", "Ketorolac 10mg", "Labetalol 100mg", "Lactulose 10g", "Lidocaine 5%", "Linagliptin 5mg", "Liraglutide 1.2mg", "Magnesium Oxide 400mg", "Memantine 10mg", "Methotrexate 2.5mg", "Methylprednisolone 4mg", "Mirtazapine 15mg", "Mometasone 50mcg", "Nebivolol 5mg", "Nitrofurantoin 100mg", "Olanzapine 10mg", "Ondansetron 4mg", "Oxcarbazepine 300mg", "Phenytoin 100mg", "Pramipexole 0.25mg", "Rabeprazole 20mg", "Ramipril 5mg", "Risperidone 2mg", "Saxagliptin 5mg", "Sildenafil 50mg", "Sotalol 80mg", "Terazosin 5mg", "Topiramate 25mg", "Tramadol 50mg", "Valacyclovir 500mg", "Valsartan 160mg", "Vildagliptin 50mg"
   ];
 
+  const glassPaper = {
+    background: 'linear-gradient(135deg, rgba(40,46,80,0.85) 0%, rgba(28,30,54,0.9) 100%)',
+    backdropFilter: 'blur(14px) saturate(140%)',
+    WebkitBackdropFilter: 'blur(14px) saturate(140%)',
+    border: '1px solid rgba(255,255,255,0.08)',
+    boxShadow: '0 8px 28px -6px rgba(0,0,0,0.55), 0 2px 6px rgba(0,0,0,0.3)',
+    borderRadius: 3,
+    color: 'white',
+    p: 0,
+    overflow: 'hidden'
+  };
+
   const AddDialog = (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth
-      PaperProps={{ sx: { background: 'rgba(34, 40, 74, 0.65)', boxShadow: 24, borderRadius: 4, color: 'white', backdropFilter: 'blur(10px)', p: 4, minWidth: 400, maxWidth: 600, height: '80vh', maxHeight: '80vh', mt: '5vh' } }}
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      maxWidth="sm"
+      fullWidth
+      PaperProps={{
+        sx: { ...glassPaper, width: { xs: '100%', sm: 560 }, maxWidth: 600 }
+      }}
     >
-      <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 22, pb: 2 }}>Add Prescription</DialogTitle>
-  <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 1, background: 'transparent', color: 'white', px: 2, minWidth: 400, maxHeight: 'calc(80vh - 140px)', overflowY: 'auto' }}>
-        <TextField label="Medicine Name & mg" name="medicine" value={newPrescription.medicine} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mt: 1, mb: 1 }} inputProps={{ list: 'medicine-options' }} />
+      <DialogTitle sx={{ px: 3, py: 2.3, m: 0, typography: 'h6', fontWeight: 700, display: 'flex', alignItems: 'center' }}>
+        <span style={{ flex: 1, fontSize: 20 }}>Add Prescription</span>
+        <IconButton onClick={handleClose} size="small" sx={{ color: '#c6cbe3', '&:hover': { color: 'white', background: 'rgba(255,255,255,0.08)' } }}>
+          <CloseRoundedIcon fontSize="small" />
+        </IconButton>
+      </DialogTitle>
+      <DialogContent sx={{ px: 3, pt: 1.5, pb: 1.7 }}>
+        <Grid container spacing={1.5}>
+          <Grid item xs={12}>
+            <TextField
+              label="Medicine Name & mg"
+              placeholder="Start typing..."
+              name="medicine"
+              value={newPrescription.medicine}
+              onChange={handleChange}
+              fullWidth
+              InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
+              inputProps={{ list: 'medicine-options' }}
+              sx={{ ...fieldSx, mt: 0.5 }}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField label="Monthly Price ($)" name="price" type="text" value={newPrescription.price} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={fieldSx} />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField label="Pick-up Date" name="date" type="date" value={newPrescription.date} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={fieldSx} />
+          </Grid>
+          <Grid item xs={12}>
+            <VuiBox>
+              <VuiTypography color="white" sx={{ fontSize: 13, mb: 0.75, opacity: 0.75 }}>Prescription Info (PDF / Image)</VuiTypography>
+              <input name="info" type="file" accept="application/pdf,image/*" onChange={handleChange} style={{ color: '#fff', fontSize: 12 }} />
+            </VuiBox>
+          </Grid>
+        </Grid>
         <datalist id="medicine-options">
           {medicineOptions.map((name, i) => (<option value={name} key={i} />))}
         </datalist>
-        <TextField label="Monthly Price ($)" name="price" type="text" value={newPrescription.price} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 1 }} />
-        <TextField label="Pick-up Date" name="date" type="date" value={newPrescription.date} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 1 }} />
-        <VuiBox mt={1}>
-          <VuiTypography color="white" sx={{ fontSize: 14, mb: 0.5, opacity: 0.8 }}>Prescription Info</VuiTypography>
-          <input name="info" type="file" accept="application/pdf,image/*" onChange={handleChange} style={{ color: '#fff' }} />
-        </VuiBox>
       </DialogContent>
-      <DialogActions sx={{ background: 'transparent', px: 2, pb: 2, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
-        <Button onClick={handleClose} sx={{ color: '#bfc6e0' }}>Cancel</Button>
-        <Button onClick={handleAdd} variant="contained" color="info" disabled={!newPrescription.medicine || !newPrescription.price || !newPrescription.date} sx={{ borderRadius: 2, px: 3, fontWeight: 600 }}>Add</Button>
+      <DialogActions sx={{ px: 3, py: 1.6, borderTop: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
+        <Button onClick={handleClose} sx={{ color: '#bfc6e0', textTransform: 'none', fontWeight: 500 }}>Cancel</Button>
+        <Button onClick={handleAdd} variant="contained" color="info" disabled={!newPrescription.medicine || !newPrescription.price || !newPrescription.date} sx={{ borderRadius: 2, px: 3, fontWeight: 600, boxShadow: '0 0 0 1px rgba(255,255,255,0.1) inset' }}>Add</Button>
       </DialogActions>
     </Dialog>
   );
 
   const EditDialog = (
-    <Dialog open={editIdx !== null} onClose={handleEditClose} maxWidth="sm" fullWidth
-      PaperProps={{ sx: { background: 'rgba(34, 40, 74, 0.65)', boxShadow: 24, borderRadius: 4, color: 'white', backdropFilter: 'blur(10px)', p: 4, minWidth: 400, maxWidth: 600, height: '80vh', maxHeight: '80vh', mt: '5vh' } }}
-    >
-      <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 22, pb: 2 }}>Edit Prescription</DialogTitle>
-  <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 1, background: 'transparent', color: 'white', px: 2, minWidth: 400, maxHeight: 'calc(80vh - 140px)', overflowY: 'auto' }}>
-        <TextField label="Medicine Name & mg" name="medicine" value={editPrescription.medicine} onChange={handleEditChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mt: 1, mb: 1 }} inputProps={{ list: 'medicine-options' }} />
+    <Dialog open={editIdx !== null} onClose={handleEditClose} maxWidth="sm" fullWidth PaperProps={{ sx: glassPaper }}>
+      <DialogTitle sx={{ px: 3, py: 2.3, m: 0, typography: 'h6', fontWeight: 700, display: 'flex', alignItems: 'center' }}>
+        <span style={{ flex: 1, fontSize: 20 }}>Edit Prescription</span>
+        <IconButton onClick={handleEditClose} size="small" sx={{ color: '#c6cbe3', '&:hover': { color: 'white', background: 'rgba(255,255,255,0.08)' } }}>
+          <CloseRoundedIcon fontSize="small" />
+        </IconButton>
+      </DialogTitle>
+      <DialogContent sx={{ px: 3, pt: 0.75, pb: 1.25 }}>
+        <Grid container spacing={1.5}>
+          <Grid item xs={12}>
+            <TextField label="Medicine Name & mg" name="medicine" value={editPrescription.medicine} onChange={handleEditChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} inputProps={{ list: 'medicine-options' }} sx={fieldSx} />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField label="Monthly Price ($)" name="price" type="text" value={editPrescription.price} onChange={handleEditChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={fieldSx} />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField label="Pick-up Date" name="date" type="date" value={editPrescription.date} onChange={handleEditChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={fieldSx} />
+          </Grid>
+          <Grid item xs={12}>
+            <VuiBox>
+              <VuiTypography color="white" sx={{ fontSize: 13, mb: 0.75, opacity: 0.75 }}>Prescription Info (PDF / Image)</VuiTypography>
+              <input name="info" type="file" accept="application/pdf,image/*" onChange={handleEditChange} style={{ color: '#fff', fontSize: 12 }} />
+            </VuiBox>
+          </Grid>
+        </Grid>
         <datalist id="medicine-options">
           {medicineOptions.map((name, i) => (<option value={name} key={i} />))}
         </datalist>
-        <TextField label="Monthly Price ($)" name="price" type="text" value={editPrescription.price} onChange={handleEditChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 1 }} />
-        <TextField label="Pick-up Date" name="date" type="date" value={editPrescription.date} onChange={handleEditChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 1 }} />
-        <VuiBox mt={1}>
-          <VuiTypography color="white" sx={{ fontSize: 14, mb: 0.5, opacity: 0.8 }}>Prescription Info</VuiTypography>
-          <input name="info" type="file" accept="application/pdf,image/*" onChange={handleEditChange} style={{ color: '#fff' }} />
-        </VuiBox>
       </DialogContent>
-      <DialogActions sx={{ background: 'transparent', px: 2, pb: 2, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
-        <Button onClick={handleEditClose} sx={{ color: '#bfc6e0' }}>Cancel</Button>
-        <Button onClick={handleEditSave} variant="contained" color="info" disabled={!editPrescription.medicine || !editPrescription.price || !editPrescription.date} sx={{ borderRadius: 2, px: 3, fontWeight: 600 }}>Save</Button>
+      <DialogActions sx={{ px: 3, py: 1.6, borderTop: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
+        <Button onClick={handleEditClose} sx={{ color: '#bfc6e0', textTransform: 'none', fontWeight: 500 }}>Cancel</Button>
+        <Button onClick={handleEditSave} variant="contained" color="info" disabled={!editPrescription.medicine || !editPrescription.price || !editPrescription.date} sx={{ borderRadius: 2, px: 3, fontWeight: 600, boxShadow: '0 0 0 1px rgba(255,255,255,0.1) inset' }}>Save</Button>
       </DialogActions>
     </Dialog>
   );
