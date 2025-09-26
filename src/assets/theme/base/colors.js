@@ -37,7 +37,10 @@ export default {
   },
 
   transparent: {
-    main: "transparent",
+    // Use explicit RGBA instead of keyword to avoid MUI colorManipulator rejecting
+    // "transparent" when functions like alpha()/lighten() attempt to parse it.
+    // MUI's decomposeColor only supports #, rgb(), rgba(), hsl(), hsla(), color().
+    main: "rgba(0,0,0,0)",
   },
 
   white: {

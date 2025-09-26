@@ -2,6 +2,7 @@
 import Card from "@mui/material/Card";
 import Grid from "@mui/material/Grid";
 import Button from "@mui/material/Button";
+import Autocomplete from "@mui/material/Autocomplete";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
@@ -44,6 +45,7 @@ import BillingInformation from "layouts/billing/components/BillingInformation";
 import SearchIcon from "@mui/icons-material/Search";
 import AddIcon from "@mui/icons-material/Add";
 import getApiBase from "../../lib/apiBase";
+import insuranceOptions from "lib/insuranceOptions";
 
 function Tables() {
   const API = getApiBase();
@@ -72,20 +74,20 @@ function Tables() {
 
   // Provider search (HUB box)
   const [provQuery, setProvQuery] = useState("");
-  const [provCity, setProvCity] = useState("");
-  const [provState, setProvState] = useState("");
+  // Insurance replaces city & state filters
+  const [provInsurance, setProvInsurance] = useState("");
   const [provZip, setProvZip] = useState("");
   const [provLoading, setProvLoading] = useState(false);
   const [provResults, setProvResults] = useState([]);
   const [hubProvDialogOpen, setHubProvDialogOpen] = useState(false);
   const [viewAllHubOpen, setViewAllHubOpen] = useState(false);
+  const [provSearchAttempted, setProvSearchAttempted] = useState(false);
   const runProviderSearch = async () => {
     setProvLoading(true);
     try {
       const params = new URLSearchParams();
       if (provQuery) params.set('q', provQuery);
-      if (provCity) params.set('city', provCity);
-      if (provState) params.set('state', provState);
+  if (provInsurance) params.set('insurance', provInsurance);
       if (provZip) params.set('zip', provZip);
       const r = await fetch(`${API}/api/providers/real-search?${params.toString()}`);
       const j = await r.json();
@@ -93,6 +95,7 @@ function Tables() {
     } catch (_) {
       setProvResults([]);
     }
+    setProvSearchAttempted(true);
     setProvLoading(false);
   };
 
@@ -473,19 +476,28 @@ function Tables() {
             </VuiTypography>
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
               {/* Search Providers now on the left */}
-              <Button
+              {/* Search Providers button restyled to visually align with VIEW ALL / + buttons */}
+              <VuiButton
                 variant="contained"
                 color="info"
+                size="small"
                 onClick={() => setHubProvDialogOpen(true)}
-                sx={{
-                  mr: 1.5,
-                  background: 'rgba(44, 50, 90, 0.65)',
+                style={{
+                  marginRight: 12,
+                  minWidth: 36,
+                  padding: '6px 14px',
+                  fontWeight: 600,
+                  letterSpacing: 0.5,
+                  fontSize: 13,
+                  opacity: 0.7,
+                  background: 'rgba(32,34,64,0.7)',
+                  color: '#e0e0e0',
                   boxShadow: 'none',
-                  '&:hover': { background: 'rgba(44, 50, 90, 0.85)' }
+                  height: 36,
                 }}
               >
-                Search Providers
-              </Button>
+                SEARCH PROVIDERS
+              </VuiButton>
               {/* View All + group moved to far right */}
               <div style={{ display: 'flex', gap: 0, alignItems: 'center' }}>
                 <VuiButton
@@ -862,61 +874,179 @@ function Tables() {
 
       {/* Provider Search Dialog for HUB */}
       <Dialog
-  open={!!hubProvDialogOpen}
-  onClose={() => setHubProvDialogOpen(false)}
-        maxWidth="md"
+        open={!!hubProvDialogOpen}
+        onClose={() => setHubProvDialogOpen(false)}
+        maxWidth="lg"
         fullWidth
         PaperProps={{
           sx: {
-            background: 'rgba(34, 40, 74, 0.65)',
+            background: 'rgba(34, 40, 74, 0.70)',
             boxShadow: 24,
             borderRadius: 4,
             color: 'white',
-            backdropFilter: 'blur(10px)'
+            backdropFilter: 'blur(12px)',
+            height: '80vh',
+            maxHeight: '80vh',
+            mt: '5vh',
+            display: 'flex',
+            flexDirection: 'column'
           }
         }}
-     >
-        <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 22, pb: 1.5 }}>Search Provider</DialogTitle>
-        <DialogContent sx={{ px: 2, pt: 1, pb: 2 }}>
-          <Grid container spacing={1.5} alignItems="center">
-            <Grid item xs={12} sm={6} md={6}>
-              <TextField size="small" label="Doctor or Specialty" value={provQuery} onChange={e=>setProvQuery(e.target.value)} fullWidth 
-                InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
-                InputProps={{ startAdornment: (<Box component="span" sx={{ color: '#aeb3d5', mr: 1 }}><SearchIcon fontSize="small" /></Box>) }}
-                sx={fieldSx}
-              />
+      >
+        <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 24, pb: 1, pr: 6 }}>
+          Search Providers
+          <VuiTypography component="span" variant="button" color="text" sx={{ ml: 1, fontSize: 12, letterSpacing: .5 }}>
+            Find and add providers to your HUB
+          </VuiTypography>
+        </DialogTitle>
+        <DialogContent
+          sx={{
+            px: 2.5,
+            pt: 1,
+            pb: 1.5,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 2,
+            overflow: 'hidden'
+          }}
+        >
+          {/* Search Form */}
+          <Box
+            sx={{
+              background: 'rgba(16,20,38,0.55)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: 2,
+              p: 2,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 1.5
+            }}
+          >
+            <Grid container spacing={1.5} alignItems="center">
+              <Grid item xs={12} md={6} lg={5}>
+                <TextField
+                  size="small"
+                  label="Doctor or Specialty"
+                  value={provQuery}
+                  onChange={e=>setProvQuery(e.target.value)}
+                  fullWidth
+                  InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
+                  InputProps={{ startAdornment: (<Box component="span" sx={{ color: '#aeb3d5', mr: 1 }}><SearchIcon fontSize="small" /></Box>) }}
+                  sx={fieldSx}
+                />
+              </Grid>
+              <Grid item xs={6} sm={4} md={3} lg={3}>
+                <Autocomplete
+                  size="small"
+                  options={[...new Set([...(Array.isArray(window?.__ACCOUNT_INSURANCE__)? window.__ACCOUNT_INSURANCE__: []), ...insuranceOptions])].slice(0,300)}
+                  getOptionLabel={(o)=> typeof o === 'string' ? o : (o.label || '')}
+                  value={provInsurance || null}
+                  onChange={(e,val)=> setProvInsurance(val || "")}
+                  renderInput={(params)=>(
+                    <TextField
+                      {...params}
+                      label="Insurance"
+                      placeholder="Type or choose"
+                      InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
+                      sx={fieldSx}
+                    />
+                  )}
+                  ListboxProps={{ style: { maxHeight: 260 } }}
+                  filterSelectedOptions
+                  clearOnEscape
+                  autoHighlight
+                />
+              </Grid>
+              <Grid item xs={6} sm={4} md={2} lg={2}>
+                <TextField size="small" label="ZIP" value={provZip} onChange={e=>setProvZip(e.target.value)} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={fieldSx} />
+              </Grid>
+              <Grid item xs={12} md={2} lg={2} sx={{ display: 'flex', alignItems: 'stretch' }}>
+                <Button
+                  variant="contained"
+                  color="info"
+                  onClick={runProviderSearch}
+                  disabled={provLoading}
+                  sx={{
+                    borderRadius: 2,
+                    fontWeight: 600,
+                    px: 3,
+                    minHeight: 40,
+                    flex: 1,
+                    background: 'linear-gradient(90deg, rgba(36,99,235,0.9) 0%, rgba(13,148,210,0.95) 100%)'
+                  }}
+                >
+                  {provLoading ? 'Searching…' : 'Search'}
+                </Button>
+              </Grid>
             </Grid>
-            <Grid item xs={6} sm={3} md={2}>
-              <TextField size="small" label="City" value={provCity} onChange={e=>setProvCity(e.target.value)} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={fieldSx} />
-            </Grid>
-            <Grid item xs={3} sm={2} md={1.5}>
-              <TextField size="small" label="State" value={provState} onChange={e=>setProvState(e.target.value)} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={fieldSx} />
-            </Grid>
-            <Grid item xs={3} sm={2} md={1.5}>
-              <TextField size="small" label="ZIP" value={provZip} onChange={e=>setProvZip(e.target.value)} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={fieldSx} />
-            </Grid>
-            <Grid item xs={12} sm={12} md={12}>
-              <Button variant="contained" color="info" onClick={runProviderSearch} disabled={provLoading} sx={{ borderRadius: 2, fontWeight: 600 }}>
-                {provLoading ? 'Searching…' : 'Search'}
-              </Button>
-            </Grid>
-          </Grid>
-          {provResults?.length > 0 && (
-            <Box sx={{ mt: 2, maxHeight: 260, overflowY: 'auto' }}>
-              {provResults.slice(0,20).map((p) => (
-                <Box key={p.id} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', py: 0.75 }}>
-                  <Box>
-                    <VuiTypography variant="button" color="white" fontWeight="medium">{p.name}</VuiTypography>
-                    <VuiTypography variant="caption" color="text"> {p.specialty || p.taxonomy || ''} • {(p.city && p.state) ? `${p.city}, ${p.state}` : p.location || ''}</VuiTypography>
+          </Box>
+
+          {/* Results Section */}
+          <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: .5 }}>
+              <VuiTypography variant="button" color="white" sx={{ letterSpacing: .5, opacity: .85 }}>
+                {provResults.length ? `Results (${provResults.length})` : 'Results'}
+              </VuiTypography>
+              {provResults.length > 0 && (
+                <VuiTypography variant="caption" color="text" sx={{ fontSize: 11 }}>
+                  Showing first {Math.min(provResults.length, 50)} items
+                </VuiTypography>
+              )}
+            </Box>
+            <Box
+              sx={{
+                position: 'relative',
+                flex: 1,
+                minHeight: 0,
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: 2,
+                overflowY: 'auto',
+                background: 'rgba(16,20,38,0.45)',
+                px: 1.25,
+                py: 1,
+                '&::-webkit-scrollbar': { width: 8 },
+                '&::-webkit-scrollbar-thumb': { background: 'rgba(255,255,255,0.15)', borderRadius: 4 },
+              }}
+            >
+              {provLoading && (
+                <VuiTypography variant="caption" color="text">Searching…</VuiTypography>
+              )}
+              {!provLoading && provResults.length === 0 && provSearchAttempted && (
+                <Box sx={{ textAlign: 'center', mt: 4, opacity: .7 }}>
+                  <VuiTypography variant="button" color="text">No providers found</VuiTypography>
+                  <VuiTypography variant="caption" color="text" sx={{ display: 'block', mt: .5 }}>
+                    Adjust your search terms or broaden the filters.
+                  </VuiTypography>
+                </Box>
+              )}
+              {!provLoading && provResults.slice(0,50).map((p) => (
+                <Box key={p.id} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', py: 0.75, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                  <Box sx={{ pr: 2, minWidth: 0 }}>
+                    <VuiTypography variant="button" color="white" fontWeight="medium" sx={{ display: 'block', fontSize: 13, lineHeight: 1.2 }}>
+                      {p.name}
+                    </VuiTypography>
+                    <VuiTypography variant="caption" color="text" sx={{ fontSize: 11, lineHeight: 1.2 }}>
+                      {(p.specialty || p.taxonomy || 'Specialty Unknown')}
+                      {' • '}
+                      {(p.city && p.state) ? `${p.city}, ${p.state}` : (p.location || 'Location Unknown')}
+                    </VuiTypography>
                   </Box>
-                  <Button size="small" color="info" variant="outlined" onClick={async ()=>{ await addProvider(p); }} sx={{ borderRadius: 2 }}>Save</Button>
+                  <Button
+                    size="small"
+                    color="info"
+                    variant="outlined"
+                    onClick={async ()=>{ await addProvider(p); }}
+                    sx={{ borderRadius: 2, fontSize: 12, fontWeight: 600, minWidth: 64 }}
+                  >
+                    Add
+                  </Button>
                 </Box>
               ))}
             </Box>
-          )}
+          </Box>
         </DialogContent>
-        <DialogActions sx={{ px: 2, pb: 2 }}>
-          <Button onClick={() => setHubProvDialogOpen(false)} sx={{ color: '#bfc6e0' }}>Close</Button>
+        <DialogActions sx={{ px: 2.5, py: 1.25, mt: 'auto' }}>
+          <Button onClick={() => setHubProvDialogOpen(false)} sx={{ color: '#bfc6e0', fontWeight: 600 }}>Close</Button>
         </DialogActions>
       </Dialog>
     </DashboardLayout>
