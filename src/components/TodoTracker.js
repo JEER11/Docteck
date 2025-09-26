@@ -5,13 +5,15 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import VuiTypography from "components/VuiTypography";
 import VuiInput from "components/VuiInput";
-import { FiMoreHorizontal, FiX } from "react-icons/fi";
+import { FiMoreHorizontal, FiX, FiPlus } from "react-icons/fi";
+import AddTodoDialog from './AddTodoDialog';
 import { useTodos } from "context/TodoContext";
 
 export default function TodoTracker() {
   const { todos: ctxTodos = [], addTodo: ctxAdd = () => {}, removeTodo: ctxRemove = () => {} } = useTodos() || {};
   // Local input only; items come from context to stay in sync across app
   const [input, setInput] = useState("");
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   const addTodo = () => {
     if (input.trim()) {
@@ -26,11 +28,16 @@ export default function TodoTracker() {
         <VuiTypography variant="button" color="white" fontWeight="bold">
           NOTES
         </VuiTypography>
-        <Box display="flex" alignItems="center" gap={2}>
-          <VuiTypography variant="button" color="white" fontWeight="bold">
-            {ctxTodos.length}
-          </VuiTypography>
-          <FiMoreHorizontal color="#6C63FF" size={20} style={{ cursor: 'pointer' }} />
+        <Box display="flex" alignItems="center" gap={1.5}>
+          <VuiTypography variant="button" color="white" fontWeight="bold">{ctxTodos.length}</VuiTypography>
+          <FiPlus
+            size={22}
+            color="#6C63FF"
+            style={{ cursor: 'pointer' }}
+            title="Add To Do"
+            onClick={() => setDialogOpen(true)}
+          />
+          <FiMoreHorizontal color="#6C63FF" size={20} style={{ cursor: 'pointer', opacity: 0.75 }} title="More" />
         </Box>
       </Box>
       <Box sx={{
@@ -57,57 +64,77 @@ export default function TodoTracker() {
         'scrollbarColor': 'rgba(255,255,255,0.13) transparent',
       }}>
         <Stack spacing={2}>
-            {ctxTodos.map((todo, idx) => (
-            <Box
-              key={idx}
-              sx={{
-                background: 'rgba(108,99,255,0.10)',
-                borderRadius: 4,
-                p: 2.5,
-                display: 'flex',
-                alignItems: 'center',
-                minHeight: 60,
-                position: 'relative',
-                mb: 1.5,
-                boxShadow: '0 2px 12px 0 rgba(108,99,255,0.08)',
-              }}
-            >
-              <VuiTypography variant="button" color="white" fontWeight="bold" sx={{ fontSize: 18, flex: 1, wordBreak: 'break-word' }}>
-                {todo.label || todo.desc}
-              </VuiTypography>
-              <FiX
-                size={20}
-                color="#fff"
-                style={{ cursor: 'pointer', marginLeft: 12, opacity: 0.7 }}
-                onClick={() => ctxRemove(idx)}
-                title="Delete note"
-              />
-            </Box>
-          ))}
+            {ctxTodos.map((todo, idx) => {
+              const hasDate = !!todo.date;
+              const dt = hasDate ? new Date(todo.date) : null;
+              return (
+                <Box
+                  key={idx}
+                  sx={{
+                    background: 'linear-gradient(135deg, rgba(108,99,255,0.18) 0%, rgba(108,99,255,0.10) 60%)',
+                    borderRadius: 4,
+                    p: 2.1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    minHeight: 60,
+                    position: 'relative',
+                    mb: 1.25,
+                    boxShadow: '0 4px 16px -4px rgba(0,0,0,0.45)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    backdropFilter: 'blur(4px)',
+                  }}
+                >
+                  <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                    <VuiTypography variant="button" color="white" fontWeight="bold" sx={{ fontSize: 16.5, lineHeight: 1.35, wordBreak: 'break-word' }}>
+                      {todo.label || todo.desc}
+                    </VuiTypography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+                      {todo.type && (
+                        <Box sx={{ fontSize: 11, fontWeight: 600, letterSpacing: 0.4, px: 1, py: 0.3, borderRadius: 2, background: 'rgba(255,255,255,0.08)', color: '#c9d0ee' }}>
+                          {String(todo.type).toUpperCase()}
+                        </Box>
+                      )}
+                      {dt && (
+                        <Box sx={{ fontSize: 11, fontWeight: 500, px: 1, py: 0.3, borderRadius: 2, background: 'rgba(255,255,255,0.08)', color: '#b5bedf' }}>
+                          {dt.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}{(dt.getHours() || dt.getMinutes()) ? ` • ${dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ''}
+                        </Box>
+                      )}
+                    </Box>
+                  </Box>
+                  <FiX
+                    size={18}
+                    color="#fff"
+                    style={{ cursor: 'pointer', marginLeft: 12, opacity: 0.65 }}
+                    onClick={() => ctxRemove(idx)}
+                    title="Delete note"
+                  />
+                </Box>
+              );
+            })}
         </Stack>
       </Box>
-      <Box sx={{ mt: 2, background: 'rgba(255,255,255,0.08)', borderRadius: 3, px: 2, py: 2, display: 'flex', alignItems: 'center', minHeight: 56 }}>
+      <Box sx={{ mt: 2, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 3, px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
         <VuiInput
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter') addTodo(); }}
-          placeholder="Write a new task and press Enter..."
+          placeholder="Quick add and press Enter..."
           sx={{
             background: 'transparent',
             color: 'white',
             border: 'none',
             boxShadow: 'none',
             borderRadius: 2,
-            fontSize: 18,
+            fontSize: 16,
             width: '100%',
-            p: 1.5,
+            p: 1.2,
             minHeight: 40,
             'input': {
               background: 'transparent',
               color: 'white',
               '::placeholder': { color: 'rgba(255,255,255,0.5)' },
               border: 'none',
-              fontSize: 18,
+              fontSize: 16,
               borderRadius: 2,
               padding: 0,
             },
@@ -115,7 +142,15 @@ export default function TodoTracker() {
           disableUnderline
           fullWidth
         />
+        <Box as="button" onClick={() => setDialogOpen(true)} style={{ background: 'rgba(108,99,255,0.15)', border: '1px solid rgba(255,255,255,0.12)', color: '#fff', cursor: 'pointer', padding: '8px 14px', fontSize: 13, fontWeight: 600, borderRadius: 10, letterSpacing: 0.6 }}>
+          Advanced
+        </Box>
       </Box>
+      <AddTodoDialog
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        onAdd={(todo) => ctxAdd(todo)}
+      />
     </Card>
   );
 }

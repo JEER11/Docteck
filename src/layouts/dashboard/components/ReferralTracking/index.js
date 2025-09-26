@@ -1,5 +1,5 @@
 	import React, { useEffect, useRef, useState } from 'react';
-import { Card, Stack, IconButton, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField } from '@mui/material';
+import { Card, Stack, IconButton, Button } from '@mui/material';
 import VuiBox from 'components/VuiBox';
 import VuiTypography from 'components/VuiTypography';
 import colors from 'assets/theme/base/colors';
@@ -7,6 +7,7 @@ import { FaEllipsisH, FaPlus } from 'react-icons/fa';
 import linearGradient from 'assets/theme/functions/linearGradient';
 import CircularProgress from '@mui/material/CircularProgress';
 import { useTodos } from 'context/TodoContext';
+import AddTodoDialog from 'components/AddTodoDialog';
 
 function ReferralTracking({ title = 'TODO TRACK' }) {
 	const { info, gradients } = colors;
@@ -14,9 +15,6 @@ function ReferralTracking({ title = 'TODO TRACK' }) {
 	// Use todos from context
 	const { todos, addTodo, removeTodo } = useTodos();
 	const [dialogOpen, setDialogOpen] = useState(false);
-	const [newType, setNewType] = useState('medicine');
-	const [newLabel, setNewLabel] = useState('');
-	const [newDate, setNewDate] = useState('');
 
 	const totalTasks = todos.length;
 	const percent = totalTasks === 0 ? 100 : 0;
@@ -42,21 +40,10 @@ function ReferralTracking({ title = 'TODO TRACK' }) {
 	// Optional: debug log inside component respecting hooks rules
 	useEffect(() => { try { console.debug && console.debug('[ReferralTracking] todos length', todos.length); } catch(_) {} }, [todos]);
 
-	const handleAddTodo = () => {
-		const label = newLabel.trim();
-		const finalLabel = label || `New ${newType.charAt(0).toUpperCase() + newType.slice(1)} Task`;
-		const id = `local_${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
-		let dateValue = null;
-		if (newDate) {
-			// Store as ISO string for consistency
-			dateValue = new Date(newDate).toISOString();
-		}
-		try { console.debug && console.debug('[ReferralTracking] handleAddTodo calling addTodo', { newType, label: finalLabel, newDate }); } catch(_) {}
-		addTodo({ id, type: newType, label: finalLabel, date: dateValue }, { forceLocal: true });
-		setDialogOpen(false);
-		setNewLabel('');
-		setNewType('medicine');
-		setNewDate('');
+	const handleAdd = (todo) => {
+		try { console.debug && console.debug('[ReferralTracking] onAdd via AddTodoDialog', todo); } catch(_) {}
+		// Context addTodo will assign id & persist (optimistic). Accept Date object for date.
+		addTodo(todo, { forceLocal: true });
 	};
 
 		return (
@@ -137,41 +124,7 @@ function ReferralTracking({ title = 'TODO TRACK' }) {
 							))}
 						</Stack>
 					</VuiBox>
-					<Dialog
-						open={dialogOpen}
-						onClose={() => setDialogOpen(false)}
-						PaperProps={{
-							sx: {
-								background: 'rgba(34, 40, 74, 0.65)',
-								boxShadow: 24,
-								borderRadius: 4,
-								color: 'white',
-								backdropFilter: 'blur(10px)',
-								p: 4,
-								minWidth: 400,
-								maxWidth: 600,
-							}
-						}}
-					>
-						<DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 22, pb: 2, background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-							Add To Do
-						</DialogTitle>
-						<DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 1, background: 'transparent', color: 'white', px: 2, minWidth: 400 }}>
-							<Stack spacing={1}>
-								<TextField label='Type' select value={newType} onChange={e => setNewType(e.target.value)} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mt: 2, mb: 0.5, color: 'white', '& .MuiSelect-select': { color: '#e7e9f3', py: 1, background: 'transparent' } }}>
-									<MenuItem value='medicine'>Medicine</MenuItem>
-									<MenuItem value='appointment'>Appointment</MenuItem>
-									<MenuItem value='other'>Other</MenuItem>
-								</TextField>
-								<TextField label='Description' value={newLabel} onChange={e => setNewLabel(e.target.value)} fullWidth variant='outlined' multiline minRows={3} InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 0.5 }} />
-								<TextField label='Date' type='date' InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} value={newDate} onChange={e => setNewDate(e.target.value)} fullWidth sx={{ ...fieldSx, mb: 0.5 }} />
-							</Stack>
-						</DialogContent>
-						<DialogActions sx={{ background: 'transparent', px: 2, pb: 2, display: 'flex', justifyContent: 'flex-end' }}>
-							<Button onClick={() => setDialogOpen(false)} sx={{ color: '#bfc6e0', mr: 1 }}>Cancel</Button>
-							<Button onClick={() => handleAddTodo()} variant='contained' color='info' sx={{ borderRadius: 2, px: 3, fontWeight: 600 }}>Add</Button>
-						</DialogActions>
-					</Dialog>
+					<AddTodoDialog open={dialogOpen} onClose={() => setDialogOpen(false)} onAdd={handleAdd} />
 				</VuiBox>
 					</Card>
 				</VuiBox>
