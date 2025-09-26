@@ -35,7 +35,7 @@ import Tooltip from '@mui/material/Tooltip';
 import PersonOutlineRoundedIcon from '@mui/icons-material/PersonOutlineRounded';
 import PhoneRoundedIcon from '@mui/icons-material/PhoneRounded';
 import EmailRoundedIcon from '@mui/icons-material/EmailRounded';
-// removed CalendarMonthRoundedIcon (not used)
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import MenuItem from '@mui/material/MenuItem';
 import Accordion from '@mui/material/Accordion';
 import AccordionSummary from '@mui/material/AccordionSummary';
@@ -226,41 +226,94 @@ const CarInformations = ({ popupVariant = 'legacy' }) => {
 		setEditorOpen(true);
 	};
 
-	// Consistent popup styles like other account setting dialogs
+	// Consistent popup styles like other account setting dialogs (enhanced)
 	const popupPaperSx = {
-		background: 'linear-gradient(145deg, rgba(20,22,40,0.92), rgba(24,26,47,0.96))',
-		backdropFilter: 'blur(16px)',
-		borderRadius: 4,
-		boxShadow: '0 12px 48px rgba(0,0,0,0.55)',
-		border: '1.5px solid #23244a',
+		background: 'linear-gradient(145deg, rgba(20,22,40,0.90), rgba(24,26,47,0.94))',
+		backdropFilter: 'blur(18px) saturate(140%)',
+		borderRadius: 5,
+		boxShadow: '0 18px 60px -4px rgba(0,0,0,0.65), 0 4px 18px rgba(0,0,0,0.4)',
+		border: '1.5px solid rgba(90,98,160,0.35)',
 		color: '#fff',
-		overflow: 'hidden'
+		overflow: 'hidden',
+		minHeight: 520,
 	};
 
 	const rowBoxSx = {
-		p: 1.25,
-		borderRadius: 2,
+		p: 1.15,
+		borderRadius: 2.2,
 		mb: 1,
-		background: 'linear-gradient(180deg, rgba(24,26,47,0.7) 0%, rgba(22,24,45,0.7) 100%)',
-		border: '1px solid rgba(255,255,255,0.08)'
+		background: 'linear-gradient(180deg, rgba(28,30,55,0.72) 0%, rgba(24,26,50,0.68) 100%)',
+		border: '1px solid rgba(255,255,255,0.09)',
+		transition: 'background .25s,border-color .25s',
+		'&:hover': { background: 'linear-gradient(180deg, rgba(34,36,63,0.82) 0%, rgba(30,32,58,0.8) 100%)', borderColor: 'rgba(255,255,255,0.18)' }
 	};
 
 		const inputSx = {
 			'& .MuiOutlinedInput-root': {
-				background: 'rgba(26,28,52,0.85)',
-				borderRadius: 2,
+				background: 'linear-gradient(180deg, rgba(34,36,65,0.9) 0%, rgba(30,32,58,0.9) 100%)',
+				borderRadius: 2.2,
 				border: '1px solid #2b2d55',
 				color: '#fff',
+				cursor: 'pointer',
 				'& fieldset': { borderColor: 'transparent' },
-				'&:hover fieldset': { borderColor: 'rgba(255,255,255,0.14)' },
-					'&.Mui-focused fieldset': { borderColor: '#3b3df2' }
+				'&:hover fieldset': { borderColor: 'rgba(255,255,255,0.18)' },
+				'&.Mui-focused fieldset': { borderColor: '#3b3df2', boxShadow: '0 0 0 1px #3b3df255' }
 			},
-				'& .MuiInputBase-input': { color: '#e7e9f3', fontSize: 14, fontWeight: 400, padding: '10px 12px' },
-				'& .MuiOutlinedInput-input': { '::placeholder': { color: '#95a0d4', opacity: 1 } },
-				'& .MuiInputAdornment-root': { color: '#aeb3d5' },
-				'& .MuiInputLabel-root': { color: '#aeb3d5', fontSize: 12, fontWeight: 600 },
-				'& .MuiInputLabel-root.Mui-focused': { color: '#e7e9f3' }
+			'& .MuiInputBase-input': { color: '#e7e9f3', fontSize: 14, fontWeight: 400, padding: '10px 12px', cursor: 'pointer' },
+			'& .MuiOutlinedInput-input': { '::placeholder': { color: '#95a0d4', opacity: 1 } },
+			'& .MuiInputAdornment-root': { color: '#aeb3d5' },
+			'& .MuiInputLabel-root': { color: '#aeb3d5', fontSize: 12, fontWeight: 600 },
+			'& .MuiInputLabel-root.Mui-focused': { color: '#e7e9f3' },
+			// Select specific styling
+			'& .MuiSelect-select': { pr: '36px !important', cursor: 'pointer' },
+			'& .MuiSvgIcon-root': { color: '#9fa5cb' }
 		};
+
+	// Common Select props with custom arrow
+	const selectProps = {
+		IconComponent: ExpandMoreRoundedIcon,
+		MenuProps: {
+			PaperProps: {
+				sx: {
+					bgcolor: 'rgba(30,32,55,0.96)',
+					backdropFilter: 'blur(12px)',
+					border: '1px solid rgba(255,255,255,0.08)',
+					'& .MuiMenuItem-root': { fontSize: 14 }
+				}
+			}
+		}
+	};
+
+	const relationshipOptions = ['Parent','Spouse','Sibling','Child','Relative','Friend','Doctor','Neighbor','Other'];
+
+	// Reusable date field with custom arrow (no duplicate native icon shown) and full-surface click
+	const QuickDateField = ({ label, value, onChange }) => (
+		<TextField
+			size='small'
+			label={label}
+			type='date'
+			value={value || ''}
+			onChange={(e)=> onChange(e.target.value)}
+			sx={{
+				...inputSx,
+				'& input[type="date"]::-webkit-calendar-picker-indicator': { opacity: 0, display: 'none' },
+				'& input[type="date"]': { cursor: 'pointer' },
+			}}
+			InputLabelProps={{ shrink: true }}
+			InputProps={{ endAdornment: (<InputAdornment position='end'><CalendarTodayIcon sx={{ fontSize: 18, color: '#9fa5cb' }} /></InputAdornment>) }}
+			onMouseDown={(e)=> {
+				// Open native picker immediately if supported
+				const input = e.currentTarget.querySelector('input');
+				if (input && input.showPicker) {
+					e.preventDefault();
+					input.showPicker();
+				}
+			}}
+		/>
+	);
+
+	// Friendly label (e.g., emergencyContacts -> Emergency Contacts)
+	const formatLabel = (key) => key ? key.replace(/([A-Z])/g, ' $1').replace(/^./, (c) => c.toUpperCase()) : '';
 
 	return (
 		<Card
@@ -414,37 +467,37 @@ const CarInformations = ({ popupVariant = 'legacy' }) => {
 				</Grid>
 				{/* Dialog for editing each box - choose variant */}
 				{popupVariant === 'settings' ? (
-					<Dialog open={!!openBox && openBox !== 'all'} onClose={handleBoxClose} maxWidth='sm' fullWidth
+					<Dialog open={!!openBox && openBox !== 'all'} onClose={handleBoxClose} maxWidth='md' fullWidth
 						PaperProps={{ sx: popupPaperSx }}>
-						<DialogTitle sx={{ position: 'relative', px: 4, pt: 3, pb: 2 }}>
-							<VuiTypography variant='lg' fontWeight='bold' color='white' sx={{ fontSize: 22 }}>
-								Edit {openBox && openBox.charAt(0).toUpperCase() + openBox.slice(1)}
+						<DialogTitle sx={{ position: 'relative', px: 5, pt: 3.25, pb: 2.25 }}>
+							<VuiTypography variant='lg' fontWeight='bold' color='white' sx={{ fontSize: 23, letterSpacing: 0.3 }}>
+								Edit {formatLabel(openBox || '')}
 							</VuiTypography>
 							<IconButton aria-label='close' onClick={handleBoxClose}
-								sx={{ position: 'absolute', right: 12, top: 10, color: '#9fa3c1', '&:hover': { color: '#fff', background: 'rgba(255,255,255,0.06)' } }}>
+								sx={{ position: 'absolute', right: 14, top: 12, color: '#9fa3c1', '&:hover': { color: '#fff', background: 'rgba(255,255,255,0.08)' } }}>
 								<CloseRoundedIcon />
 							</IconButton>
 						</DialogTitle>
 						<Divider sx={{ borderColor: '#23244a' }} />
-						<DialogContent sx={{ px: 4, py: 3 }}>
+						<DialogContent sx={{ px: 5, py: 3.5 }}>
 							{['conditions', 'allergies', 'medications', 'emergencyContacts'].includes(openBox) && (
 																						<>
-																														{/* Collapsible editor — clean like Settings */}
-																														<Accordion disableGutters expanded={editorOpen} onChange={() => setEditorOpen((v) => !v)} sx={{ bgcolor: 'transparent', boxShadow: 'none', '&:before': { display: 'none' } }}>
-																															<AccordionSummary expandIcon={<ExpandMoreRoundedIcon sx={{ color: '#aeb3d5' }} />} sx={{ px: 0 }}>
-																																<VuiTypography color='white' fontWeight='bold'>Add {openBox === 'conditions' ? 'condition' : openBox === 'allergies' ? 'allergy' : openBox === 'medications' ? 'medication' : 'contact'}</VuiTypography>
-																															</AccordionSummary>
-																															<AccordionDetails sx={{ pt: 0, px: 0, pb: 1.5 }}>
+													{/* Collapsible editor — clean like Settings (enhanced panel) */}
+													<Accordion disableGutters expanded={editorOpen} onChange={() => setEditorOpen((v) => !v)} sx={{ bgcolor: 'transparent', boxShadow: 'none', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 3, overflow: 'hidden', backdropFilter: 'blur(10px)', background: 'radial-gradient(circle at 30% 20%, rgba(60,65,110,0.18), rgba(30,32,55,0.25))', '&:before': { display: 'none' } }}>
+														<AccordionSummary expandIcon={<ExpandMoreRoundedIcon sx={{ color: '#aeb3d5' }} />} sx={{ px: 2.25, py: 1.25 }}>
+															<VuiTypography color='white' fontWeight='bold'>Add {openBox === 'conditions' ? 'condition' : openBox === 'allergies' ? 'allergy' : openBox === 'medications' ? 'medication' : 'contact'}</VuiTypography>
+														</AccordionSummary>
+																					<AccordionDetails sx={{ pt: 0, px: 2.25, pb: 2.25 }}>
 																															{openBox === 'conditions' && (
 																								<VuiBox display='grid' gridTemplateColumns={{ xs: '1fr', sm: '1fr 1fr' }} gap={1} mt={1}>
 																																	<TextField size='small' label='Condition' placeholder='e.g., Hypertension' value={editItem?.name || ''} onChange={(e) => setEditItem({ ...(editItem||{}), name: e.target.value })} sx={inputSx} />
-																																	<TextField size='small' select label='Severity' value={editItem?.severity || 'Mild'} onChange={(e) => setEditItem({ ...(editItem||{}), severity: e.target.value })} sx={inputSx}>
+																																	<TextField size='small' select label='Severity' value={editItem?.severity || 'Mild'} onChange={(e) => setEditItem({ ...(editItem||{}), severity: e.target.value })} sx={inputSx} SelectProps={selectProps}>
 																																		{['Mild','Moderate','Severe'].map(opt => <MenuItem key={opt} value={opt}>{opt}</MenuItem>)}
 																																	</TextField>
-																																	<TextField size='small' select label='Status' value={editItem?.status || 'Active'} onChange={(e) => setEditItem({ ...(editItem||{}), status: e.target.value })} sx={inputSx}>
+																																	<TextField size='small' select label='Status' value={editItem?.status || 'Active'} onChange={(e) => setEditItem({ ...(editItem||{}), status: e.target.value })} sx={inputSx} SelectProps={selectProps}>
 																																		{['Active','Resolved'].map(opt => <MenuItem key={opt} value={opt}>{opt}</MenuItem>)}
 																																	</TextField>
-																									<TextField size='small' label='Onset date' type='date' value={editItem?.onset || ''} onChange={(e) => setEditItem({ ...(editItem||{}), onset: e.target.value })} sx={inputSx} InputLabelProps={{ shrink: true }} />
+																																<QuickDateField label='Onset date' value={editItem?.onset} onChange={(val)=> setEditItem({ ...(editItem||{}), onset: val })} />
 																									<TextField size='small' label='Notes' placeholder='optional' value={editItem?.notes || ''} onChange={(e) => setEditItem({ ...(editItem||{}), notes: e.target.value })} sx={{ gridColumn: '1 / -1', ...inputSx }} multiline minRows={2} />
 																									  <VuiBox gridColumn='1 / -1' display='flex' justifyContent='flex-end' gap={1} mt={0.5}>
 																										<VuiButton size='small' color='info' onClick={commitItem} sx={{ fontWeight: 700 }}>{editingIndex !== null ? 'Update' : 'Add'}</VuiButton>
@@ -453,12 +506,12 @@ const CarInformations = ({ popupVariant = 'legacy' }) => {
 																							)}
 																															{openBox === 'allergies' && (
 																								<VuiBox display='grid' gridTemplateColumns={{ xs: '1fr', sm: '1fr 1fr' }} gap={1} mt={1}>
-																									<TextField size='small' label='Allergen' placeholder='e.g., Peanuts' value={editItem?.allergen || ''} onChange={(e) => setEditItem({ ...(editItem||{}), allergen: e.target.value })} sx={inputSx} />
-																																	<TextField size='small' select label='Type' value={editItem?.type || 'Food'} onChange={(e) => setEditItem({ ...(editItem||{}), type: e.target.value })} sx={inputSx}>
+																																<TextField size='small' label='Allergen' placeholder='e.g., Peanuts' value={editItem?.allergen || ''} onChange={(e) => setEditItem({ ...(editItem||{}), allergen: e.target.value })} sx={inputSx} />
+																																	<TextField size='small' select label='Type' value={editItem?.type || 'Food'} onChange={(e) => setEditItem({ ...(editItem||{}), type: e.target.value })} sx={inputSx} SelectProps={selectProps}>
 																																		{['Food','Drug','Environmental','Other'].map(opt => <MenuItem key={opt} value={opt}>{opt}</MenuItem>)}
 																																	</TextField>
-																									<TextField size='small' label='Reaction' placeholder='e.g., Hives' value={editItem?.reaction || ''} onChange={(e) => setEditItem({ ...(editItem||{}), reaction: e.target.value })} sx={inputSx} />
-																																	<TextField size='small' select label='Severity' value={editItem?.severity || 'Mild'} onChange={(e) => setEditItem({ ...(editItem||{}), severity: e.target.value })} sx={inputSx}>
+																																<TextField size='small' label='Reaction' placeholder='e.g., Hives' value={editItem?.reaction || ''} onChange={(e) => setEditItem({ ...(editItem||{}), reaction: e.target.value })} sx={inputSx} />
+																																	<TextField size='small' select label='Severity' value={editItem?.severity || 'Mild'} onChange={(e) => setEditItem({ ...(editItem||{}), severity: e.target.value })} sx={inputSx} SelectProps={selectProps}>
 																																		{['Mild','Moderate','Severe'].map(opt => <MenuItem key={opt} value={opt}>{opt}</MenuItem>)}
 																																	</TextField>
 																									  <VuiBox gridColumn='1 / -1' display='flex' justifyContent='flex-end' gap={1} mt={0.5}>
@@ -472,8 +525,8 @@ const CarInformations = ({ popupVariant = 'legacy' }) => {
 																								<TextField size='small' label='Dosage' value={editItem?.dosage || ''} onChange={(e) => setEditItem({ ...(editItem||{}), dosage: e.target.value })} sx={inputSx} />
 																								<TextField size='small' label='Frequency' value={editItem?.frequency || ''} onChange={(e) => setEditItem({ ...(editItem||{}), frequency: e.target.value })} sx={inputSx} />
 																								<TextField size='small' label='Prescriber' value={editItem?.prescriber || ''} onChange={(e) => setEditItem({ ...(editItem||{}), prescriber: e.target.value })} sx={inputSx} />
-																									<TextField size='small' label='Start date' type='date' value={editItem?.start || ''} onChange={(e) => setEditItem({ ...(editItem||{}), start: e.target.value })} sx={inputSx} InputLabelProps={{ shrink: true }} />
-																									<TextField size='small' label='End date' type='date' value={editItem?.end || ''} onChange={(e) => setEditItem({ ...(editItem||{}), end: e.target.value })} sx={inputSx} InputLabelProps={{ shrink: true }} />
+																								<QuickDateField label='Start date' value={editItem?.start} onChange={(val)=> setEditItem({ ...(editItem||{}), start: val })} />
+																								<QuickDateField label='End date' value={editItem?.end} onChange={(val)=> setEditItem({ ...(editItem||{}), end: val })} />
 																									  <VuiBox gridColumn='1 / -1' display='flex' justifyContent='flex-end' gap={1} mt={0.5}>
 																										<VuiButton size='small' color='info' onClick={commitItem} sx={{ fontWeight: 700 }}>{editingIndex !== null ? 'Update' : 'Add'}</VuiButton>
 																									</VuiBox>
@@ -482,7 +535,20 @@ const CarInformations = ({ popupVariant = 'legacy' }) => {
 																							{openBox === 'emergencyContacts' && (
 																								<VuiBox display='grid' gridTemplateColumns={{ xs: '1fr', sm: '1fr 1fr' }} gap={1} mt={1}>
 																									<TextField size='small' label='Name' value={editItem?.name || ''} onChange={(e) => setEditItem({ ...(editItem||{}), name: e.target.value })} sx={inputSx} InputProps={{ startAdornment: (<InputAdornment position='start'><PersonOutlineRoundedIcon sx={{ color: '#aeb3d5' }} /></InputAdornment>) }} />
-																									<TextField size='small' label='Relationship' value={editItem?.relationship || ''} onChange={(e) => setEditItem({ ...(editItem||{}), relationship: e.target.value })} sx={inputSx} />
+																									<TextField size='small' select label='Relationship' value={relationshipOptions.includes(editItem?.relationship) ? (editItem?.relationship||'') : 'Other'} onChange={(e) => {
+																										const val = e.target.value;
+																										if (val === 'Other') {
+																											setEditItem({ ...(editItem||{}), relationship: editItem?.relationship && !relationshipOptions.includes(editItem.relationship) ? editItem.relationship : '' });
+																										} else {
+																											setEditItem({ ...(editItem||{}), relationship: val });
+																										}
+																									}} sx={inputSx} SelectProps={selectProps}>
+																										{relationshipOptions.map(opt => <MenuItem key={opt} value={opt}>{opt}</MenuItem>)}
+																									</TextField>
+																									{/* Custom relationship input when Other selected */}
+																									{(!editItem?.relationship || !relationshipOptions.includes(editItem.relationship)) && (
+																										<TextField size='small' label='Custom relationship' placeholder='e.g., Cousin' value={editItem?.relationship || ''} onChange={(e) => setEditItem({ ...(editItem||{}), relationship: e.target.value })} sx={{ gridColumn: '1 / -1', ...inputSx }} />
+																									)}
 																									<TextField size='small' label='Phone' value={editItem?.phone || ''} onChange={(e) => setEditItem({ ...(editItem||{}), phone: e.target.value })} sx={inputSx} InputProps={{ startAdornment: (<InputAdornment position='start'><PhoneRoundedIcon sx={{ color: '#aeb3d5' }} /></InputAdornment>) }} />
 																									<TextField size='small' label='Email' type='email' value={editItem?.email || ''} onChange={(e) => setEditItem({ ...(editItem||{}), email: e.target.value })} sx={inputSx} InputProps={{ startAdornment: (<InputAdornment position='start'><EmailRoundedIcon sx={{ color: '#aeb3d5' }} /></InputAdornment>) }} />
 																									<VuiBox gridColumn='1 / -1' display='flex' justifyContent='space-between' alignItems='center'>
@@ -527,12 +593,15 @@ const CarInformations = ({ popupVariant = 'legacy' }) => {
 																																		{item.dosage ? `${item.dosage}` : ''}{item.frequency ? `, ${item.frequency}` : ''}{item.start ? ` • ${item.start}` : ''}{item.end ? ` → ${item.end}` : ''}
 																																	</VuiTypography>
 																																) : openBox === 'emergencyContacts' && isObj ? (
-																																	<VuiTypography variant='caption' color='text'>
-																																		{item.relationship ? `${item.relationship} • ` : ''}{item.phone || ''}{item.primary ? ' • Primary' : ''}
-																																	</VuiTypography>
+																																	<VuiBox display='flex' gap={0.75} alignItems='center' flexWrap='wrap'>
+																																		{item.relationship && <Chip size='small' label={item.relationship} sx={{ height: 22, color: '#cfd3f7', borderColor: 'rgba(255,255,255,0.25)' }} variant='outlined' />}
+																																		{item.phone && <VuiTypography variant='caption' color='text'>{item.phone}</VuiTypography>}
+																																		{item.email && <VuiTypography variant='caption' color='text'>{item.email}</VuiTypography>}
+																																		{item.primary && <Chip size='small' label='Primary' sx={{ height: 22, color: '#00ffd0', borderColor: 'rgba(0,255,208,0.45)' }} variant='outlined' />}
+																																	</VuiBox>
 																																) : null;
 																																return (
-																																	<VuiBox key={idx} sx={rowBoxSx} display='flex' alignItems='center' justifyContent='space-between'>
+																																	<VuiBox key={idx} sx={{ ...rowBoxSx, borderColor: (openBox === 'emergencyContacts' && isObj && item.primary) ? 'rgba(0,255,208,0.5)' : rowBoxSx.border, boxShadow: (openBox === 'emergencyContacts' && isObj && item.primary) ? '0 0 0 1px rgba(0,255,208,0.25)' : 'none' }} display='flex' alignItems='center' justifyContent='space-between'>
 																																		<VuiBox>
 																																			<VuiTypography color='white' variant='button' fontWeight='bold'>
 																																				{primaryText}
@@ -596,7 +665,7 @@ const CarInformations = ({ popupVariant = 'legacy' }) => {
 																										)
 																									}}
 																								/>
-																								<TextField size='small' select label='Unit' value={editUnit} onChange={(e) => setEditUnit(e.target.value)} sx={{ width: 120, ...inputSx }}>
+																								<TextField size='small' select label='Unit' value={editUnit} onChange={(e) => setEditUnit(e.target.value)} sx={{ width: 120, ...inputSx }} SelectProps={selectProps}>
 																									{['kg','lbs'].map(u => <MenuItem key={u} value={u}>{u}</MenuItem>)}
 																								</TextField>
 																							</VuiBox>
@@ -604,7 +673,7 @@ const CarInformations = ({ popupVariant = 'legacy' }) => {
 																							{pairedHeight.enabled && (
 																								<VuiBox display='flex' alignItems='center' gap={1}>
 																									<TextField size='small' variant='outlined' label='Height' type='number' value={pairedHeight.value} onChange={(e) => setPairedHeight({ ...pairedHeight, value: e.target.value })} sx={{ width: 180, ...inputSx }} InputProps={{ startAdornment: (<InputAdornment position='start'><HeightIcon sx={{ color: '#aeb3d5' }} /></InputAdornment>) }} />
-																									<TextField size='small' select label='Unit' value={pairedHeight.unit} onChange={(e) => setPairedHeight({ ...pairedHeight, unit: e.target.value })} sx={{ width: 120, ...inputSx }}>
+																								<TextField size='small' select label='Unit' value={pairedHeight.unit} onChange={(e) => setPairedHeight({ ...pairedHeight, unit: e.target.value })} sx={{ width: 120, ...inputSx }} SelectProps={selectProps}>
 																										{['cm','in'].map(u => <MenuItem key={u} value={u}>{u}</MenuItem>)}
 																									</TextField>
 																								</VuiBox>
@@ -612,12 +681,12 @@ const CarInformations = ({ popupVariant = 'legacy' }) => {
 																						</VuiBox>
 																					)}
 						</DialogContent>
-						<Divider sx={{ borderColor: '#23244a' }} />
-						<DialogActions sx={{ px: 4, py: 2 }}>
-							<Button onClick={handleBoxClose} sx={{ color: '#fff', borderRadius: 2, textTransform: 'none', fontWeight: 600, px: 2, py: 1 }}>
+						<Divider sx={{ borderColor: '#23244a', mt: 0.5 }} />
+						<DialogActions sx={{ px: 5, py: 2.4 }}>
+							<Button onClick={handleBoxClose} sx={{ color: '#fff', borderRadius: 2, textTransform: 'none', fontWeight: 600, px: 2.2, py: 1, background: 'rgba(255,255,255,0.04)', '&:hover': { background: 'rgba(255,255,255,0.08)' } }}>
 								Close
 							</Button>
-							<Button onClick={handleEditSave} color='primary' sx={{ color: '#fff', borderRadius: 2, textTransform: 'none', fontWeight: 700, px: 2.5, py: 1, background: 'linear-gradient(90deg,#6a6afc,#8b8bfc)', boxShadow: '0 2px 8px #6a6afc33', '&:hover': { background: 'linear-gradient(90deg,#8b8bfc,#6a6afc)' } }}>
+							<Button onClick={handleEditSave} color='primary' sx={{ color: '#fff', borderRadius: 2.2, textTransform: 'none', fontWeight: 700, px: 2.7, py: 1.05, background: 'linear-gradient(90deg,#5353f6,#7d7dfc)', boxShadow: '0 4px 14px -2px #5353f666', '&:hover': { background: 'linear-gradient(90deg,#7d7dfc,#5353f6)' } }}>
 								Save
 							</Button>
 						</DialogActions>

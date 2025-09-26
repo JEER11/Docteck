@@ -6,6 +6,9 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
+import Grid from "@mui/material/Grid";
+import IconButton from "@mui/material/IconButton";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 
 // Vision UI Dashboard React components
 import VuiBox from "components/VuiBox";
@@ -194,46 +197,96 @@ function BillingInformation() {
   const handleViewAllClose = () => setViewAllOpen(false);
 
   // MUI Dialogs replacing custom overlays
+  const glassPaper = {
+    background: 'linear-gradient(135deg, rgba(40,46,80,0.85) 0%, rgba(28,30,54,0.88) 100%)',
+    backdropFilter: 'blur(14px) saturate(140%)',
+    WebkitBackdropFilter: 'blur(14px) saturate(140%)',
+    border: '1px solid rgba(255,255,255,0.08)',
+    boxShadow: '0 8px 28px -6px rgba(0,0,0,0.55), 0 2px 6px rgba(0,0,0,0.3)',
+    borderRadius: 3,
+    color: 'white',
+    p: 0,
+    overflow: 'hidden'
+  };
+
   const AddDialog = (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth
-      PaperProps={{ sx: { background: 'rgba(34, 40, 74, 0.65)', boxShadow: 24, borderRadius: 4, color: 'white', backdropFilter: 'blur(10px)', p: 4, minWidth: 400, maxWidth: 600, height: '80vh', maxHeight: '80vh', mt: '5vh' } }}
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      maxWidth="md"
+      fullWidth
+      PaperProps={{
+        sx: { ...glassPaper, width: { xs: '100%', sm: 600 }, maxWidth: 640, minHeight: 430 }
+      }}
     >
-      <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 22, pb: 2 }}>Add Pharmacy</DialogTitle>
-      <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 1, background: 'transparent', color: 'white', px: 2, minWidth: 400, maxHeight: 'calc(80vh - 140px)', overflowY: 'auto' }}>
-        <TextField label="Pharmacy Name" name="name" value={newPharmacy.name} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mt: 1, mb: 1 }} />
-        <TextField label="Address" name="address" value={newPharmacy.address} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 1 }} />
-        <TextField label="Email" name="email" type="email" value={newPharmacy.email} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 1 }} />
-        <TextField label="Phone" name="phone" value={newPharmacy.phone} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 1 }} />
-        <TextField label="Prescription to Pick Up" name="prescription" value={newPharmacy.prescription} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 1 }} inputProps={{ list: 'medicine-options' }} />
+      <DialogTitle sx={{ px: 3, pt: 2.8, pb: 2.2, m: 0, typography: 'h6', fontWeight: 700, display: 'flex', alignItems: 'center' }}>
+        <span style={{ flex: 1, fontSize: 20 }}>Add Pharmacy</span>
+        <IconButton onClick={handleClose} size="small" sx={{ color: '#c6cbe3', '&:hover': { color: 'white', background: 'rgba(255,255,255,0.08)' } }}>
+          <CloseRoundedIcon fontSize="small" />
+        </IconButton>
+      </DialogTitle>
+      <DialogContent sx={{ px: 3, pt: 2.4, pb: 2.4 }}>
+        <Grid container spacing={1.5}>
+          <Grid item xs={12}>
+            <TextField placeholder="e.g. Walgreens - Downtown" label="Pharmacy Name" name="name" value={newPharmacy.name} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mt: 1 }} />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField placeholder="123 Main St, City, ST" label="Address" name="address" value={newPharmacy.address} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={fieldSx} />
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <TextField placeholder="rx@pharmacy.com" label="Email (optional)" name="email" type="email" value={newPharmacy.email} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={fieldSx} />
+          </Grid>
+            <Grid item xs={12} md={6}>
+            <TextField placeholder="(555) 123-4567" label="Phone (optional)" name="phone" value={newPharmacy.phone} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={fieldSx} />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField placeholder="Select or type a prescription" label="Prescription to Pick Up (optional)" name="prescription" value={newPharmacy.prescription} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={fieldSx} inputProps={{ list: 'medicine-options' }} />
+          </Grid>
+        </Grid>
         <datalist id="medicine-options">
           {medicineOptions.map((name, i) => (<option value={name} key={i} />))}
         </datalist>
       </DialogContent>
-      <DialogActions sx={{ background: 'transparent', px: 2, pb: 2, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
-        <Button onClick={handleClose} sx={{ color: '#bfc6e0' }}>Cancel</Button>
-  <Button onClick={handleAdd} variant="contained" color="info" disabled={!newPharmacy.name || !newPharmacy.address} sx={{ borderRadius: 2, px: 3, fontWeight: 600 }}>Add</Button>
+      <DialogActions sx={{ px: 3, py: 1.75, borderTop: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
+        <Button onClick={handleClose} sx={{ color: '#bfc6e0', textTransform: 'none', fontWeight: 500 }}>Cancel</Button>
+        <Button onClick={handleAdd} variant="contained" color="info" disabled={!newPharmacy.name || !newPharmacy.address} sx={{ borderRadius: 2, px: 3, fontWeight: 600, boxShadow: '0 0 0 1px rgba(255,255,255,0.1) inset' }}>Add</Button>
       </DialogActions>
     </Dialog>
   );
 
   const EditDialog = (
-    <Dialog open={editIdx !== null} onClose={handleEditClose} maxWidth="sm" fullWidth
-      PaperProps={{ sx: { background: 'rgba(34, 40, 74, 0.65)', boxShadow: 24, borderRadius: 4, color: 'white', backdropFilter: 'blur(10px)', p: 4, minWidth: 400, maxWidth: 600, height: '80vh', maxHeight: '80vh', mt: '5vh' } }}
-    >
-      <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 22, pb: 2 }}>Edit Pharmacy</DialogTitle>
-      <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 1, background: 'transparent', color: 'white', px: 2, minWidth: 400, maxHeight: 'calc(80vh - 140px)', overflowY: 'auto' }}>
-        <TextField label="Pharmacy Name" name="name" value={editPharmacy.name} onChange={handleEditChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mt: 1, mb: 1 }} />
-        <TextField label="Address" name="address" value={editPharmacy.address} onChange={handleEditChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 1 }} />
-        <TextField label="Email" name="email" type="email" value={editPharmacy.email} onChange={handleEditChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 1 }} />
-        <TextField label="Phone" name="phone" value={editPharmacy.phone} onChange={handleEditChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 1 }} />
-        <TextField label="Prescription to Pick Up" name="prescription" value={editPharmacy.prescription} onChange={handleEditChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 1 }} inputProps={{ list: 'medicine-options' }} />
+    <Dialog open={editIdx !== null} onClose={handleEditClose} maxWidth="sm" fullWidth PaperProps={{ sx: glassPaper }}>
+      <DialogTitle sx={{ px: 3, py: 2.5, m: 0, typography: 'h6', fontWeight: 700, display: 'flex', alignItems: 'center' }}>
+        <span style={{ flex: 1, fontSize: 20 }}>Edit Pharmacy</span>
+        <IconButton onClick={handleEditClose} size="small" sx={{ color: '#c6cbe3', '&:hover': { color: 'white', background: 'rgba(255,255,255,0.08)' } }}>
+          <CloseRoundedIcon fontSize="small" />
+        </IconButton>
+      </DialogTitle>
+      <DialogContent sx={{ px: 3, pt: 0.5, pb: 1.5 }}>
+        <Grid container spacing={1.5}>
+          <Grid item xs={12}>
+            <TextField label="Pharmacy Name" name="name" value={editPharmacy.name} onChange={handleEditChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={fieldSx} />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField label="Address" name="address" value={editPharmacy.address} onChange={handleEditChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={fieldSx} />
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <TextField label="Email" name="email" type="email" value={editPharmacy.email} onChange={handleEditChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={fieldSx} />
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <TextField label="Phone" name="phone" value={editPharmacy.phone} onChange={handleEditChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={fieldSx} />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField label="Prescription to Pick Up" name="prescription" value={editPharmacy.prescription} onChange={handleEditChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={fieldSx} inputProps={{ list: 'medicine-options' }} />
+          </Grid>
+        </Grid>
         <datalist id="medicine-options">
           {medicineOptions.map((name, i) => (<option value={name} key={i} />))}
         </datalist>
       </DialogContent>
-      <DialogActions sx={{ background: 'transparent', px: 2, pb: 2, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
-        <Button onClick={handleEditClose} sx={{ color: '#bfc6e0' }}>Cancel</Button>
-  <Button onClick={handleEditSave} variant="contained" color="info" disabled={!editPharmacy.name || !editPharmacy.address} sx={{ borderRadius: 2, px: 3, fontWeight: 600 }}>Save</Button>
+      <DialogActions sx={{ px: 3, py: 1.75, borderTop: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
+        <Button onClick={handleEditClose} sx={{ color: '#bfc6e0', textTransform: 'none', fontWeight: 500 }}>Cancel</Button>
+        <Button onClick={handleEditSave} variant="contained" color="info" disabled={!editPharmacy.name || !editPharmacy.address} sx={{ borderRadius: 2, px: 3, fontWeight: 600, boxShadow: '0 0 0 1px rgba(255,255,255,0.1) inset' }}>Save</Button>
       </DialogActions>
     </Dialog>
   );
