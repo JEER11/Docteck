@@ -1,12 +1,21 @@
 import React, { useState } from 'react';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
-import Button from '@mui/material/Button';
-import TextField from '@mui/material/TextField';
+import {
+  Dialog, DialogTitle, DialogContent, DialogActions,
+  Button, TextField, Box, Autocomplete, InputAdornment, IconButton, Grow, Slider
+} from '@mui/material';
+import MoodIcon from '@mui/icons-material/Mood';
+import LeaderboardIcon from '@mui/icons-material/Leaderboard';
 import VuiBox from 'components/VuiBox';
 import VuiTypography from 'components/VuiTypography';
+
+const Transition = React.forwardRef(function Transition(props, ref) {
+  return <Grow ref={ref} {...props} style={{ transformOrigin: 'center top', ...props.style }} timeout={{ appear: 300, enter: 300, exit: 180 }} />;
+});
+
+const EMOTION_OPTIONS = [
+  'Joyful', 'Content', 'Calm', 'Motivated', 'Neutral',
+  'Stressed', 'Anxious', 'Sad', 'Frustrated', 'Exhausted'
+];
 
 export default function WellBeingDialog({ open, onClose, onSubmit }) {
   const [emotion, setEmotion] = useState('');
@@ -30,80 +39,106 @@ export default function WellBeingDialog({ open, onClose, onSubmit }) {
     '& .MuiOutlinedInput-notchedOutline': { border: '1px solid #23244a' },
     '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#2f3570' },
     '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#6a6afc' },
-    '& .MuiInputBase-input': { color: '#e7e9f3', fontSize: 14, py: 1, background: 'transparent' },
+    '& .MuiInputBase-input': { color: '#e7e9f3', fontSize: 14, py: 1.25, background: 'transparent' },
+    minHeight: 54,
   };
 
   return (
-    <Dialog 
-      open={open} 
-      onClose={onClose} 
-      maxWidth="sm" 
+    <Dialog
+      open={open}
+      onClose={onClose}
       fullWidth
+      maxWidth="sm"
+      TransitionComponent={Transition}
+      keepMounted
       PaperProps={{
         sx: {
-          background: 'rgba(34, 40, 74, 0.65)',
-          boxShadow: 24,
-          borderRadius: 4,
-          color: 'white',
-          backdropFilter: 'blur(10px)',
-          p: 4,
-          minWidth: 400,
-          maxWidth: 600,
+          background: 'linear-gradient(145deg, rgba(30,36,66,0.92) 0%, rgba(22,26,48,0.88) 70%)',
+            boxShadow: '0 8px 28px -4px rgba(0,0,0,0.55), 0 4px 12px -2px rgba(0,0,0,0.4)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: 5,
+            color: 'white',
+            backdropFilter: 'blur(14px)',
+            p: 4,
+            minWidth: 480,
         }
       }}
     >
-      <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 22, pb: 2, background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        Log Your Well Being
-      </DialogTitle>
-      <DialogContent 
-        sx={{ 
-          display: 'flex', 
-          flexDirection: 'column', 
-          gap: 1.5, 
-          mt: 1, 
-          background: 'transparent',
-          color: 'white',
-          px: 2,
-          minWidth: 400,
-        }}
-      >
-        <VuiBox display="flex" flexDirection="column" gap={1}>
-          <TextField
-            label="Emotion"
-            value={emotion}
-            onChange={e => setEmotion(e.target.value)}
-            fullWidth
-            autoFocus
-            InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
-            sx={{ ...fieldSx, mt: 2, mb: 0.5, minHeight: 48 }}
+      <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 22, pb: 2 }}>Log Your Well Being</DialogTitle>
+      <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, px: 2, pt: 1, pb: 1.5 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, maxWidth: 520, mx: 'auto', width: '100%' }}>
+          <Autocomplete
+            options={EMOTION_OPTIONS}
+            value={emotion ? emotion : null}
+            onChange={(_, val) => setEmotion(val || '')}
+            autoHighlight
+            clearOnEscape
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Emotion"
+                placeholder="Choose or type"
+                autoFocus
+                InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
+                sx={{ ...fieldSx, mt: 1 }}
+                InputProps={{
+                  ...params.InputProps,
+                  endAdornment: (
+                    <InputAdornment position="end" sx={{ mr: 0.5 }}>
+                      <MoodIcon fontSize="small" sx={{ color: '#9ea6c4' }} />
+                      {params.InputProps.endAdornment}
+                    </InputAdornment>
+                  )
+                }}
+              />
+            )}
+            ListboxProps={{ style: { maxHeight: 240 } }}
           />
-          <TextField
-            label="How strong is this feeling? (1-10)"
-            type="number"
-            value={intensity}
-            onChange={e => setIntensity(Math.max(1, Math.min(10, Number(e.target.value))))}
-            inputProps={{ min: 1, max: 10 }}
-            InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
-            fullWidth
-            sx={{ ...fieldSx, mb: 0.5 }}
-          />
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+            <TextField
+              label="Intensity (1-10)"
+              type="number"
+              value={intensity}
+              onChange={e => setIntensity(Math.max(1, Math.min(10, Number(e.target.value))))}
+              inputProps={{ min: 1, max: 10 }}
+              InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
+              sx={{ ...fieldSx }}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end" sx={{ mr: 0.5 }}>
+                    <IconButton size="small" tabIndex={-1} sx={{ color: '#9ea6c4' }}>
+                      <LeaderboardIcon fontSize="inherit" />
+                    </IconButton>
+                  </InputAdornment>
+                )
+              }}
+            />
+            <Slider
+              value={intensity}
+              onChange={(_, v) => setIntensity(Array.isArray(v) ? v[0] : v)}
+              min={1}
+              max={10}
+              step={1}
+              marks={[1,3,5,7,10].map(v => ({ value: v, label: String(v) }))}
+              sx={{ mt: -0.5, mx: 0.5, color: '#4b8dfc' }}
+            />
+          </Box>
           <TextField
             label="Notes (optional)"
             value={note}
             onChange={e => setNote(e.target.value)}
             fullWidth
             multiline
-            minRows={2}
+            minRows={3}
+            placeholder="Context, triggers, actions…"
             InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
-            sx={{ ...fieldSx, mb: 0.5 }}
+            sx={{ ...fieldSx }}
           />
-        </VuiBox>
+        </Box>
       </DialogContent>
-      <DialogActions sx={{ background: 'transparent', px: 2, pb: 2, display: 'flex', justifyContent: 'flex-end' }}>
+      <DialogActions sx={{ px: 2, pb: 2, display: 'flex', justifyContent: 'flex-end' }}>
         <Button onClick={onClose} sx={{ color: '#bfc6e0', mr: 1 }}>Cancel</Button>
-        <Button onClick={handleSubmit} variant='contained' color='info' sx={{ borderRadius: 2, px: 3, fontWeight: 600 }}>
-          Add
-        </Button>
+        <Button onClick={handleSubmit} variant='contained' color='info' sx={{ borderRadius: 2, px: 3, fontWeight: 600 }}>Add</Button>
       </DialogActions>
     </Dialog>
   );
