@@ -15,9 +15,8 @@ import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
-import InputAdornment from '@mui/material/InputAdornment';
+import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
-import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
 import Avatar from "@mui/material/Avatar";
 import Chip from "@mui/material/Chip";
@@ -32,19 +31,19 @@ export default function Pets() {
   const [editIndex, setEditIndex] = useState(null);
   const [pets, setPets] = useState({
     dogs: [
-      { name: "Buddy", species: "Dog", breed: "Labrador", age: "5", medical: "Vaccinated, No allergies" },
-      { name: "Max", species: "Dog", breed: "Beagle", age: "3", medical: "Needs dental check" },
+      { name: "Buddy", species: "Dog", breed: "Labrador", age: "5", medical: "Vaccinated, No allergies", avatar: '' },
+      { name: "Max", species: "Dog", breed: "Beagle", age: "3", medical: "Needs dental check", avatar: '' },
     ],
     cats: [
-      { name: "Whiskers", species: "Cat", breed: "Siamese", age: "2", medical: "Allergic to fish" },
-      { name: "Luna", species: "Cat", breed: "Maine Coon", age: "4", medical: "Healthy" },
+      { name: "Whiskers", species: "Cat", breed: "Siamese", age: "2", medical: "Allergic to fish", avatar: '' },
+      { name: "Luna", species: "Cat", breed: "Maine Coon", age: "4", medical: "Healthy", avatar: '' },
     ],
     other: [
-      { name: "Tweety", species: "Bird", breed: "Canary", age: "1", medical: "Healthy" },
-      { name: "Nibbles", species: "Hamster", breed: "Syrian", age: "1.5", medical: "No known issues" },
+      { name: "Tweety", species: "Bird", breed: "Canary", age: "1", medical: "Healthy", avatar: '' },
+      { name: "Nibbles", species: "Hamster", breed: "Syrian", age: "1.5", medical: "No known issues", avatar: '' },
     ],
   });
-  const [editPet, setEditPet] = useState({ name: "", species: "", breed: "", age: "", medical: "" });
+  const [editPet, setEditPet] = useState({ name: "", species: "", breed: "", age: "", medical: "", avatar: '' });
   // Add state for popups
   // Settings dialog (tabbed)
   const [openSettings, setOpenSettings] = useState(false);
@@ -73,7 +72,7 @@ export default function Pets() {
   // Add pet
   const handleAddPet = () => {
     setEditIndex(pets[openModal].length);
-    setEditPet({ name: "", species: "", breed: "", age: "", medical: "" });
+    setEditPet({ name: "", species: "", breed: "", age: "", medical: "", avatar: '' });
   };
   const handleSaveAdd = () => {
     setPets((prev) => {
@@ -122,7 +121,7 @@ export default function Pets() {
 
   const renderPetRowBase = (p) => (
     <Stack direction="row" alignItems="center" spacing={1.5} sx={{ width: '100%' }}>
-      <Avatar sx={{ width: 36, height: 36, bgcolor: '#2f315a', fontSize: 16 }}>{(p.name || '?').charAt(0)}</Avatar>
+      <Avatar src={p.avatar || undefined} sx={{ width: 40, height: 40, bgcolor: '#2f315a', fontSize: 16 }}>{(p.name || '?').charAt(0)}</Avatar>
       <VuiTypography color="white" sx={{ fontWeight: 700, fontSize: 16, minWidth: 110 }}>{p.name}</VuiTypography>
       <Chip size="small" label={p.breed || p.species || 'Pet'} sx={{ bgcolor: 'rgba(106,106,252,0.18)', color: '#bdbdfc', border: '1px solid #2c2e59' }} />
     </Stack>
@@ -213,6 +212,36 @@ export default function Pets() {
       ))}
     </>
   );
+
+  // Shared input styling helper for pet edit form
+  const getPetInputSx = () => ({
+    '& .MuiOutlinedInput-root': {
+      background: 'linear-gradient(180deg, rgba(34,36,65,0.9) 0%, rgba(30,32,58,0.9) 100%)',
+      borderRadius: 2.2,
+      border: '1px solid #2b2d55',
+      color: '#fff',
+      '& fieldset': { borderColor: 'transparent' },
+      '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.18)' },
+      '&.Mui-focused fieldset': { borderColor: '#3b3df2', boxShadow: '0 0 0 1px #3b3df255' }
+    },
+    '& .MuiInputBase-input': { color: '#e7e9f3', fontSize: 14, fontWeight: 400, padding: '10px 12px' },
+    '& .MuiInputLabel-root': { color: '#aeb3d5', fontSize: 12, fontWeight: 600 },
+    '& .MuiInputLabel-root.Mui-focused': { color: '#e7e9f3' }
+  });
+
+  const speciesOptions = ["Dog","Cat","Bird","Fish","Hamster","Reptile","Other"];
+  const selectProps = {
+    IconComponent: ExpandMoreRoundedIcon,
+    MenuProps: { PaperProps: { sx: { bgcolor: 'rgba(30,32,55,0.96)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.08)', '& .MuiMenuItem-root': { fontSize: 14 } } } }
+  };
+
+  const handleAvatarChange = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setEditPet(p => ({ ...p, avatar: reader.result }));
+    reader.readAsDataURL(file);
+  };
 
   return (
     <DashboardLayout>
@@ -441,12 +470,29 @@ export default function Pets() {
             </>
           )}
           {openModal && editIndex !== null && (
-            <form>
-              <TextField label="Name" name="name" value={editPet.name} onChange={handleEditChange} fullWidth sx={{ mb: 2, input: { color: '#fff' }, label: { color: '#bdbdfc' }, '& .MuiOutlinedInput-root': { background: 'linear-gradient(180deg, rgba(34,36,65,0.9) 0%, rgba(30,32,58,0.9) 100%)', borderRadius: 2.2, border: '1px solid #2b2d55', '& fieldset': { borderColor: 'transparent' } } }} />
-              <TextField label="Species" name="species" value={editPet.species} onChange={handleEditChange} fullWidth sx={{ mb: 2, input: { color: '#fff' }, label: { color: '#bdbdfc' }, '& .MuiOutlinedInput-root': { background: 'linear-gradient(180deg, rgba(34,36,65,0.9) 0%, rgba(30,32,58,0.9) 100%)', borderRadius: 2.2, border: '1px solid #2b2d55', '& fieldset': { borderColor: 'transparent' } } }} />
-              <TextField label="Breed" name="breed" value={editPet.breed} onChange={handleEditChange} fullWidth sx={{ mb: 2, input: { color: '#fff' }, label: { color: '#bdbdfc' }, '& .MuiOutlinedInput-root': { background: 'linear-gradient(180deg, rgba(34,36,65,0.9) 0%, rgba(30,32,58,0.9) 100%)', borderRadius: 2.2, border: '1px solid #2b2d55', '& fieldset': { borderColor: 'transparent' } } }} />
-              <TextField label="Age" name="age" value={editPet.age} onChange={handleEditChange} fullWidth sx={{ mb: 2, input: { color: '#fff' }, label: { color: '#bdbdfc' }, '& .MuiOutlinedInput-root': { background: 'linear-gradient(180deg, rgba(34,36,65,0.9) 0%, rgba(30,32,58,0.9) 100%)', borderRadius: 2.2, border: '1px solid #2b2d55', '& fieldset': { borderColor: 'transparent' } } }} />
-              <TextField label="Medical Info" name="medical" value={editPet.medical} onChange={handleEditChange} fullWidth multiline minRows={2} sx={{ mb: 2, input: { color: '#fff' }, label: { color: '#bdbdfc' }, '& .MuiOutlinedInput-root': { background: 'linear-gradient(180deg, rgba(34,36,65,0.9) 0%, rgba(30,32,58,0.9) 100%)', borderRadius: 2.2, border: '1px solid #2b2d55', '& fieldset': { borderColor: 'transparent' } } }} />
+            <form style={{ width: '100%' }}>
+              <input hidden type="file" id="pet-avatar-upload" accept="image/*" onChange={handleAvatarChange} />
+              <VuiBox display="flex" alignItems="center" gap={2} mb={2}>
+                <Tooltip title="Upload photo">
+                  <Avatar
+                    src={editPet.avatar || undefined}
+                    sx={{ width: 64, height: 64, bgcolor: '#2f315a', fontSize: 20, fontWeight: 600, cursor: 'pointer' }}
+                    onClick={() => document.getElementById('pet-avatar-upload')?.click()}
+                  >
+                    {(editPet.name||'?').charAt(0)}
+                  </Avatar>
+                </Tooltip>
+                <VuiTypography color="text" sx={{ fontSize: 13 }}>Click the avatar to upload / change photo.</VuiTypography>
+              </VuiBox>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(230px,1fr))', gap: 14, width: '100%' }}>
+                <TextField size='small' label="Name" name="name" value={editPet.name} onChange={handleEditChange} fullWidth sx={getPetInputSx()} />
+                <TextField size='small' label="Species" name="species" value={editPet.species} onChange={handleEditChange} fullWidth select SelectProps={selectProps} sx={getPetInputSx()}>
+                  {speciesOptions.map(sp => <MenuItem key={sp} value={sp}>{sp}</MenuItem>)}
+                </TextField>
+                <TextField size='small' label="Breed" name="breed" value={editPet.breed} onChange={handleEditChange} fullWidth sx={getPetInputSx()} />
+                <TextField size='small' label="Age" name="age" value={editPet.age} onChange={handleEditChange} fullWidth sx={getPetInputSx()} InputProps={{ endAdornment: <span style={{ color: '#9fa5cb', fontSize: 12, paddingRight: 4 }}>yrs</span> }} />
+                <TextField size='small' label="Medical Info" name="medical" value={editPet.medical} onChange={handleEditChange} fullWidth multiline minRows={3} sx={getPetInputSx()} />
+              </div>
             </form>
           )}
         </DialogContent>

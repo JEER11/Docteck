@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import Header from "./components/Header";
-import PlatformSettings from "./components/PlatformSettings";
-import CarInformations from "./components/CarInformations";
+import CarInformations from "./components/CarInformations"; // settings style medical profile popups
 import VuiBox from "components/VuiBox";
 import VuiTypography from "components/VuiTypography";
 import VuiButton from "components/VuiButton";
@@ -53,18 +52,18 @@ export default function Family() {
   const [editIndex, setEditIndex] = useState(null);
   const [members, setMembers] = useState({
     parents: [
-      { name: "Jane Doe", relation: "Mother", email: "jane@example.com", phone: "555-1234", blood: "A+", allergies: "None" },
-      { name: "John Doe", relation: "Father", email: "john@example.com", phone: "555-5678", blood: "O-", allergies: "Peanuts" },
+      { name: "Jane Doe", relation: "Mother", email: "jane@example.com", phone: "555-1234", blood: "A+", allergies: "None", avatar: '' },
+      { name: "John Doe", relation: "Father", email: "john@example.com", phone: "555-5678", blood: "O-", allergies: "Peanuts", avatar: '' },
     ],
     spouse: [
-      { name: "Alex Doe", relation: "Spouse", email: "alex@example.com", phone: "555-9999", blood: "B+", allergies: "None" },
+      { name: "Alex Doe", relation: "Spouse", email: "alex@example.com", phone: "555-9999", blood: "B+", allergies: "None", avatar: '' },
     ],
     children: [
-      { name: "Lucas Doe", relation: "Son", email: "lucas@example.com", phone: "555-1111", blood: "A-", allergies: "None" },
-      { name: "Sophia Doe", relation: "Daughter", email: "sophia@example.com", phone: "555-2222", blood: "O+", allergies: "Milk" },
+      { name: "Lucas Doe", relation: "Son", email: "lucas@example.com", phone: "555-1111", blood: "A-", allergies: "None", avatar: '' },
+      { name: "Sophia Doe", relation: "Daughter", email: "sophia@example.com", phone: "555-2222", blood: "O+", allergies: "Milk", avatar: '' },
     ],
   });
-  const [editMember, setEditMember] = useState({ name: "", relation: "", email: "", phone: "", blood: "", allergies: "" });
+  const [editMember, setEditMember] = useState({ name: "", relation: "", email: "", phone: "", blood: "", allergies: "", avatar: '' });
   const [openPopup, setOpenPopup] = useState(null); // for button popups
 
   // Modal open/close
@@ -90,7 +89,7 @@ export default function Family() {
   // Add member
   const handleAddMember = () => {
     setEditIndex(members[openModal].length);
-    setEditMember({ name: "", relation: "", email: "", phone: "", blood: "", allergies: "" });
+    setEditMember({ name: "", relation: "", email: "", phone: "", blood: "", allergies: "", avatar: '' });
   };
   const handleSaveAdd = () => {
     setMembers((prev) => {
@@ -183,6 +182,16 @@ export default function Family() {
         }
       }
     }
+  };
+
+  const bloodTypes = ["A+","A-","B+","B-","AB+","AB-","O+","O-"];
+
+  const handleAvatarChange = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setEditMember(m => ({ ...m, avatar: reader.result }));
+    reader.readAsDataURL(file);
   };
 
   // Reusable date field with custom calendar icon + full-surface click
@@ -677,27 +686,63 @@ export default function Family() {
         <DialogContent sx={{ px: 5, py: 3.5 }}>
           {openModal && editIndex === null && (
             <>
-              <ul style={{ color: '#fff', paddingLeft: 18, marginBottom: 16, fontSize: 15 }}>
+              <VuiBox component="ul" sx={{ listStyle: 'none', p: 0, m: 0, mb: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
                 {members[openModal].map((m, i) => (
-                  <li key={i} style={{ marginBottom: 14, background: 'linear-gradient(180deg, rgba(24,26,47,0.7) 0%, rgba(22,24,45,0.7) 100%)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <span style={{ fontWeight: 600, fontSize: 16 }}>{m.name} <span style={{ color: '#6a6afc', fontWeight: 500 }}>({m.relation})</span></span>
-                    <span style={{ fontSize: 13, color: '#bdbdfc' }}>Email: {m.email} | Phone: {m.phone}</span>
-                    <span style={{ fontSize: 13, color: '#bdbdfc' }}>Blood: {m.blood} | Allergies: {m.allergies}</span>
-                    <Button size="small" sx={{ mt: 1, alignSelf: 'flex-end', color: '#6a6afc', textTransform: 'none', fontWeight: 600 }} onClick={() => handleEdit(openModal, i)}>Edit</Button>
+                  <li key={i} style={{
+                    display: 'flex', alignItems: 'center', gap: 14, padding: '12px 14px',
+                    background: 'linear-gradient(180deg, rgba(24,26,47,0.7) 0%, rgba(22,24,45,0.7) 100%)',
+                    border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12
+                  }}>
+                    <Avatar src={m.avatar || undefined} sx={{ width: 46, height: 46, bgcolor: '#34365e', fontSize: 17, fontWeight: 600 }}>
+                      {(m.name||'?').charAt(0)}
+                    </Avatar>
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                      <span style={{ fontWeight: 600, fontSize: 15 }}>{m.name} <span style={{ color: '#6a6afc', fontWeight: 500 }}>({m.relation})</span></span>
+                      <span style={{ fontSize: 12.5, color: '#bdbdfc', marginTop: 2 }}>Email: {m.email} | Phone: {m.phone}</span>
+                      <span style={{ fontSize: 12.5, color: '#bdbdfc' }}>Blood: {m.blood} | Allergies: {m.allergies}</span>
+                    </div>
+                    <Tooltip title="Edit member details"><Button size="small" sx={{ color: '#6a6afc', textTransform: 'none', fontWeight: 600 }} onClick={() => handleEdit(openModal, i)}>Edit</Button></Tooltip>
                   </li>
                 ))}
-              </ul>
-              <Button variant="contained" sx={{ mt: 1, background: 'linear-gradient(90deg,#6a6afc,#8b8bfc)', color: '#fff', borderRadius: 2, fontWeight: 700, textTransform: 'none', px: 3, py: 1, boxShadow: '0 2px 8px #6a6afc33' }} onClick={handleAddMember}>Add Member</Button>
+              </VuiBox>
+              <Tooltip title="Add a new family member"><Button variant="contained" sx={{ mt: 0.5, background: 'linear-gradient(90deg,#6a6afc,#8b8bfc)', color: '#fff', borderRadius: 2, fontWeight: 700, textTransform: 'none', px: 3, py: 1, boxShadow: '0 2px 8px #6a6afc33' }} onClick={handleAddMember}>Add Member</Button></Tooltip>
             </>
           )}
           {openModal && editIndex !== null && (
-            <form>
-              <TextField label="Name" name="name" value={editMember.name} onChange={handleEditChange} fullWidth sx={{ mb: 2, ...inputSx }} />
-              <TextField label="Relation" name="relation" value={editMember.relation} onChange={handleEditChange} fullWidth sx={{ mb: 2, ...inputSx }} />
-              <TextField label="Email" name="email" value={editMember.email} onChange={handleEditChange} fullWidth sx={{ mb: 2, ...inputSx }} />
-              <TextField label="Phone" name="phone" value={editMember.phone} onChange={handleEditChange} fullWidth sx={{ mb: 2, ...inputSx }} />
-              <TextField label="Blood Type" name="blood" value={editMember.blood} onChange={handleEditChange} fullWidth sx={{ mb: 2, ...inputSx }} />
-              <TextField label="Allergies" name="allergies" value={editMember.allergies} onChange={handleEditChange} fullWidth sx={{ mb: 2, ...inputSx }} />
+            <form style={{ width: '100%' }}>
+              <input hidden type="file" id="family-avatar-upload" accept="image/*" onChange={handleAvatarChange} />
+              <VuiBox display="flex" alignItems="center" gap={2} mb={2}>
+                <Tooltip title="Upload photo">
+                  <Avatar
+                    src={editMember.avatar || undefined}
+                    sx={{ width: 62, height: 62, bgcolor: '#2f315a', fontSize: 20, fontWeight: 600, cursor: 'pointer', position: 'relative' }}
+                    onClick={() => document.getElementById('family-avatar-upload')?.click()}
+                  >
+                    {(editMember.name||'?').charAt(0)}
+                  </Avatar>
+                </Tooltip>
+                <VuiTypography color="text" sx={{ fontSize: 13 }}>Click the avatar to upload / change photo.</VuiTypography>
+              </VuiBox>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(230px,1fr))', gap: 14, width: '100%' }}>
+                <TextField size='small' label="Name" name="name" value={editMember.name} onChange={handleEditChange} fullWidth sx={inputSx} />
+                <TextField size='small' label="Relation" name="relation" value={editMember.relation} onChange={handleEditChange} fullWidth sx={inputSx} />
+                <TextField size='small' label="Email" name="email" value={editMember.email} onChange={handleEditChange} fullWidth sx={inputSx} />
+                <TextField size='small' label="Phone" name="phone" value={editMember.phone} onChange={handleEditChange} fullWidth sx={inputSx} />
+                <TextField
+                  size='small'
+                  label="Blood Type"
+                  name="blood"
+                  value={editMember.blood}
+                  onChange={handleEditChange}
+                  select
+                  fullWidth
+                  sx={inputSx}
+                  SelectProps={selectProps}
+                >
+                  {bloodTypes.map(bt => <MenuItem key={bt} value={bt}>{bt}</MenuItem>)}
+                </TextField>
+                <TextField size='small' label="Allergies" name="allergies" value={editMember.allergies} onChange={handleEditChange} fullWidth multiline minRows={2} sx={inputSx} />
+              </div>
             </form>
           )}
         </DialogContent>
