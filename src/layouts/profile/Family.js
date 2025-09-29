@@ -91,6 +91,15 @@ export default function Family() {
     setEditIndex(members[openModal].length);
     setEditMember({ name: "", relation: "", email: "", phone: "", blood: "", allergies: "", avatar: '' });
   };
+  const handleDeleteMember = () => {
+    if (openModal == null || editIndex == null) return;
+    setMembers(prev => {
+      const updated = { ...prev };
+      updated[openModal] = updated[openModal].filter((_, i) => i !== editIndex);
+      return updated;
+    });
+    setEditIndex(null);
+  };
   const handleSaveAdd = () => {
     setMembers((prev) => {
       const updated = { ...prev };
@@ -673,7 +682,7 @@ export default function Family() {
         </Grid>
       </Grid>
       {/* Modal for viewing and editing members */}
-      <Dialog open={!!openModal} onClose={handleCloseModal} maxWidth='sm' fullWidth PaperProps={{ sx: popupPaperSx }}>
+  <Dialog open={!!openModal} onClose={handleCloseModal} maxWidth='md' fullWidth PaperProps={{ sx: { ...popupPaperSx, width:{ xs:'100%', sm:640, md:700 }, minHeight:570 } }}>
         <DialogTitle sx={{ position: 'relative', px: 5, pt: 3.25, pb: 2.25 }}>
           <VuiTypography variant='lg' fontWeight='bold' color='white' sx={{ fontSize: 23, letterSpacing: 0.3 }}>
             {openModal ? `${openModal.charAt(0).toUpperCase() + openModal.slice(1)} Members` : ''}
@@ -747,12 +756,18 @@ export default function Family() {
           )}
         </DialogContent>
         <Divider sx={{ borderColor: '#23244a', mt: 0.5 }} />
-        <DialogActions sx={{ px: 5, py: 2.4 }}>
+        <DialogActions sx={{ px: 5, py: 2.4, gap: 1 }}>
           <Button onClick={handleCloseModal} sx={{ color: '#fff', borderRadius: 2, textTransform: 'none', fontWeight: 600, px: 2.2, py: 1, background: 'rgba(255,255,255,0.04)', '&:hover': { background: 'rgba(255,255,255,0.08)' } }}>Close</Button>
           {openModal && editIndex !== null && (
-            <Button onClick={editIndex < members[openModal].length ? handleSaveEdit : handleSaveAdd} sx={{ color: '#fff', borderRadius: 2.2, textTransform: 'none', fontWeight: 700, px: 2.7, py: 1.05, background: 'linear-gradient(90deg,#5353f6,#7d7dfc)', boxShadow: '0 4px 14px -2px #5353f666', '&:hover': { background: 'linear-gradient(90deg,#7d7dfc,#5353f6)' } }}>
-              Save
-            </Button>
+            <>
+              <Button onClick={() => setEditIndex(null)} sx={{ color: '#fff', borderRadius: 2, textTransform: 'none', fontWeight: 600, px: 2.2, py: 1, background: 'rgba(255,255,255,0.04)', '&:hover': { background: 'rgba(255,255,255,0.10)' } }}>Back</Button>
+              {editIndex < members[openModal].length && (
+                <Button onClick={handleDeleteMember} sx={{ color: '#fff', borderRadius: 2, textTransform: 'none', fontWeight: 600, px: 2.2, py: 1, background: 'linear-gradient(90deg,#b92e2e,#d84343)', '&:hover': { background: 'linear-gradient(90deg,#d84343,#b92e2e)' } }}>Delete</Button>
+              )}
+              <Button onClick={editIndex < members[openModal].length ? handleSaveEdit : handleSaveAdd} sx={{ color: '#fff', borderRadius: 2.2, textTransform: 'none', fontWeight: 700, px: 2.7, py: 1.05, background: 'linear-gradient(90deg,#5353f6,#7d7dfc)', boxShadow: '0 4px 14px -2px #5353f666', '&:hover': { background: 'linear-gradient(90deg,#7d7dfc,#5353f6)' } }}>
+                Save
+              </Button>
+            </>
           )}
         </DialogActions>
       </Dialog>
