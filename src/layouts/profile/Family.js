@@ -720,7 +720,7 @@ export default function Family() {
           {openModal && editIndex !== null && (
             <form style={{ width: '100%' }}>
               <input hidden type="file" id="family-avatar-upload" accept="image/*" onChange={handleAvatarChange} />
-              <VuiBox display="flex" alignItems="center" gap={2} mb={2}>
+              <VuiBox display="flex" alignItems="center" gap={2} mb={3} mt={1}>
                 <Tooltip title="Upload photo">
                   <Avatar
                     src={editMember.avatar || undefined}
