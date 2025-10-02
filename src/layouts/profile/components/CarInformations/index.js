@@ -15,6 +15,10 @@ import { lineChartOptionsProfile2, lineChartOptionsProfile1 } from 'variables/ch
 import CircularProgress from '@mui/material/CircularProgress';
 import HeightIcon from '@mui/icons-material/Height';
 import MonitorWeightIcon from '@mui/icons-material/MonitorWeight';
+import PersonIcon from '@mui/icons-material/Person';
+import CalculateIcon from '@mui/icons-material/Calculate';
+import HistoryIcon from '@mui/icons-material/History';
+import StraightenIcon from '@mui/icons-material/Straighten';
 import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
 import MedicationIcon from '@mui/icons-material/Medication';
 import PermContactCalendarIcon from '@mui/icons-material/PermContactCalendar';
@@ -70,6 +74,62 @@ const CarInformations = ({ popupVariant = 'legacy' }) => {
 	const [editingIndex, setEditingIndex] = useState(null);
 	const [pairedHeight, setPairedHeight] = useState({ enabled: false, value: '', unit: 'cm' });
 	const [editorOpen, setEditorOpen] = useState(false);
+
+	// Enhanced height popup states
+	const [heightHistory, setHeightHistory] = useState([]);
+	const [showHeightDetails, setShowHeightDetails] = useState(false);
+
+	// Height helper functions
+	const convertHeight = (value, fromUnit, toUnit) => {
+		if (!value || fromUnit === toUnit) return value;
+		if (fromUnit === 'cm' && toUnit === 'in') return (value / 2.54).toFixed(1);
+		if (fromUnit === 'in' && toUnit === 'cm') return (value * 2.54).toFixed(1);
+		return value;
+	};
+
+	const formatHeightDisplay = (value, unit) => {
+		if (!value) return '';
+		if (unit === 'cm') {
+			const inches = value / 2.54;
+			const feet = Math.floor(inches / 12);
+			const remainingInches = Math.round(inches % 12);
+			return `${value} cm (${feet}'${remainingInches}")`;
+		} else {
+			const cm = value * 2.54;
+			return `${value}" (${Math.round(cm)} cm)`;
+		}
+	};
+
+	const calculateBMI = () => {
+		if (!height || !weight) return null;
+		const heightInM = heightUnit === 'cm' ? height / 100 : (height * 2.54) / 100;
+		const weightInKg = weightUnit === 'kg' ? weight : weight * 0.453592;
+		const bmi = weightInKg / (heightInM * heightInM);
+		return bmi.toFixed(1);
+	};
+
+	const getBMICategory = (bmi) => {
+		if (!bmi) return '';
+		if (bmi < 18.5) return { category: 'Underweight', color: '#4FC3F7' };
+		if (bmi < 25) return { category: 'Normal', color: '#4CAF50' };
+		if (bmi < 30) return { category: 'Overweight', color: '#FF9800' };
+		return { category: 'Obese', color: '#F44336' };
+	};
+
+	const getHeightPercentile = (heightValue, unit) => {
+		// Simplified percentile calculation (would normally use age/gender specific charts)
+		const heightCm = unit === 'cm' ? heightValue : heightValue * 2.54;
+		if (heightCm < 150) return { percentile: '5th', description: 'Below average' };
+		if (heightCm < 160) return { percentile: '25th', description: 'Below average' };
+		if (heightCm < 170) return { percentile: '50th', description: 'Average' };
+		if (heightCm < 180) return { percentile: '75th', description: 'Above average' };
+		return { percentile: '95th', description: 'Above average' };
+	};
+
+	const commonHeights = {
+		cm: [150, 155, 160, 165, 170, 175, 180, 185, 190, 195],
+		in: [59, 61, 63, 65, 67, 69, 71, 73, 75, 77]
+	};
 
 	// removed legacy handleAdd/handleRemove that depended on deleted state
 	const handleBoxOpen = (box) => {
@@ -138,6 +198,15 @@ const CarInformations = ({ popupVariant = 'legacy' }) => {
 				// nothing to do; adds done inline
 				break;
 			case 'height':
+				// Save height history before updating
+				if (height && height !== editValue) {
+					const newRecord = {
+						value: height,
+						unit: heightUnit,
+						date: new Date().toLocaleDateString()
+					};
+					setHeightHistory(prev => [newRecord, ...prev.slice(0, 4)]); // Keep last 5 records
+				}
 				setHeight(editValue);
 				setHeightUnit(editUnit);
 				break;
@@ -894,31 +963,289 @@ const CarInformations = ({ popupVariant = 'legacy' }) => {
 																						</>
 																					)}
 														{openBox === 'height' && (
-															<VuiBox display='flex' alignItems='center' gap={1}>
-																<TextField
-																	size='small'
-																	variant='outlined'
-																	placeholder='Height'
-																	type='number'
-																	value={editValue}
-																	onChange={(e) => setEditValue(e.target.value)}
-																	sx={{ width: 160, ...inputSx }}
-																	InputProps={{
-																		startAdornment: (
-																			<InputAdornment position='start'>
-																				<HeightIcon sx={{ color: '#aeb3d5' }} />
-																			</InputAdornment>
-																		)
-																	}}
-																/>
-																<select
-																	value={editUnit}
-																	onChange={(e) => setEditUnit(e.target.value)}
-																	style={{ padding: '8px 10px', borderRadius: '8px', background: 'rgba(26,28,52,0.85)', color: '#fff', border: '1px solid #2b2d55' }}
-																>
-																	<option value='cm'>cm</option>
-																	<option value='in'>in</option>
-																</select>
+															<VuiBox>
+																{/* Header with toggle for details */}
+																<VuiBox display='flex' alignItems='center' justifyContent='space-between' mb={2}>
+																	<VuiBox display='flex' alignItems='center' gap={1}>
+																		<HeightIcon sx={{ color: '#6a6afc' }} />
+																		<VuiTypography variant='h6' color='white' fontWeight='bold'>Edit Height</VuiTypography>
+																	</VuiBox>
+																	<VuiButton 
+																		size='small' 
+																		color='info' 
+																		variant='outlined'
+																		onClick={() => setShowHeightDetails(!showHeightDetails)}
+																		sx={{ textTransform: 'none', fontSize: '12px' }}
+																	>
+																		{showHeightDetails ? 'Simple View' : 'Detailed View'}
+																	</VuiButton>
+																</VuiBox>
+
+																{/* Main height input section */}
+																<VuiBox display='flex' flexDirection='column' gap={2}>
+																	{/* Primary input with visual feedback */}
+																	<VuiBox 
+																		sx={{ 
+																			background: 'linear-gradient(135deg, rgba(106,106,252,0.1) 0%, rgba(0,255,208,0.1) 100%)',
+																			border: '1px solid rgba(106,106,252,0.3)',
+																			borderRadius: 2,
+																			p: 2
+																		}}
+																	>
+																		<VuiBox display='flex' alignItems='center' gap={2}>
+																			{/* Height input */}
+																			<TextField
+																				size='small'
+																				variant='outlined'
+																				label='Height'
+																				type='number'
+																				value={editValue}
+																				onChange={(e) => setEditValue(e.target.value)}
+																				sx={{ 
+																					width: 140,
+																					...inputSx,
+																					'& .MuiOutlinedInput-root': {
+																						backgroundColor: 'rgba(26,28,52,0.9)',
+																						'& fieldset': { borderColor: 'rgba(106,106,252,0.4)' },
+																						'&:hover fieldset': { borderColor: 'rgba(106,106,252,0.6)' },
+																						'&.Mui-focused fieldset': { borderColor: '#6a6afc' }
+																					}
+																				}}
+																				InputProps={{
+																					startAdornment: (
+																						<InputAdornment position='start'>
+																							<StraightenIcon sx={{ color: '#6a6afc' }} />
+																						</InputAdornment>
+																					)
+																				}}
+																			/>
+																			
+																			{/* Unit selector */}
+																			<TextField 
+																				size='small' 
+																				select 
+																				label='Unit' 
+																				value={editUnit} 
+																				onChange={(e) => setEditUnit(e.target.value)} 
+																				sx={{ 
+																					width: 90, 
+																					...inputSx,
+																					'& .MuiOutlinedInput-root': {
+																						backgroundColor: 'rgba(26,28,52,0.9)',
+																						'& fieldset': { borderColor: 'rgba(106,106,252,0.4)' }
+																					}
+																				}} 
+																				SelectProps={selectProps}
+																			>
+																				<MenuItem value='cm'>cm</MenuItem>
+																				<MenuItem value='in'>in</MenuItem>
+																			</TextField>
+
+																			{/* Visual height indicator */}
+																			{editValue && (
+																				<VuiBox display='flex' alignItems='center' gap={1} ml={1}>
+																					<PersonIcon 
+																						sx={{ 
+																							color: '#6a6afc',
+																							fontSize: Math.min(40, Math.max(20, editValue / 5))
+																						}} 
+																					/>
+																					<VuiTypography variant='caption' color='info'>
+																						{formatHeightDisplay(editValue, editUnit)}
+																					</VuiTypography>
+																				</VuiBox>
+																			)}
+																		</VuiBox>
+
+																		{/* Quick height presets */}
+																		<VuiBox mt={1.5}>
+																			<VuiTypography variant='caption' color='text' mb={1} display='block'>
+																				Quick Selection:
+																			</VuiTypography>
+																			<VuiBox display='flex' gap={1} flexWrap='wrap'>
+																				{commonHeights[editUnit].map((presetHeight) => (
+																					<Chip
+																						key={presetHeight}
+																						label={`${presetHeight}${editUnit}`}
+																						size='small'
+																						clickable
+																						onClick={() => setEditValue(presetHeight.toString())}
+																						sx={{
+																							height: 26,
+																							fontSize: '11px',
+																							color: editValue == presetHeight ? '#fff' : '#cfd3f7',
+																							backgroundColor: editValue == presetHeight ? 'rgba(106,106,252,0.3)' : 'rgba(255,255,255,0.1)',
+																							borderColor: 'rgba(106,106,252,0.3)',
+																							'&:hover': {
+																								backgroundColor: 'rgba(106,106,252,0.2)'
+																							}
+																						}}
+																						variant='outlined'
+																					/>
+																				))}
+																			</VuiBox>
+																		</VuiBox>
+																	</VuiBox>
+
+																	{/* Detailed view with BMI and health insights */}
+																	{showHeightDetails && (
+																		<VuiBox display='flex' flexDirection='column' gap={2}>
+																			{/* BMI Calculator Section */}
+																			{weight && (
+																				<VuiBox 
+																					sx={{ 
+																						background: 'rgba(0,255,208,0.1)',
+																						border: '1px solid rgba(0,255,208,0.3)',
+																						borderRadius: 2,
+																						p: 2
+																					}}
+																				>
+																					<VuiBox display='flex' alignItems='center' gap={1} mb={1}>
+																						<CalculateIcon sx={{ color: '#00ffd0', fontSize: 18 }} />
+																						<VuiTypography variant='button' color='white' fontWeight='bold'>
+																							BMI Calculator
+																						</VuiTypography>
+																					</VuiBox>
+																					{(() => {
+																						const bmi = calculateBMI();
+																						const bmiData = getBMICategory(bmi);
+																						return bmi ? (
+																							<VuiBox display='flex' alignItems='center' gap={2}>
+																								<VuiBox>
+																									<VuiTypography variant='h4' color='white' fontWeight='bold'>
+																										{bmi}
+																									</VuiTypography>
+																									<VuiTypography variant='caption' color='text'>
+																										BMI Score
+																									</VuiTypography>
+																								</VuiBox>
+																								<VuiBox>
+																									<Chip 
+																										label={bmiData.category}
+																										sx={{ 
+																											color: bmiData.color,
+																											borderColor: bmiData.color,
+																											backgroundColor: `${bmiData.color}20`
+																										}}
+																										variant='outlined'
+																									/>
+																									<VuiTypography variant='caption' color='text' display='block' mt={0.5}>
+																										Based on height: {formatHeightDisplay(editValue || height, editUnit || heightUnit)}
+																									</VuiTypography>
+																								</VuiBox>
+																							</VuiBox>
+																						) : (
+																							<VuiTypography variant='caption' color='text'>
+																								Enter height to calculate BMI with current weight ({weight} {weightUnit})
+																							</VuiTypography>
+																						);
+																					})()}
+																				</VuiBox>
+																			)}
+
+																			{/* Height Percentile */}
+																			{editValue && (
+																				<VuiBox 
+																					sx={{ 
+																						background: 'rgba(255,152,0,0.1)',
+																						border: '1px solid rgba(255,152,0,0.3)',
+																						borderRadius: 2,
+																						p: 2
+																					}}
+																				>
+																					<VuiBox display='flex' alignItems='center' gap={1} mb={1}>
+																						<HeightIcon sx={{ color: '#FF9800', fontSize: 18 }} />
+																						<VuiTypography variant='button' color='white' fontWeight='bold'>
+																							Height Analysis
+																						</VuiTypography>
+																					</VuiBox>
+																					{(() => {
+																						const percentileData = getHeightPercentile(editValue, editUnit);
+																						return (
+																							<VuiBox display='flex' alignItems='center' gap={2}>
+																								<VuiBox>
+																									<VuiTypography variant='h6' color='white' fontWeight='bold'>
+																										{percentileData.percentile}
+																									</VuiTypography>
+																									<VuiTypography variant='caption' color='text'>
+																										Percentile
+																									</VuiTypography>
+																								</VuiBox>
+																								<VuiBox>
+																									<VuiTypography variant='button' color='#FF9800'>
+																										{percentileData.description}
+																									</VuiTypography>
+																									<VuiTypography variant='caption' color='text' display='block'>
+																										Compared to general population
+																									</VuiTypography>
+																								</VuiBox>
+																							</VuiBox>
+																						);
+																					})()}
+																				</VuiBox>
+																			)}
+
+																			{/* Height History */}
+																			{heightHistory.length > 0 && (
+																				<VuiBox 
+																					sx={{ 
+																						background: 'rgba(156,39,176,0.1)',
+																						border: '1px solid rgba(156,39,176,0.3)',
+																						borderRadius: 2,
+																						p: 2
+																					}}
+																				>
+																					<VuiBox display='flex' alignItems='center' gap={1} mb={1}>
+																						<HistoryIcon sx={{ color: '#9C27B0', fontSize: 18 }} />
+																						<VuiTypography variant='button' color='white' fontWeight='bold'>
+																							Height History
+																						</VuiTypography>
+																					</VuiBox>
+																					<VuiBox display='flex' gap={1} flexWrap='wrap'>
+																						{heightHistory.slice(0, 3).map((record, idx) => (
+																							<Chip
+																								key={idx}
+																								label={`${record.value}${record.unit} (${record.date})`}
+																								size='small'
+																								sx={{
+																									color: '#E1BEE7',
+																									borderColor: 'rgba(156,39,176,0.3)',
+																									backgroundColor: 'rgba(156,39,176,0.1)'
+																								}}
+																								variant='outlined'
+																							/>
+																						))}
+																					</VuiBox>
+																				</VuiBox>
+																			)}
+
+																			{/* Tips and Information */}
+																			<VuiBox 
+																				sx={{ 
+																					background: 'rgba(63,81,181,0.1)',
+																					border: '1px solid rgba(63,81,181,0.3)',
+																					borderRadius: 2,
+																					p: 2
+																				}}
+																			>
+																				<VuiTypography variant='button' color='white' fontWeight='bold' mb={1} display='block'>
+																					💡 Height Tips
+																				</VuiTypography>
+																				<VuiBox component='ul' sx={{ margin: 0, paddingLeft: 2, color: '#cfd3f7' }}>
+																					<VuiTypography component='li' variant='caption' color='text'>
+																						Measure height in the morning for most accurate results
+																					</VuiTypography>
+																					<VuiTypography component='li' variant='caption' color='text'>
+																						Remove shoes and stand against a flat wall
+																					</VuiTypography>
+																					<VuiTypography component='li' variant='caption' color='text'>
+																						Keep a straight posture with chin parallel to floor
+																					</VuiTypography>
+																				</VuiBox>
+																			</VuiBox>
+																		</VuiBox>
+																	)}
+																</VuiBox>
 															</VuiBox>
 														)}
 																					{openBox === 'weight' && (
