@@ -33,6 +33,7 @@ import Breadcrumbs from "examples/Breadcrumbs";
 import NotificationItem from "examples/Items/NotificationItem";
 import NotificationList from "components/NotificationList";
 import { searchSections } from "lib/globalSearch";
+import { handleSearchNavigation } from "lib/searchActions";
 
 // Custom styles for DashboardNavbar
 import {
@@ -138,6 +139,7 @@ function DashboardNavbar({ absolute, light, isMini }) {
     } else if (e.key === 'Enter') {
       const sel = results[activeIdx];
       if (sel) {
+        console.log('Enter pressed for:', sel);
         routeLoadingBus.start();
         history.push(sel.path);
         setOpenSearch(false);
@@ -188,7 +190,12 @@ function DashboardNavbar({ absolute, light, isMini }) {
                         selected={i === activeIdx}
                         onMouseEnter={() => setActiveIdx(i)}
                         onMouseDown={(e) => e.preventDefault()}
-                        onClick={() => { routeLoadingBus.start(); history.push(r.path); setOpenSearch(false); }}
+                        onClick={() => { 
+                          console.log('Searching clicked:', r);
+                          routeLoadingBus.start();
+                          history.push(r.path);
+                          setOpenSearch(false); 
+                        }}
                         sx={{ '&.Mui-selected': { background: 'rgba(255,255,255,0.08)' }, color: 'white' }}
                       >
                         <ListItemText primary={r.title} secondary={r.path.replace('/app/','')} primaryTypographyProps={{ sx: { color: 'white', fontWeight: 600 } }} secondaryTypographyProps={{ sx: { color: 'rgba(255,255,255,0.6)' } }} />
