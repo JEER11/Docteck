@@ -831,16 +831,66 @@ function Tables() {
               InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
               sx={{ ...fieldSx, mb: 0.5 }}
             />
-            <TextField label="Status" name="status" value={apptForm.status} onChange={e => setApptForm(f => ({ ...f, status: e.target.value }))} select fullWidth
-              InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
-              sx={{ ...fieldSx, mb: 0.5, color: 'white', '& .MuiSelect-select': { color: '#e7e9f3', py: 1, background: 'transparent' } }}
-            >
-              <MenuItem value="In Progress">In Progress</MenuItem>
-              <MenuItem value="Inactive">Inactive</MenuItem>
-              <MenuItem value="Active">Active</MenuItem>
-              <MenuItem value="Coming Soon">Coming Soon</MenuItem>
-              <MenuItem value="Completed">Completed</MenuItem>
-            </TextField>
+            <Autocomplete
+              size="small"
+              options={["In Progress", "Inactive", "Active", "Coming Soon", "Completed"]}
+              value={apptForm.status || null}
+              onChange={(_, val) => setApptForm(f => ({ ...f, status: val || 'Active' }))}
+              autoHighlight
+              clearOnEscape
+              disableClearable
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Status"
+                  placeholder="Select status"
+                  InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
+                  sx={{
+                    ...fieldSx,
+                    mb: 0.5,
+                    '& .MuiOutlinedInput-input': { py: 1 },
+                  }}
+                />
+              )}
+              sx={{
+                '& .MuiOutlinedInput-root': { p: 0.25, pr: 1 },
+                '& .MuiAutocomplete-endAdornment': {
+                  '& .MuiSvgIcon-root': {
+                    color: '#9fa5cb',
+                    fontSize: '1.2rem',
+                  },
+                },
+              }}
+              ListboxProps={{ 
+                style: { 
+                  maxHeight: 240,
+                  backgroundColor: 'rgba(30,32,55,0.96)',
+                  backdropFilter: 'blur(12px)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: 8,
+                }
+              }}
+              componentsProps={{
+                paper: {
+                  sx: {
+                    backgroundColor: 'rgba(30,32,55,0.96)',
+                    backdropFilter: 'blur(12px)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    borderRadius: 2,
+                    '& .MuiAutocomplete-option': {
+                      color: '#fff',
+                      fontSize: 14,
+                      '&:hover': {
+                        backgroundColor: 'rgba(106, 106, 252, 0.1)',
+                      },
+                      '&.Mui-focused': {
+                        backgroundColor: 'rgba(106, 106, 252, 0.2)',
+                      },
+                    },
+                  },
+                },
+              }}
+            />
             <TextField label="Date" name="date" type="date" value={apptForm.date} onChange={e => setApptForm(f => ({ ...f, date: e.target.value }))} fullWidth 
               InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
               sx={{ ...fieldSx, mb: 0.5 }}
