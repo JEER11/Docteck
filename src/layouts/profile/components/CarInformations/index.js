@@ -19,6 +19,10 @@ import PersonIcon from '@mui/icons-material/Person';
 import CalculateIcon from '@mui/icons-material/Calculate';
 import HistoryIcon from '@mui/icons-material/History';
 import StraightenIcon from '@mui/icons-material/Straighten';
+import FitnessCenter from '@mui/icons-material/FitnessCenter';
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import TrendingDownIcon from '@mui/icons-material/TrendingDown';
+import FavoriteIcon from '@mui/icons-material/Favorite';
 import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
 import MedicationIcon from '@mui/icons-material/Medication';
 import PermContactCalendarIcon from '@mui/icons-material/PermContactCalendar';
@@ -78,6 +82,12 @@ const CarInformations = ({ popupVariant = 'legacy' }) => {
 	// Enhanced height popup states
 	const [heightHistory, setHeightHistory] = useState([]);
 	const [showHeightDetails, setShowHeightDetails] = useState(false);
+	
+	// Enhanced weight popup states
+	const [weightHistory, setWeightHistory] = useState([]);
+	const [showWeightDetails, setShowWeightDetails] = useState(false);
+	const [weightGoal, setWeightGoal] = useState('');
+	const [weightGoalUnit, setWeightGoalUnit] = useState('kg');
 
 	// Height helper functions
 	const convertHeight = (value, fromUnit, toUnit) => {
@@ -129,6 +139,63 @@ const CarInformations = ({ popupVariant = 'legacy' }) => {
 	const commonHeights = {
 		cm: [150, 155, 160, 165, 170, 175, 180, 185, 190, 195],
 		in: [59, 61, 63, 65, 67, 69, 71, 73, 75, 77]
+	};
+
+	// Weight helper functions
+	const convertWeight = (value, fromUnit, toUnit) => {
+		if (!value || fromUnit === toUnit) return value;
+		if (fromUnit === 'kg' && toUnit === 'lbs') return (value * 2.20462).toFixed(1);
+		if (fromUnit === 'lbs' && toUnit === 'kg') return (value / 2.20462).toFixed(1);
+		return value;
+	};
+
+	const formatWeightDisplay = (value, unit) => {
+		if (!value) return '';
+		if (unit === 'kg') {
+			const lbs = value * 2.20462;
+			return `${value} kg (${lbs.toFixed(1)} lbs)`;
+		} else {
+			const kg = value / 2.20462;
+			return `${value} lbs (${kg.toFixed(1)} kg)`;
+		}
+	};
+
+	const getWeightStatus = (currentWeight, goalWeight, unit) => {
+		if (!currentWeight || !goalWeight) return null;
+		const diff = currentWeight - goalWeight;
+		const diffDisplay = Math.abs(diff).toFixed(1);
+		
+		if (Math.abs(diff) < 0.5) {
+			return { status: 'At Goal', color: '#4CAF50', message: 'Congratulations! You\'re at your target weight!' };
+		} else if (diff > 0) {
+			return { status: 'Above Goal', color: '#FF9800', message: `${diffDisplay} ${unit} above target` };
+		} else {
+			return { status: 'Below Goal', color: '#2196F3', message: `${diffDisplay} ${unit} below target` };
+		}
+	};
+
+	const getWeightCategory = (bmi) => {
+		if (!bmi) return null;
+		if (bmi < 18.5) return { category: 'Underweight', color: '#4FC3F7', advice: 'Consider consulting a healthcare provider' };
+		if (bmi < 25) return { category: 'Normal Weight', color: '#4CAF50', advice: 'Maintain current healthy habits' };
+		if (bmi < 30) return { category: 'Overweight', color: '#FF9800', advice: 'Consider lifestyle modifications' };
+		return { category: 'Obese', color: '#F44336', advice: 'Consult healthcare provider for guidance' };
+	};
+
+	const getWeightTrend = () => {
+		if (weightHistory.length < 2) return null;
+		const recent = weightHistory[0];
+		const previous = weightHistory[1];
+		const diff = recent.value - previous.value;
+		
+		if (Math.abs(diff) < 0.2) return { trend: 'stable', icon: '➡️', color: '#4CAF50' };
+		if (diff > 0) return { trend: 'increasing', icon: '📈', color: '#FF9800' };
+		return { trend: 'decreasing', icon: '📉', color: '#2196F3' };
+	};
+
+	const commonWeights = {
+		kg: [45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100],
+		lbs: [100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 220]
 	};
 
 	// removed legacy handleAdd/handleRemove that depended on deleted state
@@ -211,6 +278,16 @@ const CarInformations = ({ popupVariant = 'legacy' }) => {
 				setHeightUnit(editUnit);
 				break;
 			case 'weight':
+				// Save weight history before updating
+				if (weight && weight !== editValue) {
+					const newRecord = {
+						value: weight,
+						unit: weightUnit,
+						date: new Date().toLocaleDateString(),
+						bmi: calculateBMI() // Save BMI at time of measurement
+					};
+					setWeightHistory(prev => [newRecord, ...prev.slice(0, 4)]); // Keep last 5 records
+				}
 				setWeight(editValue);
 				setWeightUnit(editUnit);
 				if (pairedHeight.enabled) {
@@ -1249,37 +1326,401 @@ const CarInformations = ({ popupVariant = 'legacy' }) => {
 															</VuiBox>
 														)}
 																					{openBox === 'weight' && (
-																						<VuiBox display='flex' flexDirection='column' gap={1}>
-																							<VuiBox display='flex' alignItems='center' gap={1}>
-																								<TextField
-																									size='small'
-																									variant='outlined'
-																									label='Weight'
-																									type='number'
-																									value={editValue}
-																									onChange={(e) => setEditValue(e.target.value)}
-																									sx={{ width: 180, ...inputSx }}
-																									InputProps={{
-																										startAdornment: (
-																											<InputAdornment position='start'>
-																												<MonitorWeightIcon sx={{ color: '#aeb3d5' }} />
-																											</InputAdornment>
-																										)
-																									}}
-																								/>
-																								<TextField size='small' select label='Unit' value={editUnit} onChange={(e) => setEditUnit(e.target.value)} sx={{ width: 120, ...inputSx }} SelectProps={selectProps}>
-																									{['kg','lbs'].map(u => <MenuItem key={u} value={u}>{u}</MenuItem>)}
-																								</TextField>
-																							</VuiBox>
-																							<FormControlLabel control={<Switch checked={pairedHeight.enabled} onChange={(e) => setPairedHeight({ ...pairedHeight, enabled: e.target.checked })} />} label={<VuiTypography variant='button' color='text'>Also update height</VuiTypography>} />
-																							{pairedHeight.enabled && (
+																						<VuiBox>
+																							{/* Header with toggle for details */}
+																							<VuiBox display='flex' alignItems='center' justifyContent='space-between' mb={2}>
 																								<VuiBox display='flex' alignItems='center' gap={1}>
-																									<TextField size='small' variant='outlined' label='Height' type='number' value={pairedHeight.value} onChange={(e) => setPairedHeight({ ...pairedHeight, value: e.target.value })} sx={{ width: 180, ...inputSx }} InputProps={{ startAdornment: (<InputAdornment position='start'><HeightIcon sx={{ color: '#aeb3d5' }} /></InputAdornment>) }} />
-																								<TextField size='small' select label='Unit' value={pairedHeight.unit} onChange={(e) => setPairedHeight({ ...pairedHeight, unit: e.target.value })} sx={{ width: 120, ...inputSx }} SelectProps={selectProps}>
-																										{['cm','in'].map(u => <MenuItem key={u} value={u}>{u}</MenuItem>)}
-																									</TextField>
+																									<MonitorWeightIcon sx={{ color: '#FF6B6B' }} />
+																									<VuiTypography variant='h6' color='white' fontWeight='bold'>Edit Weight</VuiTypography>
 																								</VuiBox>
-																							)}
+																								<VuiButton 
+																									size='small' 
+																									color='info' 
+																									variant='outlined'
+																									onClick={() => setShowWeightDetails(!showWeightDetails)}
+																									sx={{ textTransform: 'none', fontSize: '12px' }}
+																								>
+																									{showWeightDetails ? 'Simple View' : 'Detailed View'}
+																								</VuiButton>
+																							</VuiBox>
+
+																							{/* Main weight input section */}
+																							<VuiBox display='flex' flexDirection='column' gap={2}>
+																								{/* Primary input with visual feedback */}
+																								<VuiBox 
+																									sx={{ 
+																										background: 'linear-gradient(135deg, rgba(255,107,107,0.1) 0%, rgba(255,152,0,0.1) 100%)',
+																										border: '1px solid rgba(255,107,107,0.3)',
+																										borderRadius: 2,
+																										p: 2
+																									}}
+																								>
+																									<VuiBox display='flex' alignItems='center' gap={2}>
+																										{/* Weight input */}
+																										<TextField
+																											size='small'
+																											variant='outlined'
+																											label='Weight'
+																											type='number'
+																											value={editValue}
+																											onChange={(e) => setEditValue(e.target.value)}
+																											sx={{ 
+																												width: 140,
+																												...inputSx,
+																												'& .MuiOutlinedInput-root': {
+																													backgroundColor: 'rgba(26,28,52,0.9)',
+																													'& fieldset': { borderColor: 'rgba(255,107,107,0.4)' },
+																													'&:hover fieldset': { borderColor: 'rgba(255,107,107,0.6)' },
+																													'&.Mui-focused fieldset': { borderColor: '#FF6B6B' }
+																												}
+																											}}
+																											InputProps={{
+																												startAdornment: (
+																													<InputAdornment position='start'>
+																														<MonitorWeightIcon sx={{ color: '#FF6B6B' }} />
+																													</InputAdornment>
+																												)
+																											}}
+																										/>
+																										
+																										{/* Unit selector */}
+																										<TextField 
+																											size='small' 
+																											select 
+																											label='Unit' 
+																											value={editUnit} 
+																											onChange={(e) => setEditUnit(e.target.value)} 
+																											sx={{ 
+																												width: 90, 
+																												...inputSx,
+																												'& .MuiOutlinedInput-root': {
+																													backgroundColor: 'rgba(26,28,52,0.9)',
+																													'& fieldset': { borderColor: 'rgba(255,107,107,0.4)' }
+																												}
+																											}} 
+																											SelectProps={selectProps}
+																										>
+																											<MenuItem value='kg'>kg</MenuItem>
+																											<MenuItem value='lbs'>lbs</MenuItem>
+																										</TextField>
+
+																										{/* Visual weight indicator */}
+																										{editValue && (
+																											<VuiBox display='flex' alignItems='center' gap={1} ml={1}>
+																												<FitnessCenter 
+																													sx={{ 
+																														color: '#FF6B6B',
+																														fontSize: Math.min(35, Math.max(20, editValue / 3))
+																													}} 
+																												/>
+																												<VuiTypography variant='caption' color='info'>
+																													{formatWeightDisplay(editValue, editUnit)}
+																												</VuiTypography>
+																											</VuiBox>
+																										)}
+																									</VuiBox>
+
+																									{/* Quick weight presets */}
+																									<VuiBox mt={1.5}>
+																										<VuiTypography variant='caption' color='text' mb={1} display='block'>
+																											Quick Selection:
+																										</VuiTypography>
+																										<VuiBox display='flex' gap={1} flexWrap='wrap'>
+																											{commonWeights[editUnit].map((presetWeight) => (
+																												<Chip
+																													key={presetWeight}
+																													label={`${presetWeight}${editUnit}`}
+																													size='small'
+																													clickable
+																													onClick={() => setEditValue(presetWeight.toString())}
+																													sx={{
+																														height: 26,
+																														fontSize: '11px',
+																														color: editValue == presetWeight ? '#fff' : '#cfd3f7',
+																														backgroundColor: editValue == presetWeight ? 'rgba(255,107,107,0.3)' : 'rgba(255,255,255,0.1)',
+																														borderColor: 'rgba(255,107,107,0.3)',
+																														'&:hover': {
+																															backgroundColor: 'rgba(255,107,107,0.2)'
+																														}
+																													}}
+																													variant='outlined'
+																												/>
+																											))}
+																										</VuiBox>
+																									</VuiBox>
+
+																									{/* Paired height update toggle */}
+																									<VuiBox mt={1.5}>
+																										<FormControlLabel 
+																											control={
+																												<Switch 
+																													checked={pairedHeight.enabled} 
+																													onChange={(e) => setPairedHeight({ ...pairedHeight, enabled: e.target.checked })} 
+																													sx={{
+																														'& .MuiSwitch-switchBase.Mui-checked': {
+																															color: '#FF6B6B',
+																														},
+																														'& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+																															backgroundColor: '#FF6B6B',
+																														}
+																													}}
+																												/>
+																											} 
+																											label={
+																												<VuiTypography variant='button' color='text'>
+																													Also update height
+																												</VuiTypography>
+																											} 
+																										/>
+																										{pairedHeight.enabled && (
+																											<VuiBox display='flex' alignItems='center' gap={1} mt={1}>
+																												<TextField 
+																													size='small' 
+																													variant='outlined' 
+																													label='Height' 
+																													type='number' 
+																													value={pairedHeight.value} 
+																													onChange={(e) => setPairedHeight({ ...pairedHeight, value: e.target.value })} 
+																													sx={{ width: 140, ...inputSx }} 
+																													InputProps={{ 
+																														startAdornment: (
+																															<InputAdornment position='start'>
+																																<HeightIcon sx={{ color: '#6a6afc' }} />
+																															</InputAdornment>
+																														) 
+																													}} 
+																												/>
+																												<TextField 
+																													size='small' 
+																													select 
+																													label='Unit' 
+																													value={pairedHeight.unit} 
+																													onChange={(e) => setPairedHeight({ ...pairedHeight, unit: e.target.value })} 
+																													sx={{ width: 90, ...inputSx }} 
+																													SelectProps={selectProps}
+																												>
+																													<MenuItem value='cm'>cm</MenuItem>
+																													<MenuItem value='in'>in</MenuItem>
+																												</TextField>
+																											</VuiBox>
+																										)}
+																									</VuiBox>
+																								</VuiBox>
+
+																								{/* Detailed view with BMI, goals, and health insights */}
+																								{showWeightDetails && (
+																									<VuiBox display='flex' flexDirection='column' gap={2}>
+																										{/* BMI Section with enhanced display */}
+																										{height && (
+																											<VuiBox 
+																												sx={{ 
+																													background: 'rgba(0,255,208,0.1)',
+																													border: '1px solid rgba(0,255,208,0.3)',
+																													borderRadius: 2,
+																													p: 2
+																												}}
+																											>
+																												<VuiBox display='flex' alignItems='center' gap={1} mb={1}>
+																													<FavoriteIcon sx={{ color: '#00ffd0', fontSize: 18 }} />
+																													<VuiTypography variant='button' color='white' fontWeight='bold'>
+																														Health Metrics
+																													</VuiTypography>
+																												</VuiBox>
+																												{(() => {
+																													const currentBMI = calculateBMI();
+																													const weightData = getWeightCategory(currentBMI);
+																													return currentBMI ? (
+																														<VuiBox display='flex' flexDirection='column' gap={1.5}>
+																															<VuiBox display='flex' alignItems='center' gap={2}>
+																																<VuiBox>
+																																	<VuiTypography variant='h4' color='white' fontWeight='bold'>
+																																		{currentBMI}
+																																	</VuiTypography>
+																																	<VuiTypography variant='caption' color='text'>
+																																		BMI Score
+																																	</VuiTypography>
+																																</VuiBox>
+																																<VuiBox>
+																																	<Chip 
+																																		label={weightData.category}
+																																		sx={{ 
+																																			color: weightData.color,
+																																			borderColor: weightData.color,
+																																			backgroundColor: `${weightData.color}20`
+																																		}}
+																																		variant='outlined'
+																																	/>
+																																	<VuiTypography variant='caption' color='text' display='block' mt={0.5}>
+																																		{weightData.advice}
+																																	</VuiTypography>
+																																</VuiBox>
+																															</VuiBox>
+																															<VuiTypography variant='caption' color='text'>
+																																Current: {formatWeightDisplay(editValue || weight, editUnit || weightUnit)} | Height: {formatHeightDisplay(height, heightUnit)}
+																															</VuiTypography>
+																														</VuiBox>
+																													) : (
+																														<VuiTypography variant='caption' color='text'>
+																															Enter weight to calculate BMI with current height ({height} {heightUnit})
+																														</VuiTypography>
+																													);
+																												})()}
+																											</VuiBox>
+																										)}
+
+																										{/* Weight Goal Tracking */}
+																										<VuiBox 
+																											sx={{ 
+																												background: 'rgba(33,150,243,0.1)',
+																												border: '1px solid rgba(33,150,243,0.3)',
+																												borderRadius: 2,
+																												p: 2
+																											}}
+																										>
+																											<VuiBox display='flex' alignItems='center' gap={1} mb={1}>
+																												<TrendingUpIcon sx={{ color: '#2196F3', fontSize: 18 }} />
+																												<VuiTypography variant='button' color='white' fontWeight='bold'>
+																													Weight Goal
+																												</VuiTypography>
+																											</VuiBox>
+																											<VuiBox display='flex' alignItems='center' gap={1} mb={1}>
+																												<TextField
+																													size='small'
+																													variant='outlined'
+																													label='Target Weight'
+																													type='number'
+																													value={weightGoal}
+																													onChange={(e) => setWeightGoal(e.target.value)}
+																													sx={{ 
+																														width: 140,
+																														...inputSx,
+																														'& .MuiOutlinedInput-root': {
+																															backgroundColor: 'rgba(26,28,52,0.9)',
+																															'& fieldset': { borderColor: 'rgba(33,150,243,0.4)' }
+																														}
+																													}}
+																												/>
+																												<TextField 
+																													size='small' 
+																													select 
+																													label='Unit' 
+																													value={weightGoalUnit} 
+																													onChange={(e) => setWeightGoalUnit(e.target.value)} 
+																													sx={{ width: 90, ...inputSx }} 
+																													SelectProps={selectProps}
+																												>
+																													<MenuItem value='kg'>kg</MenuItem>
+																													<MenuItem value='lbs'>lbs</MenuItem>
+																												</TextField>
+																											</VuiBox>
+																											{weightGoal && editValue && (
+																												(() => {
+																													const goalStatus = getWeightStatus(editValue, weightGoal, editUnit);
+																													return goalStatus ? (
+																														<VuiBox display='flex' alignItems='center' gap={2}>
+																															<Chip 
+																																label={goalStatus.status}
+																																sx={{ 
+																																	color: goalStatus.color,
+																																	borderColor: goalStatus.color,
+																																	backgroundColor: `${goalStatus.color}20`
+																																}}
+																																variant='outlined'
+																															/>
+																															<VuiTypography variant='caption' color='text'>
+																																{goalStatus.message}
+																															</VuiTypography>
+																														</VuiBox>
+																													) : null;
+																												})()
+																											)}
+																										</VuiBox>
+
+																										{/* Weight History and Trends */}
+																										{weightHistory.length > 0 && (
+																											<VuiBox 
+																												sx={{ 
+																													background: 'rgba(156,39,176,0.1)',
+																													border: '1px solid rgba(156,39,176,0.3)',
+																													borderRadius: 2,
+																													p: 2
+																												}}
+																											>
+																												<VuiBox display='flex' alignItems='center' gap={1} mb={1}>
+																													<HistoryIcon sx={{ color: '#9C27B0', fontSize: 18 }} />
+																													<VuiTypography variant='button' color='white' fontWeight='bold'>
+																														Weight History & Trends
+																													</VuiTypography>
+																													{(() => {
+																														const trend = getWeightTrend();
+																														return trend ? (
+																															<Chip
+																																label={`${trend.icon} ${trend.trend}`}
+																																size='small'
+																																sx={{
+																																	color: trend.color,
+																																	borderColor: trend.color,
+																																	backgroundColor: `${trend.color}20`,
+																																	ml: 1
+																																}}
+																																variant='outlined'
+																															/>
+																														) : null;
+																													})()}
+																												</VuiBox>
+																												<VuiBox display='flex' gap={1} flexWrap='wrap'>
+																													{weightHistory.slice(0, 3).map((record, idx) => (
+																														<VuiBox key={idx} sx={{ minWidth: '120px' }}>
+																															<Chip
+																																label={`${record.value}${record.unit}`}
+																																size='small'
+																																sx={{
+																																	color: '#E1BEE7',
+																																	borderColor: 'rgba(156,39,176,0.3)',
+																																	backgroundColor: 'rgba(156,39,176,0.1)',
+																																	mb: 0.5
+																																}}
+																																variant='outlined'
+																															/>
+																															<VuiTypography variant='caption' color='text' display='block'>
+																																{record.date} {record.bmi && `(BMI: ${record.bmi})`}
+																															</VuiTypography>
+																														</VuiBox>
+																													))}
+																												</VuiBox>
+																											</VuiBox>
+																										)}
+
+																										{/* Weight Management Tips */}
+																										<VuiBox 
+																											sx={{ 
+																												background: 'rgba(63,81,181,0.1)',
+																												border: '1px solid rgba(63,81,181,0.3)',
+																												borderRadius: 2,
+																												p: 2
+																											}}
+																										>
+																											<VuiTypography variant='button' color='white' fontWeight='bold' mb={1} display='block'>
+																												⚖️ Weight Management Tips
+																											</VuiTypography>
+																											<VuiBox component='ul' sx={{ margin: 0, paddingLeft: 2, color: '#cfd3f7' }}>
+																												<VuiTypography component='li' variant='caption' color='text'>
+																													Weigh yourself at the same time each day, preferably morning
+																												</VuiTypography>
+																												<VuiTypography component='li' variant='caption' color='text'>
+																													Track trends over time rather than daily fluctuations
+																												</VuiTypography>
+																												<VuiTypography component='li' variant='caption' color='text'>
+																													Combine with proper nutrition and regular physical activity
+																												</VuiTypography>
+																												<VuiTypography component='li' variant='caption' color='text'>
+																													Consult healthcare providers for personalized guidance
+																												</VuiTypography>
+																											</VuiBox>
+																										</VuiBox>
+																									</VuiBox>
+																								)}
+																							</VuiBox>
 																						</VuiBox>
 																					)}
 						</DialogContent>
