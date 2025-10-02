@@ -37,6 +37,7 @@ import PhoneRoundedIcon from '@mui/icons-material/PhoneRounded';
 import EmailRoundedIcon from '@mui/icons-material/EmailRounded';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import MenuItem from '@mui/material/MenuItem';
+import Autocomplete from '@mui/material/Autocomplete';
 import Accordion from '@mui/material/Accordion';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
@@ -507,13 +508,123 @@ const CarInformations = ({ popupVariant = 'legacy' }) => {
 																															{openBox === 'allergies' && (
 																								<VuiBox display='grid' gridTemplateColumns={{ xs: '1fr', sm: '1fr 1fr' }} gap={1} mt={1}>
 																																<TextField size='small' label='Allergen' placeholder='e.g., Peanuts' value={editItem?.allergen || ''} onChange={(e) => setEditItem({ ...(editItem||{}), allergen: e.target.value })} sx={inputSx} />
-																																	<TextField size='small' select label='Type' value={editItem?.type || 'Food'} onChange={(e) => setEditItem({ ...(editItem||{}), type: e.target.value })} sx={inputSx} SelectProps={selectProps}>
-																																		{['Food','Drug','Environmental','Other'].map(opt => <MenuItem key={opt} value={opt}>{opt}</MenuItem>)}
-																																	</TextField>
+																																	<Autocomplete
+																																		size='small'
+																																		options={['Food','Drug','Environmental','Other']}
+																																		value={editItem?.type || 'Food'}
+																																		onChange={(_, val) => setEditItem({ ...(editItem||{}), type: val || 'Food' })}
+																																		autoHighlight
+																																		clearOnEscape
+																																		disableClearable
+																																		renderInput={(params) => (
+																																			<TextField
+																																				{...params}
+																																				label="Type"
+																																				placeholder="Select type"
+																																				sx={{
+																																					...inputSx,
+																																					'& .MuiOutlinedInput-input': { py: 1 },
+																																				}}
+																																			/>
+																																		)}
+																																		sx={{
+																																			'& .MuiOutlinedInput-root': { p: 0.25, pr: 1 },
+																																			'& .MuiAutocomplete-endAdornment': {
+																																				'& .MuiSvgIcon-root': {
+																																					color: '#9fa5cb',
+																																					fontSize: '1.2rem',
+																																				},
+																																			},
+																																		}}
+																																		ListboxProps={{ 
+																																			style: { 
+																																				maxHeight: 240,
+																																				backgroundColor: 'rgba(30,32,55,0.96)',
+																																				backdropFilter: 'blur(12px)',
+																																				border: '1px solid rgba(255,255,255,0.08)',
+																																				borderRadius: 8,
+																																			}
+																																		}}
+																																		componentsProps={{
+																																			paper: {
+																																				sx: {
+																																					backgroundColor: 'rgba(30,32,55,0.96)',
+																																					backdropFilter: 'blur(12px)',
+																																					border: '1px solid rgba(255,255,255,0.08)',
+																																					borderRadius: 2,
+																																					'& .MuiAutocomplete-option': {
+																																						color: '#fff',
+																																						fontSize: 14,
+																																						'&:hover': {
+																																							backgroundColor: 'rgba(106, 106, 252, 0.1)',
+																																						},
+																																						'&.Mui-focused': {
+																																							backgroundColor: 'rgba(106, 106, 252, 0.2)',
+																																						},
+																																					},
+																																				},
+																																			},
+																																		}}
+																																	/>
 																																<TextField size='small' label='Reaction' placeholder='e.g., Hives' value={editItem?.reaction || ''} onChange={(e) => setEditItem({ ...(editItem||{}), reaction: e.target.value })} sx={inputSx} />
-																																	<TextField size='small' select label='Severity' value={editItem?.severity || 'Mild'} onChange={(e) => setEditItem({ ...(editItem||{}), severity: e.target.value })} sx={inputSx} SelectProps={selectProps}>
-																																		{['Mild','Moderate','Severe'].map(opt => <MenuItem key={opt} value={opt}>{opt}</MenuItem>)}
-																																	</TextField>
+																																	<Autocomplete
+																																		size='small'
+																																		options={['Mild','Moderate','Severe']}
+																																		value={editItem?.severity || 'Mild'}
+																																		onChange={(_, val) => setEditItem({ ...(editItem||{}), severity: val || 'Mild' })}
+																																		autoHighlight
+																																		clearOnEscape
+																																		disableClearable
+																																		renderInput={(params) => (
+																																			<TextField
+																																				{...params}
+																																				label="Severity"
+																																				placeholder="Select severity"
+																																				sx={{
+																																					...inputSx,
+																																					'& .MuiOutlinedInput-input': { py: 1 },
+																																				}}
+																																			/>
+																																		)}
+																																		sx={{
+																																			'& .MuiOutlinedInput-root': { p: 0.25, pr: 1 },
+																																			'& .MuiAutocomplete-endAdornment': {
+																																				'& .MuiSvgIcon-root': {
+																																					color: '#9fa5cb',
+																																					fontSize: '1.2rem',
+																																				},
+																																			},
+																																		}}
+																																		ListboxProps={{ 
+																																			style: { 
+																																				maxHeight: 240,
+																																				backgroundColor: 'rgba(30,32,55,0.96)',
+																																				backdropFilter: 'blur(12px)',
+																																				border: '1px solid rgba(255,255,255,0.08)',
+																																				borderRadius: 8,
+																																			}
+																																		}}
+																																		componentsProps={{
+																																			paper: {
+																																				sx: {
+																																					backgroundColor: 'rgba(30,32,55,0.96)',
+																																					backdropFilter: 'blur(12px)',
+																																					border: '1px solid rgba(255,255,255,0.08)',
+																																					borderRadius: 2,
+																																					'& .MuiAutocomplete-option': {
+																																						color: '#fff',
+																																						fontSize: 14,
+																																						'&:hover': {
+																																							backgroundColor: 'rgba(106, 106, 252, 0.1)',
+																																						},
+																																						'&.Mui-focused': {
+																																							backgroundColor: 'rgba(106, 106, 252, 0.2)',
+																																						},
+																																					},
+																																				},
+																																			},
+																																		}}
+																																	/>
 																									  <VuiBox gridColumn='1 / -1' display='flex' justifyContent='flex-end' gap={1} mt={0.5}>
 																										<VuiButton size='small' color='info' onClick={commitItem} sx={{ fontWeight: 700 }}>{editingIndex !== null ? 'Update' : 'Add'}</VuiButton>
 																									</VuiBox>
@@ -535,16 +646,70 @@ const CarInformations = ({ popupVariant = 'legacy' }) => {
 																							{openBox === 'emergencyContacts' && (
 																								<VuiBox display='grid' gridTemplateColumns={{ xs: '1fr', sm: '1fr 1fr' }} gap={1} mt={1}>
 																									<TextField size='small' label='Name' value={editItem?.name || ''} onChange={(e) => setEditItem({ ...(editItem||{}), name: e.target.value })} sx={inputSx} InputProps={{ startAdornment: (<InputAdornment position='start'><PersonOutlineRoundedIcon sx={{ color: '#aeb3d5' }} /></InputAdornment>) }} />
-																									<TextField size='small' select label='Relationship' value={relationshipOptions.includes(editItem?.relationship) ? (editItem?.relationship||'') : 'Other'} onChange={(e) => {
-																										const val = e.target.value;
-																										if (val === 'Other') {
-																											setEditItem({ ...(editItem||{}), relationship: editItem?.relationship && !relationshipOptions.includes(editItem.relationship) ? editItem.relationship : '' });
-																										} else {
-																											setEditItem({ ...(editItem||{}), relationship: val });
-																										}
-																									}} sx={inputSx} SelectProps={selectProps}>
-																										{relationshipOptions.map(opt => <MenuItem key={opt} value={opt}>{opt}</MenuItem>)}
-																									</TextField>
+																									<Autocomplete
+																										size='small'
+																										options={relationshipOptions}
+																										value={relationshipOptions.includes(editItem?.relationship) ? editItem?.relationship : null}
+																										onChange={(_, val) => {
+																											if (val === 'Other') {
+																												setEditItem({ ...(editItem||{}), relationship: editItem?.relationship && !relationshipOptions.includes(editItem.relationship) ? editItem.relationship : '' });
+																											} else {
+																												setEditItem({ ...(editItem||{}), relationship: val || '' });
+																											}
+																										}}
+																										autoHighlight
+																										clearOnEscape
+																										disableClearable
+																										renderInput={(params) => (
+																											<TextField
+																												{...params}
+																												label="Relationship"
+																												placeholder="Select relationship"
+																												sx={{
+																													...inputSx,
+																													'& .MuiOutlinedInput-input': { py: 1 },
+																												}}
+																											/>
+																										)}
+																										sx={{
+																											'& .MuiOutlinedInput-root': { p: 0.25, pr: 1 },
+																											'& .MuiAutocomplete-endAdornment': {
+																												'& .MuiSvgIcon-root': {
+																													color: '#9fa5cb',
+																													fontSize: '1.2rem',
+																												},
+																											},
+																										}}
+																										ListboxProps={{ 
+																											style: { 
+																												maxHeight: 240,
+																												backgroundColor: 'rgba(30,32,55,0.96)',
+																												backdropFilter: 'blur(12px)',
+																												border: '1px solid rgba(255,255,255,0.08)',
+																												borderRadius: 8,
+																											}
+																										}}
+																										componentsProps={{
+																											paper: {
+																												sx: {
+																													backgroundColor: 'rgba(30,32,55,0.96)',
+																													backdropFilter: 'blur(12px)',
+																													border: '1px solid rgba(255,255,255,0.08)',
+																													borderRadius: 2,
+																													'& .MuiAutocomplete-option': {
+																														color: '#fff',
+																														fontSize: 14,
+																														'&:hover': {
+																															backgroundColor: 'rgba(106, 106, 252, 0.1)',
+																														},
+																														'&.Mui-focused': {
+																															backgroundColor: 'rgba(106, 106, 252, 0.2)',
+																														},
+																													},
+																												},
+																											},
+																										}}
+																									/>
 																									{/* Custom relationship input when Other selected */}
 																									{(!editItem?.relationship || !relationshipOptions.includes(editItem.relationship)) && (
 																										<TextField size='small' label='Custom relationship' placeholder='e.g., Cousin' value={editItem?.relationship || ''} onChange={(e) => setEditItem({ ...(editItem||{}), relationship: e.target.value })} sx={{ gridColumn: '1 / -1', ...inputSx }} />

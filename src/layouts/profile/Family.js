@@ -29,6 +29,7 @@ import InputAdornment from "@mui/material/InputAdornment";
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
 import MenuItem from '@mui/material/MenuItem';
+import Autocomplete from '@mui/material/Autocomplete';
 
 import LocalHospitalOutlinedIcon from "@mui/icons-material/LocalHospitalOutlined";
 import LocalPharmacyOutlinedIcon from "@mui/icons-material/LocalPharmacyOutlined";
@@ -181,13 +182,36 @@ export default function Family() {
   // Select Menu theme override (mirrors Medical Profile)
   const selectProps = {
     IconComponent: ExpandMoreRoundedIcon,
+    sx: {
+      '& .MuiSelect-icon': {
+        color: '#9ca3af',
+        fontSize: '1.5rem',
+        right: 8,
+      },
+      '& .MuiSelect-select': {
+        paddingRight: '40px !important',
+      },
+    },
     MenuProps: {
       PaperProps: {
         sx: {
           bgcolor: 'rgba(30,32,55,0.96)',
           backdropFilter: 'blur(12px)',
           border: '1px solid rgba(255,255,255,0.08)',
-          '& .MuiMenuItem-root': { fontSize: 14 }
+          borderRadius: 2,
+          '& .MuiMenuItem-root': { 
+            fontSize: 14,
+            color: '#fff',
+            '&:hover': {
+              backgroundColor: 'rgba(106, 106, 252, 0.1)',
+            },
+            '&.Mui-selected': {
+              backgroundColor: 'rgba(106, 106, 252, 0.2)',
+              '&:hover': {
+                backgroundColor: 'rgba(106, 106, 252, 0.3)',
+              },
+            },
+          }
         }
       }
     }
@@ -737,19 +761,65 @@ export default function Family() {
                 <TextField size='small' label="Relation" name="relation" value={editMember.relation} onChange={handleEditChange} fullWidth sx={inputSx} />
                 <TextField size='small' label="Email" name="email" value={editMember.email} onChange={handleEditChange} fullWidth sx={inputSx} />
                 <TextField size='small' label="Phone" name="phone" value={editMember.phone} onChange={handleEditChange} fullWidth sx={inputSx} />
-                <TextField
+                <Autocomplete
                   size='small'
-                  label="Blood Type"
-                  name="blood"
-                  value={editMember.blood}
-                  onChange={handleEditChange}
-                  select
-                  fullWidth
-                  sx={inputSx}
-                  SelectProps={selectProps}
-                >
-                  {bloodTypes.map(bt => <MenuItem key={bt} value={bt}>{bt}</MenuItem>)}
-                </TextField>
+                  options={bloodTypes}
+                  value={editMember.blood || null}
+                  onChange={(_, val) => setEditMember(prev => ({ ...prev, blood: val || '' }))}
+                  autoHighlight
+                  clearOnEscape
+                  disableClearable
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Blood Type"
+                      placeholder="Select blood type"
+                      InputLabelProps={{ shrink: true, style: { color: '#aeb3d5' } }}
+                      sx={{
+                        ...inputSx,
+                        '& .MuiOutlinedInput-input': { py: 1 },
+                      }}
+                    />
+                  )}
+                  sx={{
+                    '& .MuiOutlinedInput-root': { p: 0.25, pr: 1 },
+                    '& .MuiAutocomplete-endAdornment': {
+                      '& .MuiSvgIcon-root': {
+                        color: '#9fa5cb',
+                        fontSize: '1.2rem',
+                      },
+                    },
+                  }}
+                  ListboxProps={{ 
+                    style: { 
+                      maxHeight: 240,
+                      backgroundColor: 'rgba(30,32,55,0.96)',
+                      backdropFilter: 'blur(12px)',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      borderRadius: 8,
+                    }
+                  }}
+                  componentsProps={{
+                    paper: {
+                      sx: {
+                        backgroundColor: 'rgba(30,32,55,0.96)',
+                        backdropFilter: 'blur(12px)',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                        borderRadius: 2,
+                        '& .MuiAutocomplete-option': {
+                          color: '#fff',
+                          fontSize: 14,
+                          '&:hover': {
+                            backgroundColor: 'rgba(106, 106, 252, 0.1)',
+                          },
+                          '&.Mui-focused': {
+                            backgroundColor: 'rgba(106, 106, 252, 0.2)',
+                          },
+                        },
+                      },
+                    },
+                  }}
+                />
                 <TextField size='small' label="Allergies" name="allergies" value={editMember.allergies} onChange={handleEditChange} fullWidth multiline minRows={2} sx={inputSx} />
               </div>
             </form>
