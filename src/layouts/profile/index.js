@@ -117,6 +117,7 @@ import { useAuth } from "hooks/useAuth";
 import { auth, db } from "lib/firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import getApiBase from "../../lib/apiBase";
+import { searchActionBus } from "lib/searchActions";
 import VuiButton from "components/VuiButton";
 import MiniDayCalendar from "components/MiniDayCalendar";
 import { AppointmentProvider } from "context/AppointmentContext";
@@ -512,6 +513,23 @@ function Overview() {
       messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
     }
   }, [chatMessages, selectedDoctor, chatOpen]);
+
+  // Listen for search actions to open dialogs
+  useEffect(() => {
+    const unsubscribe = searchActionBus.subscribe((action) => {
+      if (action.type === 'dialog') {
+        if (action.target === 'record') {
+          setRecordTab(action.tab || 0);
+          setRecordDialog(true);
+        } else if (action.target === 'communication') {
+          setCommTab(action.tab || 0);
+          setCommunicationDialog(true);
+        }
+      }
+    });
+
+    return unsubscribe;
+  }, []);
 
   const renderStatus = (status) => {
     if (!status) return null;
@@ -1132,7 +1150,15 @@ function Overview() {
                     <SettingsSection
                       title="Record"
                       actions={recordActions}
-                      onAction={() => setRecordDialog(true)}
+                      onAction={(label) => {
+                        // Set the appropriate tab based on the clicked item
+                        if (label === "Visits") setRecordTab(0);
+                        else if (label === "Test Results") setRecordTab(1);
+                        else if (label === "End of Life Planning") setRecordTab(2);
+                        else if (label === "Medical and Family History") setRecordTab(3);
+                        else if (label === "Preventive Care") setRecordTab(4);
+                        setRecordDialog(true);
+                      }}
                       onViewAll={() => setRecordDialog(true)}
                     />
                   </Grid>
@@ -1140,7 +1166,15 @@ function Overview() {
                     <SettingsSection
                       title="Communication"
                       actions={communicationActions}
-                      onAction={() => setCommunicationDialog(true)}
+                      onAction={(label) => {
+                        // Set the appropriate tab based on the clicked item
+                        if (label === "Messages") setCommTab(0);
+                        else if (label === "Ask Questions") setCommTab(1);
+                        else if (label === "Letters") setCommTab(2);
+                        else if (label === "Community Resources") setCommTab(3);
+                        else if (label === "Report Problems") setCommTab(4);
+                        setCommunicationDialog(true);
+                      }}
                       onViewAll={() => setCommunicationDialog(true)}
                     />
                   </Grid>

@@ -1,5 +1,5 @@
 // Simple global search index for app sections/routes
-// Each item: { title, path, keywords: [..] }
+// Each item: { title, path, keywords: [...], action?: { type: 'dialog', target: 'record', tab?: number } }
 
 const manualSections = [
   { title: 'Dashboard', path: '/app/dashboard', keywords: ['home', 'overview', 'stats'] },
@@ -10,16 +10,17 @@ const manualSections = [
   { title: 'Family', path: '/app/profile/family', keywords: ['family', 'members', 'caregivers'] },
   { title: 'Pets', path: '/app/profile/pets', keywords: ['pets', 'vet', 'test results', 'schedule'] },
 
-  // Common content terms visible across pages
-  { title: 'Test Results', path: '/app/profile', keywords: ['tests', 'results', 'labs'] },
-  { title: 'End of Life Planning', path: '/app/profile', keywords: ['end of life', 'planning', 'will', 'advance directive'] },
-  { title: 'Medical and Family History', path: '/app/profile', keywords: ['medical history', 'family history'] },
-  { title: 'Preventive Care', path: '/app/profile', keywords: ['preventive', 'screenings', 'vaccines'] },
-  { title: 'Messages', path: '/app/profile', keywords: ['messages', 'communication'] },
+  // Common content terms visible across pages - these should open specific dialogs
+  { title: 'Visits', path: '/app/profile', keywords: ['visits', 'appointments', 'doctor visits'], action: { type: 'dialog', target: 'record', tab: 0 } },
+  { title: 'Test Results', path: '/app/profile', keywords: ['tests', 'results', 'labs'], action: { type: 'dialog', target: 'record', tab: 1 } },
+  { title: 'End of Life Planning', path: '/app/profile', keywords: ['end of life', 'planning', 'will', 'advance directive'], action: { type: 'dialog', target: 'record', tab: 2 } },
+  { title: 'Medical and Family History', path: '/app/profile', keywords: ['medical history', 'family history'], action: { type: 'dialog', target: 'record', tab: 3 } },
+  { title: 'Preventive Care', path: '/app/profile', keywords: ['preventive', 'screenings', 'vaccines'], action: { type: 'dialog', target: 'record', tab: 4 } },
+  { title: 'Messages', path: '/app/profile', keywords: ['messages', 'communication'], action: { type: 'dialog', target: 'communication', tab: 0 } },
   { title: 'Ask Questions', path: '/app/assistance', keywords: ['ask', 'questions', 'doctor', 'assistant'] },
-  { title: 'Letters', path: '/app/profile', keywords: ['letters', 'documents'] },
-  { title: 'Community Resources', path: '/app/profile', keywords: ['community', 'resources', 'help'] },
-  { title: 'Report Problems', path: '/app/profile', keywords: ['report', 'problems', 'support'] },
+  { title: 'Letters', path: '/app/profile', keywords: ['letters', 'documents'], action: { type: 'dialog', target: 'communication', tab: 2 } },
+  { title: 'Community Resources', path: '/app/profile', keywords: ['community', 'resources', 'help'], action: { type: 'dialog', target: 'communication', tab: 3 } },
+  { title: 'Report Problems', path: '/app/profile', keywords: ['report', 'problems', 'support'], action: { type: 'dialog', target: 'communication', tab: 4 } },
 ];
 
 // Lazy-derived entries from routes provided at runtime via window.__APP_ROUTES__
