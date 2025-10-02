@@ -492,12 +492,122 @@ const CarInformations = ({ popupVariant = 'legacy' }) => {
 																															{openBox === 'conditions' && (
 																								<VuiBox display='grid' gridTemplateColumns={{ xs: '1fr', sm: '1fr 1fr' }} gap={1} mt={1}>
 																																	<TextField size='small' label='Condition' placeholder='e.g., Hypertension' value={editItem?.name || ''} onChange={(e) => setEditItem({ ...(editItem||{}), name: e.target.value })} sx={inputSx} />
-																																	<TextField size='small' select label='Severity' value={editItem?.severity || 'Mild'} onChange={(e) => setEditItem({ ...(editItem||{}), severity: e.target.value })} sx={inputSx} SelectProps={selectProps}>
-																																		{['Mild','Moderate','Severe'].map(opt => <MenuItem key={opt} value={opt}>{opt}</MenuItem>)}
-																																	</TextField>
-																																	<TextField size='small' select label='Status' value={editItem?.status || 'Active'} onChange={(e) => setEditItem({ ...(editItem||{}), status: e.target.value })} sx={inputSx} SelectProps={selectProps}>
-																																		{['Active','Resolved'].map(opt => <MenuItem key={opt} value={opt}>{opt}</MenuItem>)}
-																																	</TextField>
+																																	<Autocomplete
+																																		size='small'
+																																		options={['Mild','Moderate','Severe']}
+																																		value={editItem?.severity || 'Mild'}
+																																		onChange={(_, val) => setEditItem({ ...(editItem||{}), severity: val || 'Mild' })}
+																																		autoHighlight
+																																		clearOnEscape
+																																		disableClearable
+																																		renderInput={(params) => (
+																																			<TextField
+																																				{...params}
+																																				label="Severity"
+																																				placeholder="Select severity"
+																																				sx={{
+																																					...inputSx,
+																																					'& .MuiOutlinedInput-input': { py: 1 },
+																																				}}
+																																			/>
+																																		)}
+																																		sx={{
+																																			'& .MuiOutlinedInput-root': { p: 0.25, pr: 1 },
+																																			'& .MuiAutocomplete-endAdornment': {
+																																				'& .MuiSvgIcon-root': {
+																																					color: '#9fa5cb',
+																																					fontSize: '1.2rem',
+																																				},
+																																			},
+																																		}}
+																																		ListboxProps={{ 
+																																			style: { 
+																																				maxHeight: 240,
+																																				backgroundColor: 'rgba(30,32,55,0.96)',
+																																				backdropFilter: 'blur(12px)',
+																																				border: '1px solid rgba(255,255,255,0.08)',
+																																				borderRadius: 8,
+																																			}
+																																		}}
+																																		componentsProps={{
+																																			paper: {
+																																				sx: {
+																																					backgroundColor: 'rgba(30,32,55,0.96)',
+																																					backdropFilter: 'blur(12px)',
+																																					border: '1px solid rgba(255,255,255,0.08)',
+																																					borderRadius: 2,
+																																					'& .MuiAutocomplete-option': {
+																																						color: '#fff',
+																																						fontSize: 14,
+																																						'&:hover': {
+																																							backgroundColor: 'rgba(106, 106, 252, 0.1)',
+																																						},
+																																						'&.Mui-focused': {
+																																							backgroundColor: 'rgba(106, 106, 252, 0.2)',
+																																						},
+																																					},
+																																				},
+																																			},
+																																		}}
+																																	/>
+																																	<Autocomplete
+																																		size='small'
+																																		options={['Active','Resolved']}
+																																		value={editItem?.status || 'Active'}
+																																		onChange={(_, val) => setEditItem({ ...(editItem||{}), status: val || 'Active' })}
+																																		autoHighlight
+																																		clearOnEscape
+																																		disableClearable
+																																		renderInput={(params) => (
+																																			<TextField
+																																				{...params}
+																																				label="Status"
+																																				placeholder="Select status"
+																																				sx={{
+																																					...inputSx,
+																																					'& .MuiOutlinedInput-input': { py: 1 },
+																																				}}
+																																			/>
+																																		)}
+																																		sx={{
+																																			'& .MuiOutlinedInput-root': { p: 0.25, pr: 1 },
+																																			'& .MuiAutocomplete-endAdornment': {
+																																				'& .MuiSvgIcon-root': {
+																																					color: '#9fa5cb',
+																																					fontSize: '1.2rem',
+																																				},
+																																			},
+																																		}}
+																																		ListboxProps={{ 
+																																			style: { 
+																																				maxHeight: 240,
+																																				backgroundColor: 'rgba(30,32,55,0.96)',
+																																				backdropFilter: 'blur(12px)',
+																																				border: '1px solid rgba(255,255,255,0.08)',
+																																				borderRadius: 8,
+																																			}
+																																		}}
+																																		componentsProps={{
+																																			paper: {
+																																				sx: {
+																																					backgroundColor: 'rgba(30,32,55,0.96)',
+																																					backdropFilter: 'blur(12px)',
+																																					border: '1px solid rgba(255,255,255,0.08)',
+																																					borderRadius: 2,
+																																					'& .MuiAutocomplete-option': {
+																																						color: '#fff',
+																																						fontSize: 14,
+																																						'&:hover': {
+																																							backgroundColor: 'rgba(106, 106, 252, 0.1)',
+																																						},
+																																						'&.Mui-focused': {
+																																							backgroundColor: 'rgba(106, 106, 252, 0.2)',
+																																						},
+																																					},
+																																				},
+																																			},
+																																		}}
+																																	/>
 																																<QuickDateField label='Onset date' value={editItem?.onset} onChange={(val)=> setEditItem({ ...(editItem||{}), onset: val })} />
 																									<TextField size='small' label='Notes' placeholder='optional' value={editItem?.notes || ''} onChange={(e) => setEditItem({ ...(editItem||{}), notes: e.target.value })} sx={{ gridColumn: '1 / -1', ...inputSx }} multiline minRows={2} />
 																									  <VuiBox gridColumn='1 / -1' display='flex' justifyContent='flex-end' gap={1} mt={0.5}>
