@@ -19,15 +19,19 @@ export function TodoProvider({ children }) {
       if (raw) {
         const arr = JSON.parse(raw);
         if (Array.isArray(arr) && arr.length) {
-          const mapped = arr.map(t => ({ ...t, date: t.date ? new Date(t.date) : undefined }));
+          const mapped = arr.map(t => ({ 
+            ...t, 
+            date: t.date ? new Date(t.date) : undefined,
+            status: t.status || 'ongoing' // Add default status for existing todos
+          }));
           syncLatest(mapped);
           setHydrated(true);
           return;
         }
       }
       const seed = [
-        { id: `local_${Date.now()}_seed1`, type: 'medicine', label: 'Aspirin 100mg daily', date: new Date(Date.now()+2*86400000) },
-        { id: `local_${Date.now()}_seed2`, type: 'appointment', label: 'Schedule blood test', date: new Date(Date.now()+5*86400000) }
+        { id: `local_${Date.now()}_seed1`, type: 'medicine', label: 'Aspirin 100mg daily', date: new Date(Date.now()+2*86400000), status: 'ongoing' },
+        { id: `local_${Date.now()}_seed2`, type: 'appointment', label: 'Schedule blood test', date: new Date(Date.now()+5*86400000), status: 'ongoing' }
       ];
       syncLatest(seed);
       localStorage.setItem('todos', JSON.stringify(seed));
@@ -42,6 +46,7 @@ export function TodoProvider({ children }) {
     const forceLocal = Boolean(options.forceLocal);
     if (!todo.label || !todo.label.trim()) todo = { ...todo, label: `New ${todo.type ? (todo.type[0].toUpperCase()+todo.type.slice(1)) : 'Task'}` };
     if (!todo.id) todo = { ...todo, id: `local_${Date.now()}_${Math.random().toString(36).slice(2,8)}` };
+    if (!todo.status) todo = { ...todo, status: 'ongoing' }; // Default status is ongoing
     // optimistic
     syncLatest([...latestTodosRef.current, todo]);
     persist([...latestTodosRef.current]);
@@ -59,6 +64,21 @@ export function TodoProvider({ children }) {
       }
     }
   };
+  
+  const updateTodoStatus = async (idx, newStatus) => {
+    const arr = [...latestTodosRef.current];
+    const target = arr[idx];
+    if (!target) return;
+    
+    const updatedTodo = { ...target, status: newStatus };
+    arr[idx] = updatedTodo;
+    
+    syncLatest(arr);
+    persist(arr);
+    
+    // TODO: Add remote persistence for status updates if needed
+  };
+  
   const removeTodo = async (idx) => {
     const arr = [...latestTodosRef.current];
     const target = arr[idx];
@@ -107,7 +127,11 @@ export function TodoProvider({ children }) {
     if (!hydrated || remoteDisabled) return;
     if (!isTodosAvailable()) return; // user not ready
     const unsub = onTodos({}, (items) => {
-      const mapped = items.map(t => ({ ...t, date: t.date ? new Date(t.date) : undefined }));
+      const mapped = items.map(t => ({ 
+        ...t, 
+        date: t.date ? new Date(t.date) : undefined,
+        status: t.status || 'ongoing' // Add default status for remote todos
+      }));
       const current = latestTodosRef.current;
       if (mapped.length === 0 && current.length > 0) return; // don't wipe
       // merge optimistic locals not yet in remote
@@ -128,7 +152,7 @@ export function TodoProvider({ children }) {
   // If Firestore keeps throwing 400s, we rely purely on local state (remoteDisabled=true)
   // Expose the reactive state array (todos) so components re-render properly.
   return (
-    <TodoContext.Provider value={{ todos, addTodo, removeTodo, remoteDisabled }}>
+    <TodoContext.Provider value={{ todos, addTodo, removeTodo, updateTodoStatus, remoteDisabled }}>
       {children}
     </TodoContext.Provider>
   );
