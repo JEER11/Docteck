@@ -36,6 +36,7 @@ import { useAppointments } from "../../context/AppointmentContext";
 // Icons
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import { FaEllipsisH } from 'react-icons/fa';
 import React, { useState } from "react";
 import { dateFnsLocalizer } from "react-big-calendar";
 
@@ -71,6 +72,10 @@ function Tables() {
   });
   const [editApptIdx, setEditApptIdx] = useState(null);
   const [viewAllApptOpen, setViewAllApptOpen] = useState(false);
+
+  // Appointment filtering state (similar to TODO TRACK)
+  const [apptMenuAnchor, setApptMenuAnchor] = useState(null);
+  const [apptFilterStatus, setApptFilterStatus] = useState('ongoing'); // 'all', 'past', 'ongoing', 'completed'
 
   // Provider search (HUB box)
   const [provQuery, setProvQuery] = useState("");
@@ -148,6 +153,20 @@ function Tables() {
 
   // Placeholder handlers for "View All" actions
   const handleViewAllAppointments = () => setViewAllApptOpen(true);
+
+  // Appointment menu handlers (similar to TODO TRACK)
+  const handleApptMenuOpen = (event) => {
+    setApptMenuAnchor(event.currentTarget);
+  };
+
+  const handleApptMenuClose = () => {
+    setApptMenuAnchor(null);
+  };
+
+  const handleApptStatusFilter = (status) => {
+    setApptFilterStatus(status);
+    handleApptMenuClose();
+  };
   const handleViewAllHub = () => setViewAllHubOpen(true);
 
   // Unified TextField styles (no inner blue bubble). Match Account Settings inputs.
@@ -266,8 +285,28 @@ function Tables() {
     { name: "date", align: "center", label: "Date" },
     { name: "action", align: "center", label: "Action" },
   ];
-  // Map appointments to doctor rows
-  const apptRows = appointments.map((appt, idx) => {
+  
+  // Filter appointments based on status (similar to TODO TRACK)
+  const filteredAppointments = appointments.filter(appt => {
+    if (apptFilterStatus === 'all') return true;
+    
+    const apptDate = appt.start ? new Date(appt.start) : new Date();
+    const currentDate = new Date();
+    const status = appt.status || appt.doctor?.status || 'Active';
+    
+    if (apptFilterStatus === 'past') {
+      return apptDate < currentDate;
+    } else if (apptFilterStatus === 'ongoing') {
+      return apptDate >= currentDate && status !== 'Completed';
+    } else if (apptFilterStatus === 'completed') {
+      return status === 'Completed';
+    }
+    
+    return true;
+  });
+  
+  // Map filtered appointments to doctor rows
+  const apptRows = filteredAppointments.map((appt, idx) => {
     // Example doctor info (replace with real data if available)
     const doctor = appt.doctor || {
       name: appt.title || "Doctor Name",
@@ -429,6 +468,65 @@ function Tables() {
                     <AddIcon />
                   </VuiButton>
                 </div>
+                {/* Three dots menu for appointment filtering */}
+                <VuiBox 
+                  display='flex' 
+                  justifyContent='center' 
+                  alignItems='center' 
+                  bgColor='#22234B' 
+                  sx={{ 
+                    width: '37px', 
+                    height: '37px', 
+                    cursor: 'pointer', 
+                    borderRadius: '12px', 
+                    ml: 1, 
+                    userSelect: 'auto',
+                    '&:hover': { background: '#2a2c5a' }
+                  }}
+                  onClick={handleApptMenuOpen}
+                >
+                  <FaEllipsisH color="#6C63FF" size='18px' />
+                </VuiBox>
+                <Menu
+                  anchorEl={apptMenuAnchor}
+                  open={Boolean(apptMenuAnchor)}
+                  onClose={handleApptMenuClose}
+                  anchorOrigin={{
+                    vertical: 'bottom',
+                    horizontal: 'right',
+                  }}
+                  transformOrigin={{
+                    vertical: 'top',
+                    horizontal: 'right',
+                  }}
+                  PaperProps={{
+                    sx: {
+                      background: '#22234B',
+                      border: '1px solid rgba(255,255,255,0.12)',
+                      borderRadius: 2,
+                      '& .MuiMenuItem-root': {
+                        color: '#fff',
+                        fontSize: 14,
+                        '&:hover': {
+                          background: 'rgba(165,138,255,0.15)',
+                        }
+                      }
+                    }
+                  }}
+                >
+                  <MenuItem onClick={() => handleApptStatusFilter('all')}>
+                    All Appointments
+                  </MenuItem>
+                  <MenuItem onClick={() => handleApptStatusFilter('past')}>
+                    Past
+                  </MenuItem>
+                  <MenuItem onClick={() => handleApptStatusFilter('ongoing')}>
+                    Ongoing
+                  </MenuItem>
+                  <MenuItem onClick={() => handleApptStatusFilter('completed')}>
+                    Completed
+                  </MenuItem>
+                </Menu>
               </Box>
             </VuiBox>
             <VuiBox
@@ -662,7 +760,69 @@ function Tables() {
           }
         }}
       >
-        <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 22, pb: 1.25 }}>All Appointments</DialogTitle>
+        <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 22, pb: 1.25, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          All Appointments
+          <IconButton
+            onClick={handleApptMenuOpen}
+            sx={{ color: 'white', '&:hover': { color: '#00E4FF' } }}
+          >
+            <FaEllipsisH />
+          </IconButton>
+        </DialogTitle>
+        
+        {/* Appointment Filter Menu */}
+        <Menu
+          anchorEl={apptMenuAnchor}
+          open={Boolean(apptMenuAnchor)}
+          onClose={handleApptMenuClose}
+          PaperProps={{
+            sx: {
+              background: 'rgba(34, 40, 74, 0.9)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              borderRadius: 2,
+              mt: 1
+            }
+          }}
+        >
+          <MenuItem 
+            onClick={() => handleApptStatusFilter('all')}
+            sx={{ 
+              color: apptFilterStatus === 'all' ? '#00E4FF' : 'white',
+              '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.1)' }
+            }}
+          >
+            All Appointments
+          </MenuItem>
+          <MenuItem 
+            onClick={() => handleApptStatusFilter('past')}
+            sx={{ 
+              color: apptFilterStatus === 'past' ? '#00E4FF' : 'white',
+              '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.1)' }
+            }}
+          >
+            Past
+          </MenuItem>
+          <MenuItem 
+            onClick={() => handleApptStatusFilter('ongoing')}
+            sx={{ 
+              color: apptFilterStatus === 'ongoing' ? '#00E4FF' : 'white',
+              '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.1)' }
+            }}
+          >
+            Ongoing
+          </MenuItem>
+          <MenuItem 
+            onClick={() => handleApptStatusFilter('completed')}
+            sx={{ 
+              color: apptFilterStatus === 'completed' ? '#00E4FF' : 'white',
+              '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.1)' }
+            }}
+          >
+            Completed
+          </MenuItem>
+        </Menu>
+        
         <DialogContent sx={{ px: 2, pt: 0.5, pb: 2 }}>
           <Box sx={{
             maxHeight: 'calc(92vh - 140px)', // nearly full-height scroll
@@ -677,10 +837,10 @@ function Tables() {
               <VuiTypography variant="caption" color="text" sx={{ width: 180, textAlign:'center' }}>Date</VuiTypography>
               <VuiTypography variant="caption" color="text" sx={{ width: 100, textAlign:'right' }}>Actions</VuiTypography>
             </Box>
-            {appointments.length === 0 && (
+            {filteredAppointments.length === 0 && (
               <VuiTypography variant="caption" color="text" sx={{ p: 2, display:'block' }}>No appointments yet.</VuiTypography>
             )}
-            {appointments.map((appt, idx) => {
+            {filteredAppointments.map((appt, idx) => {
               const doctor = appt.doctor || {};
               const name = doctor.name || appt.title || 'Doctor';
               const email = doctor.email || appt.email || '';
