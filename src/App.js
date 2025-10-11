@@ -115,6 +115,9 @@ export default function App() {
     </Suspense>
   );
 
+  // Check if current route is an authentication page
+  const isAuthPage = pathname.startsWith("/authentication");
+
   // Mark readiness once first paint effects run
   useEffect(() => {
     // Allow next tick so initial Suspense fallback also counts as mounted
@@ -127,8 +130,8 @@ export default function App() {
       <ThemeProvider theme={themeRTL}>
         <CssBaseline />
         <RouteChangeLoader />
-        <Sidenav routes={routes} brandName="Docteck" color={controller.sidenavColor || "info"} />
-        <Configurator />
+        {!isAuthPage && <Sidenav routes={routes} brandName="Docteck" color={controller.sidenavColor || "info"} />}
+        {!isAuthPage && <Configurator />}
         {AppContent}
       </ThemeProvider>
     </CacheProvider>
@@ -136,8 +139,8 @@ export default function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <RouteChangeLoader />
-      <Sidenav routes={routes} brandName="Docteck" color={controller.sidenavColor || "info"} />
-      <Configurator />
+      {!isAuthPage && <Sidenav routes={routes} brandName="Docteck" color={controller.sidenavColor || "info"} />}
+      {!isAuthPage && <Configurator />}
       {AppContent}
     </ThemeProvider>
   );
