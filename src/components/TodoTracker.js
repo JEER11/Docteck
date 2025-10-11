@@ -142,9 +142,6 @@ export default function TodoTracker() {
           disableUnderline
           fullWidth
         />
-        <Box as="button" onClick={() => setDialogOpen(true)} style={{ background: 'rgba(108,99,255,0.15)', border: '1px solid rgba(255,255,255,0.12)', color: '#fff', cursor: 'pointer', padding: '8px 14px', fontSize: 13, fontWeight: 600, borderRadius: 10, letterSpacing: 0.6 }}>
-          Advanced
-        </Box>
       </Box>
       <AddTodoDialog
         open={dialogOpen}
