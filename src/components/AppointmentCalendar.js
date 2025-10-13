@@ -175,40 +175,26 @@ function AppointmentCalendar() {
           .custom-calendar .today-highlight::before {
             content: '';
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 32px;
-            height: 32px;
-            background: linear-gradient(135deg, #A58AFF 0%, #7C6BFF 100%);
-            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            right: 2px;
+            bottom: 2px;
+            background: linear-gradient(135deg, rgba(165, 138, 255, 0.15) 0%, rgba(124, 107, 255, 0.15) 100%);
+            border: 2px solid rgba(165, 138, 255, 0.6);
+            border-radius: 8px;
             z-index: 1;
-            box-shadow: 0 0 15px rgba(165, 138, 255, 0.4);
-            animation: todayPulse 2s ease-in-out infinite;
           }
           
           .custom-calendar .today-highlight .rbc-button-link {
             position: relative;
             z-index: 2;
-            color: #ffffff !important;
-            font-weight: 600 !important;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-          }
-          
-          @keyframes todayPulse {
-            0%, 100% {
-              box-shadow: 0 0 15px rgba(165, 138, 255, 0.4);
-              transform: translate(-50%, -50%) scale(1);
-            }
-            50% {
-              box-shadow: 0 0 25px rgba(165, 138, 255, 0.6);
-              transform: translate(-50%, -50%) scale(1.05);
-            }
+            color: #A58AFF !important;
+            font-weight: 700 !important;
           }
           
           .custom-calendar .today-highlight:hover::before {
-            box-shadow: 0 0 20px rgba(165, 138, 255, 0.6);
-            transform: translate(-50%, -50%) scale(1.1);
+            background: linear-gradient(135deg, rgba(165, 138, 255, 0.25) 0%, rgba(124, 107, 255, 0.25) 100%);
+            border-color: rgba(165, 138, 255, 0.8);
           }
         `}
       </style>
