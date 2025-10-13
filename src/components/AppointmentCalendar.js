@@ -166,6 +166,52 @@ function AppointmentCalendar() {
 
   return (
     <>
+      <style>
+        {`
+          .custom-calendar .today-highlight {
+            position: relative;
+          }
+          
+          .custom-calendar .today-highlight::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #A58AFF 0%, #7C6BFF 100%);
+            border-radius: 50%;
+            z-index: 1;
+            box-shadow: 0 0 15px rgba(165, 138, 255, 0.4);
+            animation: todayPulse 2s ease-in-out infinite;
+          }
+          
+          .custom-calendar .today-highlight .rbc-button-link {
+            position: relative;
+            z-index: 2;
+            color: #ffffff !important;
+            font-weight: 600 !important;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+          }
+          
+          @keyframes todayPulse {
+            0%, 100% {
+              box-shadow: 0 0 15px rgba(165, 138, 255, 0.4);
+              transform: translate(-50%, -50%) scale(1);
+            }
+            50% {
+              box-shadow: 0 0 25px rgba(165, 138, 255, 0.6);
+              transform: translate(-50%, -50%) scale(1.05);
+            }
+          }
+          
+          .custom-calendar .today-highlight:hover::before {
+            box-shadow: 0 0 20px rgba(165, 138, 255, 0.6);
+            transform: translate(-50%, -50%) scale(1.1);
+          }
+        `}
+      </style>
       <Card
         sx={{
           height: '100%',
@@ -270,13 +316,20 @@ function AppointmentCalendar() {
                 padding: "1px 4px",
               },
             })}
-            dayPropGetter={() => ({
-              style: {
-                backgroundColor: "transparent",
-                color: "#fff",
-                fontSize: 13,
-              },
-            })}
+            dayPropGetter={(date) => {
+              const today = new Date();
+              const isToday = date.toDateString() === today.toDateString();
+              
+              return {
+                style: {
+                  backgroundColor: "transparent",
+                  color: "#fff",
+                  fontSize: 13,
+                  position: "relative",
+                },
+                className: isToday ? "today-highlight" : "",
+              };
+            }}
             className="custom-calendar"
           />
         </Box>
