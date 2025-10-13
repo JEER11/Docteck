@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Card,
-  Typography,
   Box,
   ToggleButton,
   ToggleButtonGroup,
@@ -25,7 +24,10 @@ const localizer = momentLocalizer(moment);
 function AppointmentCalendar() {
   // Defensive: fallback to empty object if context is undefined
   const context = useAppointments() || {};
-  const appointments = Array.isArray(context.appointments) ? context.appointments : [];
+  const appointments = React.useMemo(() => 
+    Array.isArray(context.appointments) ? context.appointments : [], 
+    [context.appointments]
+  );
   // Safety net: also read persisted local appointments in case context didn't refresh yet
   const persistedAppointments = React.useMemo(() => {
     try {
@@ -34,7 +36,7 @@ function AppointmentCalendar() {
       if (!Array.isArray(arr)) return [];
       return arr.map(a => ({ ...a, start: new Date(a.start), end: new Date(a.end) }));
     } catch (_) { return []; }
-  }, [appointments.length]);
+  }, [appointments]);
   const mergedAppointments = React.useMemo(() => {
     const key = (a) => (a.id ? `id:${a.id}` : `t:${new Date(a.start).toISOString()}`);
     const map = new Map();
@@ -84,19 +86,6 @@ function AppointmentCalendar() {
   const [view, setView] = useState(Views.MONTH);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [toast, setToast] = useState({ open: false, message: '', severity: 'info' });
-  const [localAdds, setLocalAdds] = useState([]);
-
-  const persistLocal = (evt) => {
-    try {
-      const raw = localStorage.getItem('appointments') || '[]';
-      const arr = Array.isArray(JSON.parse(raw)) ? JSON.parse(raw) : [];
-      const key = (e) => (e.id ? `id:${e.id}` : `t:${new Date(e.start).toISOString()}:${e.title||''}`);
-      const seen = new Set(arr.map(a => key(a)));
-      const payload = { ...evt, start: (evt.start instanceof Date ? evt.start : new Date(evt.start)).toISOString(), end: (evt.end instanceof Date ? evt.end : new Date(evt.end)).toISOString() };
-      if (!seen.has(key(evt))) arr.push(payload);
-      localStorage.setItem('appointments', JSON.stringify(arr));
-    } catch(_) {}
-  };
 
   // Handle new appointments
   const handleSelect = ({ start, end }) => {
@@ -113,10 +102,7 @@ function AppointmentCalendar() {
         allDay: false,
       };
       try { console.log('[Cal] addAppointment from select', newAppointment); } catch(_) {}
-      // Local UI fallback first
-      const uiEvent = { id: 'ui-'+Date.now().toString(36), ...newAppointment };
-      setLocalAdds((prev) => [...prev, uiEvent]);
-      persistLocal(uiEvent);
+      // Only use the context's addAppointment - don't duplicate with local adds
       Promise.resolve(addAppointment(newAppointment)).then((res) => {
         const status = res?.status || 'local';
         const message = status === 'firestore' ? 'Saved to Firestore' : status === 'server' ? 'Saved to server' : 'Saved locally';
@@ -168,10 +154,7 @@ function AppointmentCalendar() {
       details: form.details
     };
     try { console.log('[Cal] addAppointment from dialog', payload); } catch(_) {}
-    // Local UI fallback first
-    const uiEvent = { id: 'ui-'+Date.now().toString(36), ...payload };
-    setLocalAdds((prev) => [...prev, uiEvent]);
-    persistLocal(uiEvent);
+    // Only use the context's addAppointment - don't duplicate with local adds
     Promise.resolve(addAppointment(payload)).then((res) => {
       const status = res?.status || 'local';
       const message = status === 'firestore' ? 'Saved to Firestore' : status === 'server' ? 'Saved to server' : 'Saved locally';
@@ -258,7 +241,7 @@ function AppointmentCalendar() {
           </Box>
           <Calendar
             localizer={localizer}
-            events={[...mergedAppointments, ...localAdds, ...overlayEvents]}
+            events={[...mergedAppointments, ...overlayEvents]}
             startAccessor="start"
             endAccessor="end"
             style={{ height: '100%', minHeight: 320, width: "100%", minWidth: 0, fontSize: 13 }}

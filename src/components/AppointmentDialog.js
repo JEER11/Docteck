@@ -151,7 +151,16 @@ export default function AppointmentDialog({ open, onClose, onSubmit }) {
                       size="small"
                       onClick={() => {
                         if (dateRef.current) {
-                          if (dateRef.current.showPicker) dateRef.current.showPicker(); else dateRef.current.focus();
+                          try {
+                            if (dateRef.current.showPicker) {
+                              dateRef.current.showPicker();
+                            } else {
+                              dateRef.current.focus();
+                            }
+                          } catch (error) {
+                            // Fallback to focus if showPicker fails (e.g., no user gesture)
+                            dateRef.current.focus();
+                          }
                         }
                       }}
                       tabIndex={-1}
@@ -163,7 +172,20 @@ export default function AppointmentDialog({ open, onClose, onSubmit }) {
                 )
               }}
               sx={{ ...fieldSx, mb: 0.5, cursor: 'pointer' }}
-              onClick={() => { if (dateRef.current) { if (dateRef.current.showPicker) dateRef.current.showPicker(); else dateRef.current.focus(); } }}
+              onClick={() => { 
+                if (dateRef.current) { 
+                  try {
+                    if (dateRef.current.showPicker) {
+                      dateRef.current.showPicker();
+                    } else {
+                      dateRef.current.focus();
+                    }
+                  } catch (error) {
+                    // Fallback to focus if showPicker fails (e.g., no user gesture)
+                    dateRef.current.focus();
+                  }
+                } 
+              }}
             />
             <Box sx={{ display: 'flex', gap: 2 }}>
               <TextField
@@ -281,7 +303,20 @@ export default function AppointmentDialog({ open, onClose, onSubmit }) {
                   <InputAdornment position="end" sx={{ mr: 0.5 }}>
                     <IconButton
                       size="small"
-                      onClick={() => { if (dateRef.current) { if (dateRef.current.showPicker) dateRef.current.showPicker(); else dateRef.current.focus(); } }}
+                      onClick={() => { 
+                        if (dateRef.current) { 
+                          try {
+                            if (dateRef.current.showPicker) {
+                              dateRef.current.showPicker();
+                            } else {
+                              dateRef.current.focus();
+                            }
+                          } catch (error) {
+                            // Fallback to focus if showPicker fails (e.g., no user gesture)
+                            dateRef.current.focus();
+                          }
+                        } 
+                      }}
                       tabIndex={-1}
                       sx={{ color: '#9ea6c4', '&:hover': { color: '#c2cae6' } }}
                     >
@@ -291,7 +326,20 @@ export default function AppointmentDialog({ open, onClose, onSubmit }) {
                 )
               }}
               sx={{ ...fieldSx, mb: 0.5, cursor: 'pointer' }}
-              onClick={() => { if (dateRef.current) { if (dateRef.current.showPicker) dateRef.current.showPicker(); else dateRef.current.focus(); } }}
+              onClick={() => { 
+                if (dateRef.current) { 
+                  try {
+                    if (dateRef.current.showPicker) {
+                      dateRef.current.showPicker();
+                    } else {
+                      dateRef.current.focus();
+                    }
+                  } catch (error) {
+                    // Fallback to focus if showPicker fails (e.g., no user gesture)
+                    dateRef.current.focus();
+                  }
+                } 
+              }}
             />
             <TextField
               label="Time"
