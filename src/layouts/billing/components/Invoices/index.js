@@ -318,8 +318,8 @@ function Invoices() {
 
   const glassPaper = {
     background: 'linear-gradient(135deg, rgba(40,46,80,0.85) 0%, rgba(28,30,54,0.9) 100%)',
-    backdropFilter: 'blur(14px) saturate(140%)',
-    WebkitBackdropFilter: 'blur(14px) saturate(140%)',
+    backdropFilter: 'blur(14px) saturate(100%)',
+    WebkitBackdropFilter: 'blur(14px) saturate(100%)',
     border: '1px solid rgba(255,255,255,0.08)',
     boxShadow: '0 8px 28px -6px rgba(0,0,0,0.55), 0 2px 6px rgba(0,0,0,0.3)',
     borderRadius: 3,
