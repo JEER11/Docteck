@@ -246,7 +246,7 @@ export default function Pets() {
   // Match Family popup styling
   const popupPaperSx = {
     background: 'linear-gradient(145deg, rgba(20,22,40,0.90), rgba(24,26,47,0.94))',
-    backdropFilter: 'blur(18px) saturate(140%)',
+    backdropFilter: 'blur(18px) saturate(100%)',
     borderRadius: 5,
     boxShadow: '0 18px 60px -4px rgba(0,0,0,0.65), 0 4px 18px rgba(0,0,0,0.4)',
     border: '1.5px solid rgba(90,98,160,0.35)',
@@ -301,7 +301,7 @@ export default function Pets() {
               PaperProps={{
                 sx: {
                   background: 'linear-gradient(145deg, rgba(20,22,40,0.90), rgba(24,26,47,0.94))',
-                  backdropFilter: 'blur(18px) saturate(140%)',
+                  backdropFilter: 'blur(18px) saturate(100%)',
                   borderRadius: 5,
                   boxShadow: '0 18px 60px -4px rgba(0,0,0,0.65), 0 4px 18px rgba(0,0,0,0.4)',
                   border: '1.5px solid rgba(90,98,160,0.35)',
