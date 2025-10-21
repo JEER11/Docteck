@@ -84,6 +84,13 @@ function AppointmentCalendar() {
   }, [todos, rxList]);
   const addAppointment = context.addAppointment || (() => {});
   const [view, setView] = useState(Views.MONTH);
+  // Compact week sizing: fix the calendar height so Week view doesn't stretch the page
+  const isWeek = view === Views.WEEK;
+  const calendarHeight = isWeek ? 440 : 520; // keep week shorter, month a bit taller
+  // Limit visible hours in Week to shrink vertical content
+  const minTime = React.useMemo(() => new Date(1970, 0, 1, 6, 0, 0), []); // 6 AM
+  const maxTime = React.useMemo(() => new Date(1970, 0, 1, 21, 0, 0), []); // 9 PM
+  const scrollToTime = React.useMemo(() => new Date(1970, 0, 1, 8, 0, 0), []); // auto-scroll to 8 AM
   const [dialogOpen, setDialogOpen] = useState(false);
   const [toast, setToast] = useState({ open: false, message: '', severity: 'info' });
 
@@ -200,8 +207,8 @@ function AppointmentCalendar() {
       </style>
       <Card
         sx={{
-          height: '100%',
-          minHeight: { xs: 420, md: 520, lg: 600 },
+          height: 'auto',
+          minHeight: { xs: 380, md: 420 },
           width: "100%",
           minWidth: 0,
           background: "rgba(20,20,40,0.7)",
@@ -215,7 +222,7 @@ function AppointmentCalendar() {
           flexDirection: 'column',
         }}
       >
-        <Box sx={{ flex: 1, minHeight: { xs: 320, md: 420 }, width: "100%", minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+        <Box sx={{ width: "100%", minWidth: 0, display: 'flex', flexDirection: 'column' }}>
           <Box
             sx={{
               display: "flex",
@@ -271,12 +278,13 @@ function AppointmentCalendar() {
               <AddIcon fontSize="small" />
             </IconButton>
           </Box>
+          <Box sx={{ height: { xs: calendarHeight - 40, md: calendarHeight }, transition: 'height 120ms ease' }}>
           <Calendar
             localizer={localizer}
             events={[...mergedAppointments, ...overlayEvents]}
             startAccessor="start"
             endAccessor="end"
-            style={{ height: '100%', minHeight: 320, width: "100%", minWidth: 0, fontSize: 13 }}
+            style={{ height: '100%', width: "100%", minWidth: 0, fontSize: 13 }}
             view={view}
             onView={setView}
             components={{
@@ -287,6 +295,11 @@ function AppointmentCalendar() {
             selectable
             onSelectSlot={handleSelect}
             views={[Views.MONTH, Views.WEEK, Views.AGENDA]}
+            min={isWeek ? minTime : undefined}
+            max={isWeek ? maxTime : undefined}
+            step={isWeek ? 60 : 30}
+            timeslots={isWeek ? 2 : 2}
+            scrollToTime={isWeek ? scrollToTime : undefined}
             formats={{
               timeGutterFormat: "HH:mm",
               eventTimeRangeFormat: ({ start, end }) =>
@@ -318,6 +331,7 @@ function AppointmentCalendar() {
             }}
             className="custom-calendar"
           />
+          </Box>
         </Box>
       </Card>
       <AppointmentDialog open={dialogOpen} onClose={handleDialogClose} onSubmit={handleDialogSubmit} />
