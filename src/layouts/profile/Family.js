@@ -139,7 +139,7 @@ export default function Family() {
 
   // Enhanced glassy popup styling (unified across pages)
   const popupPaperSx = {
-    background: 'linear-gradient(145deg, rgba(18,20,36,0.96), rgba(20,22,40,0.98))',
+    background: 'linear-gradient(145deg, rgba(24,26,48,0.92), rgba(22,24,45,0.94))',
     backdropFilter: 'blur(18px) saturate(100%)',
     borderRadius: 5,
     boxShadow: '0 18px 60px -4px rgba(0,0,0,0.65), 0 4px 18px rgba(0,0,0,0.4)',

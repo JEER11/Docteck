@@ -198,7 +198,7 @@ function BillingInformation() {
 
   // MUI Dialogs replacing custom overlays
   const glassPaper = {
-    background: 'linear-gradient(135deg, rgba(20,22,40,0.96) 0%, rgba(18,20,36,0.98) 100%)',
+    background: 'linear-gradient(135deg, rgba(26,30,58,0.92) 0%, rgba(20,22,40,0.94) 100%)',
     backdropFilter: 'blur(14px) saturate(100%)',
     WebkitBackdropFilter: 'blur(14px) saturate(100%)',
     border: '1px solid rgba(255,255,255,0.08)',
@@ -247,7 +247,7 @@ function BillingInformation() {
           {medicineOptions.map((name, i) => (<option value={name} key={i} />))}
         </datalist>
       </DialogContent>
-      <DialogActions sx={{ px: 3, py: 1.75, borderTop: '1px solid rgba(0,0,0,0.35)', background: 'rgba(0,0,0,0.2)' }}>
+      <DialogActions sx={{ px: 3, py: 1.75, borderTop: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.03)' }}>
         <Button onClick={handleClose} sx={{ color: '#bfc6e0', textTransform: 'none', fontWeight: 500 }}>Cancel</Button>
         <Button onClick={handleAdd} variant="contained" color="info" disabled={!newPharmacy.name || !newPharmacy.address} sx={{ borderRadius: 2, px: 3, fontWeight: 600, boxShadow: '0 0 0 1px rgba(255,255,255,0.1) inset' }}>Add</Button>
       </DialogActions>

@@ -317,7 +317,7 @@ function Invoices() {
   ];
 
   const glassPaper = {
-    background: 'linear-gradient(135deg, rgba(20,22,40,0.96) 0%, rgba(18,20,36,0.98) 100%)',
+    background: 'linear-gradient(135deg, rgba(26,30,58,0.92) 0%, rgba(20,22,40,0.94) 100%)',
     backdropFilter: 'blur(14px) saturate(100%)',
     WebkitBackdropFilter: 'blur(14px) saturate(100%)',
     border: '1px solid rgba(255,255,255,0.08)',
