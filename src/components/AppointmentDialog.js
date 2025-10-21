@@ -91,7 +91,7 @@ export default function AppointmentDialog({ open, onClose, onSubmit }) {
 
   // Match Caring Hub Appointments dialog UI
   const paperSx = {
-    background: 'linear-gradient(145deg, rgba(18,20,36,0.96) 0%, rgba(20,22,40,0.98) 70%)',
+    background: 'linear-gradient(145deg, rgba(24,26,48,0.92) 0%, rgba(22,24,45,0.94) 70%)',
     boxShadow: '0 8px 28px -4px rgba(0,0,0,0.55), 0 4px 12px -2px rgba(0,0,0,0.4)',
     border: '1px solid rgba(255,255,255,0.08)',
     borderRadius: 5,
