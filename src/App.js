@@ -6,6 +6,7 @@ import { __diagnoseTodosWrite } from 'lib/todoData';
 import { Route, Switch, Redirect, useLocation } from "react-router-dom";
 import FullScreenLoader from "components/FullScreenLoader";
 import RouteChangeLoader from "components/RouteChangeLoader";
+import AppErrorBoundary from "components/AppErrorBoundary";
 
 // MUI theme
 import { ThemeProvider } from "@mui/material/styles";
@@ -106,13 +107,15 @@ export default function App() {
     });
 
   const AppContent = (
-    <Suspense fallback={<FullScreenLoader />}> 
-      <Switch>
-        {getRoutes(routes)}
-        <Route path="/calendar/oauth-success.html" />
-        <Redirect from="*" to="/dashboard" />
-      </Switch>
-    </Suspense>
+    <AppErrorBoundary>
+      <Suspense fallback={<FullScreenLoader />}> 
+        <Switch>
+          {getRoutes(routes)}
+          <Route path="/calendar/oauth-success.html" />
+          <Redirect from="*" to="/dashboard" />
+        </Switch>
+      </Suspense>
+    </AppErrorBoundary>
   );
 
   // Check if current route is an authentication page
