@@ -4,12 +4,12 @@ services:
     image: nginx:1.27-alpine
     ports:
       - "80:80"
-      # - "443:443"  # HTTPS: uncomment after mounting certs and enabling nginx/conf.d/ssl.conf
+      - "443:443"  # HTTPS enabled (ensure certs are mounted and valid)
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
       - ./build:/usr/share/nginx/html:ro
-      # - ./certs:/etc/nginx/certs:ro   # Place fullchain.pem + privkey.pem here for TLS
+  - ./certs:/etc/nginx/certs:ro   # Place fullchain.pem + privkey.pem here for TLS
     depends_on:
       - node-backend
       - flask-service

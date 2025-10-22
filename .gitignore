@@ -3,6 +3,8 @@
 server/.env
 python_server/.env
 python_server/.index_cache.html
+build/.index-cache.html
+**/.index-cache.html
 
 # Node
 node_modules/
