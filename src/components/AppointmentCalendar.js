@@ -84,9 +84,9 @@ function AppointmentCalendar() {
   }, [todos, rxList]);
   const addAppointment = context.addAppointment || (() => {});
   const [view, setView] = useState(Views.MONTH);
-  // Compact week sizing: fix the calendar height so Week view doesn't stretch the page
+  // Use one compact, consistent height across all views so Week matches Month/Agenda
   const isWeek = view === Views.WEEK;
-  const containerHeight = isWeek ? 460 : 560; // consistent card height per view
+  const containerHeight = 560;
   // Limit visible hours in Week to shrink vertical content
   const minTime = React.useMemo(() => new Date(1970, 0, 1, 6, 0, 0), []); // 6 AM
   const maxTime = React.useMemo(() => new Date(1970, 0, 1, 21, 0, 0), []); // 9 PM
@@ -227,6 +227,8 @@ function AppointmentCalendar() {
             overflow: hidden;
             border-radius: 8px;
           }
+          /* Ensure the time view stretches to fill the calendar container */
+          .custom-calendar .rbc-time-view { height: 100%; }
           /* Align native 'today' highlight across header + column */
           .custom-calendar.compact-week .rbc-header.rbc-today {
             background: rgba(165,138,255,0.12);
