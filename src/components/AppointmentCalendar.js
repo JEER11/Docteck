@@ -86,7 +86,7 @@ function AppointmentCalendar() {
   const [view, setView] = useState(Views.MONTH);
   // Compact week sizing: fix the calendar height so Week view doesn't stretch the page
   const isWeek = view === Views.WEEK;
-  const calendarHeight = isWeek ? 440 : 520; // keep week shorter, month a bit taller
+  const containerHeight = isWeek ? 460 : 560; // consistent card height per view
   // Limit visible hours in Week to shrink vertical content
   const minTime = React.useMemo(() => new Date(1970, 0, 1, 6, 0, 0), []); // 6 AM
   const maxTime = React.useMemo(() => new Date(1970, 0, 1, 21, 0, 0), []); // 9 PM
@@ -214,7 +214,7 @@ function AppointmentCalendar() {
             border-color: rgba(255,255,255,0.08) !important;
           }
           .custom-calendar.compact-week .rbc-header {
-            background: rgba(165,138,255,0.08);
+            background: rgba(165,138,255,0.06);
             border-color: rgba(255,255,255,0.08) !important;
             color: #e7e9f3;
             font-weight: 700;
@@ -227,33 +227,15 @@ function AppointmentCalendar() {
             overflow: hidden;
             border-radius: 8px;
           }
-          /* Morning / Midday / Evening soft bands */
-          .custom-calendar.compact-week .rbc-time-content::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background:
-              linear-gradient(
-                to bottom,
-                rgba(165,138,255,0.06) 0%,
-                rgba(165,138,255,0.06) 33.33%,
-                transparent 33.33%,
-                transparent 33.34%,
-                rgba(124,107,255,0.06) 33.34%,
-                rgba(124,107,255,0.06) 73.34%,
-                transparent 73.34%,
-                transparent 73.35%,
-                rgba(165,138,255,0.06) 73.35%,
-                rgba(165,138,255,0.06) 100%
-              );
-            pointer-events: none;
-            z-index: 0;
+          /* Align native 'today' highlight across header + column */
+          .custom-calendar.compact-week .rbc-header.rbc-today {
+            background: rgba(165,138,255,0.12);
+            color: #fff;
           }
-          .custom-calendar.compact-week .rbc-day-slot .rbc-events-container,
-          .custom-calendar.compact-week .rbc-time-gutter,
-          .custom-calendar.compact-week .rbc-time-column {
-            position: relative;
-            z-index: 1; /* above bands */
+          .custom-calendar.compact-week .rbc-day-bg.rbc-today,
+          .custom-calendar.compact-week .rbc-day-slot.rbc-today,
+          .custom-calendar.compact-week .rbc-time-column.rbc-today {
+            background: rgba(165,138,255,0.06);
           }
           .custom-calendar.compact-week .rbc-current-time-indicator {
             background: #A58AFF;
@@ -265,8 +247,8 @@ function AppointmentCalendar() {
       </style>
       <Card
         sx={{
-          height: 'auto',
-          minHeight: { xs: 380, md: 420 },
+          height: containerHeight,
+          minHeight: { xs: 380, md: containerHeight },
           width: "100%",
           minWidth: 0,
           background: "rgba(20,20,40,0.7)",
@@ -280,7 +262,7 @@ function AppointmentCalendar() {
           flexDirection: 'column',
         }}
       >
-        <Box sx={{ width: "100%", minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+        <Box sx={{ flex: 1, width: "100%", minWidth: 0, display: 'flex', flexDirection: 'column' }}>
           <Box
             sx={{
               display: "flex",
@@ -336,7 +318,6 @@ function AppointmentCalendar() {
               <AddIcon fontSize="small" />
             </IconButton>
           </Box>
-          <Box sx={{ height: { xs: calendarHeight - 40, md: calendarHeight }, transition: 'height 120ms ease' }}>
           <Calendar
             localizer={localizer}
             events={[...mergedAppointments, ...overlayEvents]}
@@ -384,12 +365,12 @@ function AppointmentCalendar() {
                   fontSize: 13,
                   position: "relative",
                 },
-                className: isToday ? "today-highlight" : "",
+                // Use custom month highlight only in month view; rely on rbc-today in week view for perfect alignment
+                className: !isWeek && isToday ? "today-highlight" : "",
               };
             }}
             className={`custom-calendar ${isWeek ? 'compact-week' : ''}`}
           />
-          </Box>
         </Box>
       </Card>
       <AppointmentDialog open={dialogOpen} onClose={handleDialogClose} onSubmit={handleDialogSubmit} />
