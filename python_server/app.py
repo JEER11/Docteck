@@ -16,9 +16,20 @@ load_dotenv()
 app = Flask(__name__)
 # Trust a single reverse proxy (Nginx) to supply X-Forwarded-* so request.url, scheme, and remote IP are correct
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
-# Allow simple CORS for /api/* endpoints (adjust origins in production)
-# Include X-API-SECRET so frontends can pass an optional API secret if enabled
-CORS(app, resources={r"/api/*": {"origins": "*", "allow_headers": ["Content-Type","Authorization","X-API-SECRET"]}})
+# Allow CORS for /api/* endpoints.
+# In production, restrict to ALLOWED_ORIGINS / CORS_ORIGINS (comma-separated).
+# In development, allow localhost defaults.
+raw = (os.environ.get('ALLOWED_ORIGINS') or os.environ.get('CORS_ORIGINS') or '').strip()
+origins = [o.strip() for o in raw.split(',') if o.strip()]
+is_prod = (os.environ.get('FLASK_ENV') == 'production' or os.environ.get('ENV') == 'production' or os.environ.get('APP_ENV') == 'production')
+if not origins and not is_prod:
+    origins = ['http://localhost:3000','http://127.0.0.1:3000','http://localhost:3001','http://127.0.0.1:3001']
+CORS(app, resources={r"/api/*": {
+    "origins": origins,
+    "allow_headers": ["Content-Type","Authorization","X-Requested-With","X-API-SECRET"],
+    "supports_credentials": True,
+    "methods": ["GET","POST","PUT","PATCH","DELETE","OPTIONS"]
+}})
 
 # Optional API secret to protect /api/* routes in non-public deployments
 API_SECRET = (os.environ.get('API_SECRET') or '').strip()

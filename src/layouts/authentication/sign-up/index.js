@@ -40,7 +40,7 @@ import { hasFirebaseConfig } from "lib/firebase";
 function SignUp() {
   const history = useHistory();
   const [rememberMe, setRememberMe] = useState(true);
-  const { signup, signin, signinWithGoogle, signinWithFacebook, signinWithMicrosoft, signinWithYahoo, user } = useAuth();
+  const { signup, signin, signinWithGoogle, signinWithFacebook, signinWithMicrosoft, signinWithYahoo, enableGoogle, enableFacebook, enableMicrosoft, enableYahoo, user } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -175,26 +175,34 @@ function SignUp() {
             Register with
           </VuiTypography>
           <Stack mb="25px" justifyContent="center" alignItems="center" direction="row" spacing={2}>
-            <GradientBorder borderRadius="xl">
-              <IconButton onClick={() => handleSocialSignin(async () => { await signinWithFacebook(); history.push('/profile'); })} disabled={submitting}>
-                <Icon as={FaFacebook} w="30px" h="30px" sx={({ palette: { white } }) => ({ color: white.focus })} />
-              </IconButton>
-            </GradientBorder>
-            <GradientBorder borderRadius="xl">
-              <IconButton onClick={() => handleSocialSignin(async () => { await signinWithMicrosoft(); history.push('/profile'); })} disabled={submitting}>
-                <Icon as={FaMicrosoft} w="30px" h="30px" sx={({ palette: { white } }) => ({ color: white.focus })} />
-              </IconButton>
-            </GradientBorder>
-            <GradientBorder borderRadius="xl">
-              <IconButton onClick={() => handleSocialSignin(async () => { await signinWithGoogle(); history.push('/profile'); })} disabled={submitting}>
-                <Icon as={FaGoogle} w="30px" h="30px" sx={({ palette: { white } }) => ({ color: white.focus })} />
-              </IconButton>
-            </GradientBorder>
-            <GradientBorder borderRadius="xl">
-              <IconButton onClick={() => handleSocialSignin(async () => { await signinWithYahoo(); history.push('/profile'); })} disabled={submitting}>
-                <Icon as={FaYahoo} w="30px" h="30px" sx={({ palette: { white } }) => ({ color: white.focus })} />
-              </IconButton>
-            </GradientBorder>
+            {enableFacebook && (
+              <GradientBorder borderRadius="xl">
+                <IconButton onClick={() => handleSocialSignin(async () => { await signinWithFacebook(); history.push('/profile'); })} disabled={submitting}>
+                  <Icon as={FaFacebook} w="30px" h="30px" sx={({ palette: { white } }) => ({ color: white.focus })} />
+                </IconButton>
+              </GradientBorder>
+            )}
+            {enableMicrosoft && (
+              <GradientBorder borderRadius="xl">
+                <IconButton onClick={() => handleSocialSignin(async () => { await signinWithMicrosoft(); history.push('/profile'); })} disabled={submitting}>
+                  <Icon as={FaMicrosoft} w="30px" h="30px" sx={({ palette: { white } }) => ({ color: white.focus })} />
+                </IconButton>
+              </GradientBorder>
+            )}
+            {enableGoogle && (
+              <GradientBorder borderRadius="xl">
+                <IconButton onClick={() => handleSocialSignin(async () => { await signinWithGoogle(); history.push('/profile'); })} disabled={submitting}>
+                  <Icon as={FaGoogle} w="30px" h="30px" sx={({ palette: { white } }) => ({ color: white.focus })} />
+                </IconButton>
+              </GradientBorder>
+            )}
+            {enableYahoo && (
+              <GradientBorder borderRadius="xl">
+                <IconButton onClick={() => handleSocialSignin(async () => { await signinWithYahoo(); history.push('/profile'); })} disabled={submitting}>
+                  <Icon as={FaYahoo} w="30px" h="30px" sx={({ palette: { white } }) => ({ color: white.focus })} />
+                </IconButton>
+              </GradientBorder>
+            )}
           </Stack>
           <VuiTypography
             color="text"
