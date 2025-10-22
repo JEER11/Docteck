@@ -49,7 +49,7 @@ import { routeLoadingBus } from "components/routeLoadingBus";
 function SignIn() {
   const history = useHistory();
   const [rememberMe, setRememberMe] = useState(true);
-  const { signin, signinWithGoogle, signinWithFacebook, signinWithMicrosoft, signinWithYahoo, user } = useAuth();
+  const { signin, signinWithGoogle, signinWithFacebook, signinWithMicrosoft, signinWithYahoo, enableGoogle, enableFacebook, enableMicrosoft, enableYahoo, user } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -321,26 +321,34 @@ function SignIn() {
           Or sign in with
         </VuiTypography>
         <Stack mb={2} justifyContent="center" alignItems="center" direction="row" spacing={2}>
-          <GradientBorder borderRadius="xl">
-            <IconButton onClick={() => handleSocialSignin(signinWithFacebook)} disabled={submitting}>
-              <Icon as={FaFacebook} w="30px" h="30px" sx={({ palette: { white } }) => ({ color: white.focus })} />
-            </IconButton>
-          </GradientBorder>
-          <GradientBorder borderRadius="xl">
-            <IconButton onClick={() => handleSocialSignin(signinWithMicrosoft)} disabled={submitting}>
-              <Icon as={FaMicrosoft} w="30px" h="30px" sx={({ palette: { white } }) => ({ color: white.focus })} />
-            </IconButton>
-          </GradientBorder>
-          <GradientBorder borderRadius="xl">
-            <IconButton onClick={() => handleSocialSignin(signinWithGoogle)} disabled={submitting}>
-              <Icon as={FaGoogle} w="30px" h="30px" sx={({ palette: { white } }) => ({ color: white.focus })} />
-            </IconButton>
-          </GradientBorder>
-          <GradientBorder borderRadius="xl">
-            <IconButton onClick={() => handleSocialSignin(signinWithYahoo)} disabled={submitting}>
-              <Icon as={FaYahoo} w="30px" h="30px" sx={({ palette: { white } }) => ({ color: white.focus })} />
-            </IconButton>
-          </GradientBorder>
+          {enableFacebook && (
+            <GradientBorder borderRadius="xl">
+              <IconButton onClick={() => handleSocialSignin(signinWithFacebook)} disabled={submitting}>
+                <Icon as={FaFacebook} w="30px" h="30px" sx={({ palette: { white } }) => ({ color: white.focus })} />
+              </IconButton>
+            </GradientBorder>
+          )}
+          {enableMicrosoft && (
+            <GradientBorder borderRadius="xl">
+              <IconButton onClick={() => handleSocialSignin(signinWithMicrosoft)} disabled={submitting}>
+                <Icon as={FaMicrosoft} w="30px" h="30px" sx={({ palette: { white } }) => ({ color: white.focus })} />
+              </IconButton>
+            </GradientBorder>
+          )}
+          {enableGoogle && (
+            <GradientBorder borderRadius="xl">
+              <IconButton onClick={() => handleSocialSignin(signinWithGoogle)} disabled={submitting}>
+                <Icon as={FaGoogle} w="30px" h="30px" sx={({ palette: { white } }) => ({ color: white.focus })} />
+              </IconButton>
+            </GradientBorder>
+          )}
+          {enableYahoo && (
+            <GradientBorder borderRadius="xl">
+              <IconButton onClick={() => handleSocialSignin(signinWithYahoo)} disabled={submitting}>
+                <Icon as={FaYahoo} w="30px" h="30px" sx={({ palette: { white } }) => ({ color: white.focus })} />
+              </IconButton>
+            </GradientBorder>
+          )}
         </Stack>
         <VuiBox mt={3} textAlign="center">
           <VuiTypography variant="button" color="text" fontWeight="regular">

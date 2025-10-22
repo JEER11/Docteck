@@ -23,7 +23,30 @@ const port = Number(process.env.SERVER_PORT || process.env.NODE_PORT || 3001);
 app.set('trust proxy', 1);
 
 
-app.use(cors());
+// CORS: default open in dev, locked down in production via ALLOWED_ORIGINS env
+const rawOrigins = (process.env.ALLOWED_ORIGINS || process.env.CORS_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
+const devOrigins = [
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+  'http://localhost:5050',
+  'http://127.0.0.1:5050',
+];
+const isProd = (process.env.NODE_ENV === 'production' || process.env.APP_ENV === 'production' || process.env.ENV === 'production');
+const allowedOrigins = rawOrigins.length ? rawOrigins : (isProd ? [] : devOrigins);
+const corsCfg = {
+  origin: (origin, cb) => {
+    // Allow requests with no origin (e.g., same-origin or curl/postman)
+    if (!origin) return cb(null, true);
+    if (allowedOrigins.length === 0) return cb(null, false); // no cross-origin in prod unless explicitly allowed
+    const ok = allowedOrigins.includes(origin);
+    return cb(null, ok);
+  },
+  credentials: true,
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+  allowedHeaders: ['Content-Type','Authorization','X-Requested-With','X-API-SECRET'],
+};
+app.use(cors(corsCfg));
+app.options('*', cors(corsCfg));
 // Harden JSON parser: avoid noisy logs if a non-JSON request slips through
 app.use((req, res, next) => {
   const ct = (req.headers['content-type'] || '').toLowerCase();

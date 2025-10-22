@@ -17,6 +17,12 @@ export function useAuth() {
   const [loading, setLoading] = useState(true); // global auth init
   const [isAuthReady, setIsAuthReady] = useState(false); // becomes true after first onAuthStateChanged fires
 
+  // Auth provider feature flags (default: Google on, others off)
+  const enableGoogle = String(process.env.REACT_APP_ENABLE_GOOGLE ?? 'true') !== 'false';
+  const enableFacebook = String(process.env.REACT_APP_ENABLE_FACEBOOK ?? 'false') === 'true';
+  const enableMicrosoft = String(process.env.REACT_APP_ENABLE_MICROSOFT ?? 'false') === 'true';
+  const enableYahoo = String(process.env.REACT_APP_ENABLE_YAHOO ?? 'false') === 'true';
+
   useEffect(() => {
     // If Firebase is not configured, mark loading false and skip listeners
     if (!auth) {
@@ -103,6 +109,7 @@ export function useAuth() {
   // Google sign in
   const signinWithGoogle = async () => {
     if (!auth) return Promise.reject(new Error("Authentication is not available. Firebase is not configured."));
+    if (!enableGoogle) return Promise.reject(new Error("Google sign-in is disabled."));
     try {
       return await signInWithPopup(auth, googleProvider);
     } catch (err) {
@@ -116,6 +123,7 @@ export function useAuth() {
   // Facebook sign in
   const signinWithFacebook = async () => {
     if (!auth) return Promise.reject(new Error("Authentication is not available. Firebase is not configured."));
+    if (!enableFacebook) return Promise.reject(new Error("Facebook sign-in is disabled."));
     try {
       return await signInWithPopup(auth, facebookProvider);
     } catch (err) {
@@ -129,6 +137,7 @@ export function useAuth() {
   // Microsoft sign in
   const signinWithMicrosoft = async () => {
     if (!auth) return Promise.reject(new Error("Authentication is not available. Firebase is not configured."));
+    if (!enableMicrosoft) return Promise.reject(new Error("Microsoft sign-in is disabled."));
     try {
       return await signInWithPopup(auth, microsoftProvider);
     } catch (err) {
@@ -143,6 +152,7 @@ export function useAuth() {
   const yahooProvider = new OAuthProvider('yahoo.com');
   const signinWithYahoo = async () => {
     if (!auth) return Promise.reject(new Error("Authentication is not available. Firebase is not configured."));
+    if (!enableYahoo) return Promise.reject(new Error("Yahoo sign-in is disabled."));
     try {
       return await signInWithPopup(auth, yahooProvider);
     } catch (err) {
@@ -184,6 +194,11 @@ export function useAuth() {
     signinWithMicrosoft,
     signinWithYahoo,
   signInWithPhone,
+    // flags so UI can conditionally render provider buttons
+    enableGoogle,
+    enableFacebook,
+    enableMicrosoft,
+    enableYahoo,
     signout,
   };
 }

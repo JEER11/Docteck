@@ -18,6 +18,34 @@ Copy `.env.production.sample` to `.env.production` and set real values:
 - Configure CORS on the Node/Flask backends to your production origins.
 - Stripe: set live keys on backend and configure webhooks to your domain.
 
+Express (Node) CORS example:
+
+```js
+import cors from 'cors';
+const app = express();
+const ORIGINS = [
+   'https://yourdomain.com',
+   'https://www.yourdomain.com',
+];
+app.use(cors({ origin: ORIGINS, credentials: true, methods: 'GET,POST,PATCH,PUT,DELETE,OPTIONS' }));
+app.options('*', cors());
+```
+
+Flask CORS example:
+
+```python
+from flask_cors import CORS
+app = Flask(__name__)
+CORS(app, resources={r"/api/*": {"origins": ["https://yourdomain.com", "https://www.yourdomain.com"], "supports_credentials": True}})
+```
+
+Stripe webhook notes:
+
+- Use your live secret key on the server only.
+- Expose a public HTTPS endpoint (e.g., `/api/stripe/webhook`).
+- Verify signatures with the webhook signing secret from Stripe dashboard.
+- Test with `stripe trigger` or by creating real test events in live mode before launch day.
+
 3) SPA fallback
 
 - If serving static build from Nginx, enable `try_files ... /app/index.html;` under `/app/` location.
@@ -28,6 +56,37 @@ Copy `.env.production.sample` to `.env.production` and set real values:
 - Verify Firebase Firestore/Storage rules restrict access to authenticated users as intended.
 - Keep secrets server-side; never ship private keys to the client.
 - Review the CSP (currently Report-Only) and tighten it after auditing allowed hosts.
+   - Typical allowances: Firebase domains, your API, Stripe (`https://js.stripe.com`, `https://*.stripe.com`), Google fonts if used.
+   - After validating, switch to `Content-Security-Policy` (enforce) instead of Report-Only.
+
+### Enable HTTPS + HSTS (Nginx)
+
+Steps to serve over HTTPS with HSTS in Docker:
+
+1) Get certificates
+- Use Let’s Encrypt or your CA to obtain `fullchain.pem` and `privkey.pem`.
+- Put them in `./certs/` (mounted read-only to `/etc/nginx/certs/`).
+
+2) Expose 443 and mount certs in docker-compose
+- In `docker-compose.yml` → `services.nginx`:
+   - Uncomment `- "443:443"` under `ports`.
+   - Uncomment `- ./certs:/etc/nginx/certs:ro` under `volumes`.
+
+3) Enable the TLS server block
+- Open `nginx/conf.d/ssl.conf`.
+- Replace `server_name` with your real domain(s).
+- Uncomment the `listen 443 ssl http2;` server block (and the optional `listen 80` redirect block).
+- Keep the provided security headers and HSTS enabled once HTTPS is confirmed.
+
+4) Deploy and test
+- Bring the stack up and verify:
+   - `https://yourdomain.com` loads and redirects HTTP→HTTPS if configured.
+   - Response headers include HSTS and your CSP (Report-Only or enforced).
+- After a short validation period, you can switch from Report-Only CSP to enforced CSP in `nginx/nginx.conf` (and mirror it in `ssl.conf`).
+
+Notes:
+- `ssl.conf` mirrors the same proxying as `nginx/nginx.conf` for `/app/*`, `/api/*`, and `/uploads/*`.
+- If you change proxy paths/upstreams in `nginx/nginx.conf`, make the same changes in `ssl.conf`.
 
 5) Monitoring
 
