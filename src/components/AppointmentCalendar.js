@@ -203,6 +203,64 @@ function AppointmentCalendar() {
             background: linear-gradient(135deg, rgba(165, 138, 255, 0.25) 0%, rgba(124, 107, 255, 0.25) 100%);
             border-color: rgba(165, 138, 255, 0.8);
           }
+
+          /* Compact Week styling */
+          .custom-calendar.compact-week .rbc-time-view,
+          .custom-calendar.compact-week .rbc-time-header,
+          .custom-calendar.compact-week .rbc-time-content,
+          .custom-calendar.compact-week .rbc-time-gutter,
+          .custom-calendar.compact-week .rbc-day-slot,
+          .custom-calendar.compact-week .rbc-timeslot-group {
+            border-color: rgba(255,255,255,0.08) !important;
+          }
+          .custom-calendar.compact-week .rbc-header {
+            background: rgba(165,138,255,0.08);
+            border-color: rgba(255,255,255,0.08) !important;
+            color: #e7e9f3;
+            font-weight: 700;
+          }
+          .custom-calendar.compact-week .rbc-time-gutter {
+            width: 54px; /* tighter gutter */
+          }
+          .custom-calendar.compact-week .rbc-time-content {
+            position: relative;
+            overflow: hidden;
+            border-radius: 8px;
+          }
+          /* Morning / Midday / Evening soft bands */
+          .custom-calendar.compact-week .rbc-time-content::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+              linear-gradient(
+                to bottom,
+                rgba(165,138,255,0.06) 0%,
+                rgba(165,138,255,0.06) 33.33%,
+                transparent 33.33%,
+                transparent 33.34%,
+                rgba(124,107,255,0.06) 33.34%,
+                rgba(124,107,255,0.06) 73.34%,
+                transparent 73.34%,
+                transparent 73.35%,
+                rgba(165,138,255,0.06) 73.35%,
+                rgba(165,138,255,0.06) 100%
+              );
+            pointer-events: none;
+            z-index: 0;
+          }
+          .custom-calendar.compact-week .rbc-day-slot .rbc-events-container,
+          .custom-calendar.compact-week .rbc-time-gutter,
+          .custom-calendar.compact-week .rbc-time-column {
+            position: relative;
+            z-index: 1; /* above bands */
+          }
+          .custom-calendar.compact-week .rbc-current-time-indicator {
+            background: #A58AFF;
+          }
+          .custom-calendar.compact-week .rbc-event {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+          }
         `}
       </style>
       <Card
@@ -329,7 +387,7 @@ function AppointmentCalendar() {
                 className: isToday ? "today-highlight" : "",
               };
             }}
-            className="custom-calendar"
+            className={`custom-calendar ${isWeek ? 'compact-week' : ''}`}
           />
           </Box>
         </Box>
