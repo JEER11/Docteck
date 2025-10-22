@@ -58,11 +58,11 @@ export default function App() {
     return () => document.body.classList.remove("billing-bg");
   }, [pathname]);
 
-  // One-time diagnostics log (safe / no PII) – remove after backend fix
+  // One-time diagnostics (dev only)
   useEffect(() => {
+    if (process.env.NODE_ENV === 'production') return;
     try {
       const cfg = (window && window.__FIREBASE_CONFIG__) || {};
-      // Only log once per load
       if (!window.__FIREBASE_DIAG_LOGGED__) {
         window.__FIREBASE_DIAG_LOGGED__ = true;
         console.group('[FirebaseDiag]');
@@ -80,8 +80,9 @@ export default function App() {
     } catch (_) { /* ignore */ }
   }, []);
 
-  // Attempt a single self-test write once a user is present (won't spam). Safe no-op if rules reject.
+  // Attempt a single self-test write once a user is present (dev only)
   useEffect(() => {
+    if (process.env.NODE_ENV === 'production') return;
     let t;
     function attempt() {
       if (auth?.currentUser?.uid && !window.__FIREBASE_TODO_TEST__) {

@@ -1,3 +1,42 @@
+## Production deployment checklist
+
+Use this list to prepare a safe launch.
+
+1) Frontend env (.env.production)
+
+Copy `.env.production.sample` to `.env.production` and set real values:
+
+- PUBLIC_URL (e.g., `/app/`)
+- REACT_APP_API_URL (Node API base)
+- Firebase config (web)
+- REACT_APP_STRIPE_PUBLISHABLE_KEY (live)
+- GENERATE_SOURCEMAP=false
+
+2) Backend and routing
+
+- Serve via Nginx with HTTPS (see `nginx/nginx.conf`), enable gzip and security headers.
+- Configure CORS on the Node/Flask backends to your production origins.
+- Stripe: set live keys on backend and configure webhooks to your domain.
+
+3) SPA fallback
+
+- If serving static build from Nginx, enable `try_files ... /app/index.html;` under `/app/` location.
+- If Flask serves the SPA, ensure its route returns `index.html` for unknown paths under `/app/*`.
+
+4) Security
+
+- Verify Firebase Firestore/Storage rules restrict access to authenticated users as intended.
+- Keep secrets server-side; never ship private keys to the client.
+- Review the CSP (currently Report-Only) and tighten it after auditing allowed hosts.
+
+5) Monitoring
+
+- Add analytics and error tracking (e.g., Sentry DSN) via env if desired.
+
+6) QA
+
+- Run Lighthouse (PWA/Perf/Accessibility/SEO) and cross-device smoke tests.
+
 # Docteck
 
 Docteck is a modern web application designed to streamline appointment scheduling, billing, and task management for healthcare professionals and their clients. Built with React for the frontend and Node.js for backend services, Docteck provides a seamless experience for managing calendars, handling payments, and tracking daily tasks—all in one place.
