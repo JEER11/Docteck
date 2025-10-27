@@ -14,8 +14,8 @@ const weatherIcons = {
   Default: <WiDaySunny size={56} color="#FFD600" />
 };
 
-const apiKey = process.env.REACT_APP_OPENWEATHER_API_KEY;
-console.log('WeatherBox: apiKey =', apiKey);
+const apiKey = (process.env.REACT_APP_OPENWEATHER_API_KEY || '').trim();
+console.log('WeatherBox: apiKey present =', Boolean(apiKey));
 
 export default function WeatherBox({ city: propCity = 'New York' }) {
   const [weather, setWeather] = useState(null);
@@ -24,6 +24,12 @@ export default function WeatherBox({ city: propCity = 'New York' }) {
 
   useEffect(() => {
     // Try to get user's location
+    if (!apiKey) {
+      // No key configured; show friendly message
+      setLoading(false);
+      setWeather({ cod: 401, message: 'Missing OpenWeather API key' });
+      return;
+    }
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -123,9 +129,16 @@ export default function WeatherBox({ city: propCity = 'New York' }) {
       {loading ? (
         <CircularProgress color="info" />
       ) : error ? (
-        <VuiTypography color="error" variant="button" fontWeight="bold">
-          Unable to fetch weather data.
-        </VuiTypography>
+        <VuiBox textAlign="center">
+          <VuiTypography color="error" variant="button" fontWeight="bold" mb={0.5}>
+            Unable to fetch weather data.
+          </VuiTypography>
+          {(!apiKey || weather?.cod === 401) && (
+            <VuiTypography color="text" variant="caption">
+              Check REACT_APP_OPENWEATHER_API_KEY in your environment.
+            </VuiTypography>
+          )}
+        </VuiBox>
       ) : (
         <>
           <VuiTypography variant="lg" color="white" fontWeight="bold" mb="4px" sx={{ letterSpacing: 0.5 }}>

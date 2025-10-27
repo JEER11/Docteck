@@ -2,7 +2,10 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const { OpenAI } = require('openai');
-const fetch = require('node-fetch');
+// Prefer Node 18+ global fetch; fallback to dynamic import of node-fetch only if needed
+const fetch = (global.fetch
+  ? global.fetch.bind(global)
+  : (...args) => import('node-fetch').then(({ default: f }) => f(...args)));
 const { createProxyMiddleware } = require('http-proxy-middleware');
 const path = require('path');
 const fs = require('fs');
@@ -16,8 +19,9 @@ require('dotenv').config({ path: path.join(__dirname, '.env') });
 const stripeRoutes = require('./stripeRoutes');
 const stripePayRoutes = require('./stripePayRoutes');
 const app = express();
-// Use a Node-specific port var to avoid clashing with Flask's PORT from root .env
-const port = Number(process.env.SERVER_PORT || process.env.NODE_PORT || 3001);
+// Use provider PORT when available (Render/Railway/etc.), else fall back to our vars
+// Keep SERVER_PORT/NODE_PORT for local dev and Docker overrides
+const port = Number(process.env.PORT || process.env.SERVER_PORT || process.env.NODE_PORT || 3001);
 
 // Behind Nginx, trust the first proxy for X-Forwarded-* headers
 app.set('trust proxy', 1);
