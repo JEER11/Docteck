@@ -1,7 +1,9 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const { OpenAI } = require('openai');
+// OpenAI SDK import compatible with both v4 and v5 under CommonJS
+const OpenAIImport = require('openai');
+const OpenAI = OpenAIImport?.OpenAI || OpenAIImport;
 // Prefer Node 18+ global fetch; fallback to dynamic import of node-fetch only if needed
 const fetch = (global.fetch
   ? global.fetch.bind(global)
@@ -25,6 +27,14 @@ const port = Number(process.env.PORT || process.env.SERVER_PORT || process.env.N
 
 // Behind Nginx, trust the first proxy for X-Forwarded-* headers
 app.set('trust proxy', 1);
+
+// Log unexpected errors so Render logs show root cause instead of a silent exit
+process.on('unhandledRejection', (err) => {
+  try { console.error('UnhandledRejection:', err); } catch (_) {}
+});
+process.on('uncaughtException', (err) => {
+  try { console.error('UncaughtException:', err); } catch (_) {}
+});
 
 
 // CORS: default open in dev, locked down in production via ALLOWED_ORIGINS env
