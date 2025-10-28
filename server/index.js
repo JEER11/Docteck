@@ -39,6 +39,8 @@ process.on('uncaughtException', (err) => {
 
 // CORS: default open in dev, locked down in production via ALLOWED_ORIGINS env
 const rawOrigins = (process.env.ALLOWED_ORIGINS || process.env.CORS_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
+// Optional wildcard patterns like *.vercel.app via ALLOWED_ORIGIN_PATTERNS
+const rawOriginPatterns = (process.env.ALLOWED_ORIGIN_PATTERNS || process.env.CORS_ORIGIN_PATTERNS || '').split(',').map(s => s.trim()).filter(Boolean);
 const devOrigins = [
   'http://localhost:3000',
   'http://127.0.0.1:3000',
@@ -47,12 +49,31 @@ const devOrigins = [
 ];
 const isProd = (process.env.NODE_ENV === 'production' || process.env.APP_ENV === 'production' || process.env.ENV === 'production');
 const allowedOrigins = rawOrigins.length ? rawOrigins : (isProd ? [] : devOrigins);
+const allowedPatterns = rawOriginPatterns;
+// Convenience switch to allow Vercel preview deployments (default true)
+const allowVercelPreviews = (process.env.ALLOW_VERCEL_PREVIEWS || 'true').toLowerCase() !== 'false';
+function matchWildcard(pattern, origin) {
+  // supports patterns like https://*.vercel.app
+  if (!pattern || !origin) return false;
+  if (!pattern.includes('*')) return pattern === origin;
+  const esc = pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*');
+  const re = new RegExp('^' + esc + '$');
+  return re.test(origin);
+}
 const corsCfg = {
   origin: (origin, cb) => {
     // Allow requests with no origin (e.g., same-origin or curl/postman)
     if (!origin) return cb(null, true);
-    if (allowedOrigins.length === 0) return cb(null, false); // no cross-origin in prod unless explicitly allowed
-    const ok = allowedOrigins.includes(origin);
+    // Exact allow-list
+    let ok = allowedOrigins.includes(origin);
+    // Wildcard patterns from env
+    if (!ok && allowedPatterns.length) ok = allowedPatterns.some(p => matchWildcard(p, origin));
+    // Allow Vercel preview subdomains if enabled
+    if (!ok && allowVercelPreviews) {
+      ok = /^https:\/\/[a-z0-9-]+\.vercel\.app$/i.test(origin);
+    }
+    // If nothing matched and no explicit allow-list, deny in prod
+    if (!ok && allowedOrigins.length === 0 && allowedPatterns.length === 0 && isProd) return cb(null, false);
     return cb(null, ok);
   },
   credentials: true,
