@@ -105,12 +105,22 @@ export default function AppointmentDialog({ open, onClose, onSubmit }) {
   const fieldSx = {
     width: '100%',
     ml: 0,
-    background: '#181a2f',
     borderRadius: 1.5,
-    '& .MuiOutlinedInput-notchedOutline': { border: '1px solid #23244a' },
-    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#2f3570' },
-    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#6a6afc' },
+    '& .MuiOutlinedInput-root': {
+      background: '#0a0c1a',
+      '&:hover': {
+        background: '#0d0f1f',
+      },
+    },
+    '& .MuiOutlinedInput-notchedOutline': { border: '1px solid rgba(255, 255, 255, 0.06)' },
+    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255, 255, 255, 0.12)' },
+    '& .Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(106, 106, 252, 0.4)' },
     '& .MuiInputBase-input': { color: '#e7e9f3', fontSize: 14, py: 1.35, background: 'transparent' },
+    '& .MuiSelect-select': { background: 'transparent' },
+    '& .MuiInputLabel-root': {
+      color: '#6b7199',
+      '&.Mui-focused': { color: '#6b7199' },
+    },
     minHeight: 54,
     '& input[type="date"]::-webkit-calendar-picker-indicator': { display: 'none' },
     '& input[type="time"]::-webkit-calendar-picker-indicator': { display: 'none' },
@@ -134,7 +144,7 @@ export default function AppointmentDialog({ open, onClose, onSubmit }) {
         </Tabs>
         {tab === 0 ? (
           <Box component="form" sx={{ display: 'flex', flexDirection: 'column', gap: 1, maxWidth: 560, mx: 'auto', width: '100%' }}>
-            <TextField label="Title" name="title" value={form.title} onChange={handleChange} fullWidth placeholder="Optional – we'll infer one" InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mt: 2, mb: 0.5 }} />
+            <TextField label="Title" name="title" value={form.title} onChange={handleChange} fullWidth placeholder="Optional – we'll infer one" InputLabelProps={{ shrink: true }} sx={{ ...fieldSx, mt: 2, mb: 0.5 }} />
             <TextField
               label="Date"
               name="date"
@@ -143,7 +153,7 @@ export default function AppointmentDialog({ open, onClose, onSubmit }) {
               inputRef={dateRef}
               onChange={handleChange}
               fullWidth
-              InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
+              InputLabelProps={{ shrink: true }}
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end" sx={{ mr: 0.5 }}>
@@ -195,7 +205,7 @@ export default function AppointmentDialog({ open, onClose, onSubmit }) {
                 value={form.from}
                 inputRef={fromRef}
                 onChange={handleChange}
-                InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
+                InputLabelProps={{ shrink: true }}
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end" sx={{ mr: 0.25 }}>
@@ -220,7 +230,7 @@ export default function AppointmentDialog({ open, onClose, onSubmit }) {
                 value={form.to}
                 inputRef={toRef}
                 onChange={handleChange}
-                InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
+                InputLabelProps={{ shrink: true }}
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end" sx={{ mr: 0.25 }}>
@@ -252,7 +262,7 @@ export default function AppointmentDialog({ open, onClose, onSubmit }) {
                   {...params}
                   label="Doctor"
                   placeholder="Select Doctor"
-                  InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
+                  InputLabelProps={{ shrink: true }}
                   sx={{ ...fieldSx, mb: 0.5, '& .MuiOutlinedInput-input': { py: 1 } }}
                 />
               )}
@@ -264,7 +274,7 @@ export default function AppointmentDialog({ open, onClose, onSubmit }) {
                 Suggested: {slots.slice(0,4).map(s => new Date(s.start).toLocaleString()).join('  •  ')}
               </Box>
             )}
-            <TextField label="Location" name="location" value={form.location} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 0.5 }} />
+            <TextField label="Location" name="location" value={form.location} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true }} sx={{ ...fieldSx, mb: 0.5 }} />
             <Autocomplete
               size="small"
               options={reasons}
@@ -278,7 +288,7 @@ export default function AppointmentDialog({ open, onClose, onSubmit }) {
                   {...params}
                   label="Reason"
                   placeholder="Select Reason"
-                  InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
+                  InputLabelProps={{ shrink: true }}
                   sx={{ ...fieldSx, mb: 0.5, '& .MuiOutlinedInput-input': { py: 1 } }}
                 />
               )}
@@ -288,7 +298,7 @@ export default function AppointmentDialog({ open, onClose, onSubmit }) {
           </Box>
         ) : (
           <Box component="form" sx={{ display: 'flex', flexDirection: 'column', gap: 1, maxWidth: 560, mx: 'auto', width: '100%' }}>
-            <TextField label="Title" name="title" value={form.title} onChange={handleChange} fullWidth placeholder="Optional – we'll infer one" InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mt: 2, mb: 0.5 }} />
+            <TextField label="Title" name="title" value={form.title} onChange={handleChange} fullWidth placeholder="Optional – we'll infer one" InputLabelProps={{ shrink: true }} sx={{ ...fieldSx, mt: 2, mb: 0.5 }} />
             <TextField
               label="Date"
               name="date"
@@ -297,7 +307,7 @@ export default function AppointmentDialog({ open, onClose, onSubmit }) {
               inputRef={dateRef}
               onChange={handleChange}
               fullWidth
-              InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
+              InputLabelProps={{ shrink: true }}
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end" sx={{ mr: 0.5 }}>
@@ -349,7 +359,7 @@ export default function AppointmentDialog({ open, onClose, onSubmit }) {
               inputRef={fromRef}
               onChange={handleChange}
               fullWidth
-              InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
+              InputLabelProps={{ shrink: true }}
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end" sx={{ mr: 0.25 }}>
@@ -380,14 +390,14 @@ export default function AppointmentDialog({ open, onClose, onSubmit }) {
                   {...params}
                   label="Doctor"
                   placeholder="Select Doctor"
-                  InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
+                  InputLabelProps={{ shrink: true }}
                   sx={{ ...fieldSx, mb: 0.5, '& .MuiOutlinedInput-input': { py: 1 } }}
                 />
               )}
               sx={{ mb: 0.5, '& .MuiOutlinedInput-root': { p: 0.25, pr: 1 } }}
               ListboxProps={{ style: { maxHeight: 240 } }}
             />
-            <TextField label="Details" name="details" value={form.details} onChange={handleChange} fullWidth multiline minRows={3} InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 0.5 }} />
+            <TextField label="Details" name="details" value={form.details} onChange={handleChange} fullWidth multiline minRows={3} InputLabelProps={{ shrink: true }} sx={{ ...fieldSx, mb: 0.5 }} />
           </Box>
         )}
       </DialogContent>

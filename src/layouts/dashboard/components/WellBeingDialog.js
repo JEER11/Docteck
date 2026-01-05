@@ -34,12 +34,22 @@ export default function WellBeingDialog({ open, onClose, onSubmit }) {
   const fieldSx = {
     width: '100%',
     ml: 0,
-    background: '#181a2f',
     borderRadius: 1.5,
-    '& .MuiOutlinedInput-notchedOutline': { border: '1px solid #23244a' },
-    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#2f3570' },
-    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#6a6afc' },
+    '& .MuiOutlinedInput-root': {
+      background: '#0a0c1a',
+      '&:hover': {
+        background: '#0d0f1f',
+      },
+    },
+    '& .MuiOutlinedInput-notchedOutline': { border: '1px solid rgba(255, 255, 255, 0.06)' },
+    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255, 255, 255, 0.12)' },
+    '& .Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(106, 106, 252, 0.4)' },
     '& .MuiInputBase-input': { color: '#e7e9f3', fontSize: 14, py: 1.25, background: 'transparent' },
+    '& .MuiSelect-select': { background: 'transparent' },
+    '& .MuiInputLabel-root': {
+      color: '#6b7199',
+      '&.Mui-focused': { color: '#6b7199' },
+    },
     minHeight: 54,
   };
 
@@ -79,7 +89,7 @@ export default function WellBeingDialog({ open, onClose, onSubmit }) {
                 label="Emotion"
                 placeholder="Choose or type"
                 autoFocus
-                InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
+                InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }}
                 sx={{ ...fieldSx, mt: 1 }}
                 InputProps={{
                   ...params.InputProps,
@@ -101,7 +111,7 @@ export default function WellBeingDialog({ open, onClose, onSubmit }) {
               value={intensity}
               onChange={e => setIntensity(Math.max(1, Math.min(10, Number(e.target.value))))}
               inputProps={{ min: 1, max: 10 }}
-              InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
+              InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }}
               sx={{ ...fieldSx }}
               InputProps={{
                 endAdornment: (
@@ -131,7 +141,7 @@ export default function WellBeingDialog({ open, onClose, onSubmit }) {
             multiline
             minRows={3}
             placeholder="Context, triggers, actions…"
-            InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
+            InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }}
             sx={{ ...fieldSx }}
           />
         </Box>

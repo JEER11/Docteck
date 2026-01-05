@@ -109,12 +109,22 @@ function BillingInformation() {
   const fieldSx = {
     width: '100%',
     ml: 0,
-    background: '#181a2f',
     borderRadius: 1.5,
-    '& .MuiOutlinedInput-notchedOutline': { border: '1px solid #23244a' },
-    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#2f3570' },
-    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#6a6afc' },
+    '& .MuiOutlinedInput-root': {
+      background: '#0a0c1a',
+      '&:hover': {
+        background: '#0d0f1f',
+      },
+    },
+    '& .MuiOutlinedInput-notchedOutline': { border: '1px solid rgba(255, 255, 255, 0.06)' },
+    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255, 255, 255, 0.12)' },
+    '& .Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(106, 106, 252, 0.4)' },
     '& .MuiInputBase-input': { color: '#e7e9f3', fontSize: 14, py: 1, background: 'transparent' },
+    '& .MuiSelect-select': { background: 'transparent' },
+    '& .MuiInputLabel-root': {
+      color: '#6b7199',
+      '&.Mui-focused': { color: '#6b7199' },
+    },
   };
 
   // List of common prescription medicines (at least 100)
@@ -228,19 +238,19 @@ function BillingInformation() {
       <DialogContent sx={{ px: 3, pt: 2.4, pb: 2.4 }}>
         <Grid container spacing={1.5}>
           <Grid item xs={12}>
-            <TextField placeholder="e.g. Walgreens - Downtown" label="Pharmacy Name" name="name" value={newPharmacy.name} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mt: 1 }} />
+            <TextField placeholder="e.g. Walgreens - Downtown" label="Pharmacy Name" name="name" value={newPharmacy.name} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }} sx={{ ...fieldSx, mt: 1 }} />
           </Grid>
           <Grid item xs={12}>
-            <TextField placeholder="123 Main St, City, ST" label="Address" name="address" value={newPharmacy.address} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={fieldSx} />
+            <TextField placeholder="123 Main St, City, ST" label="Address" name="address" value={newPharmacy.address} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }} sx={fieldSx} />
           </Grid>
           <Grid item xs={12} md={6}>
-            <TextField placeholder="rx@pharmacy.com" label="Email (optional)" name="email" type="email" value={newPharmacy.email} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={fieldSx} />
+            <TextField placeholder="rx@pharmacy.com" label="Email (optional)" name="email" type="email" value={newPharmacy.email} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }} sx={fieldSx} />
           </Grid>
             <Grid item xs={12} md={6}>
-            <TextField placeholder="(555) 123-4567" label="Phone (optional)" name="phone" value={newPharmacy.phone} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={fieldSx} />
+            <TextField placeholder="(555) 123-4567" label="Phone (optional)" name="phone" value={newPharmacy.phone} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }} sx={fieldSx} />
           </Grid>
           <Grid item xs={12}>
-            <TextField placeholder="Select or type a prescription" label="Prescription to Pick Up (optional)" name="prescription" value={newPharmacy.prescription} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={fieldSx} inputProps={{ list: 'medicine-options' }} />
+            <TextField placeholder="Select or type a prescription" label="Prescription to Pick Up (optional)" name="prescription" value={newPharmacy.prescription} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }} sx={fieldSx} inputProps={{ list: 'medicine-options' }} />
           </Grid>
         </Grid>
         <datalist id="medicine-options">
@@ -265,19 +275,19 @@ function BillingInformation() {
       <DialogContent sx={{ px: 3, pt: 0.5, pb: 1.5 }}>
         <Grid container spacing={1.5}>
           <Grid item xs={12}>
-            <TextField label="Pharmacy Name" name="name" value={editPharmacy.name} onChange={handleEditChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={fieldSx} />
+            <TextField label="Pharmacy Name" name="name" value={editPharmacy.name} onChange={handleEditChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }} sx={fieldSx} />
           </Grid>
           <Grid item xs={12}>
-            <TextField label="Address" name="address" value={editPharmacy.address} onChange={handleEditChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={fieldSx} />
+            <TextField label="Address" name="address" value={editPharmacy.address} onChange={handleEditChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }} sx={fieldSx} />
           </Grid>
           <Grid item xs={12} md={6}>
-            <TextField label="Email" name="email" type="email" value={editPharmacy.email} onChange={handleEditChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={fieldSx} />
+            <TextField label="Email" name="email" type="email" value={editPharmacy.email} onChange={handleEditChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }} sx={fieldSx} />
           </Grid>
           <Grid item xs={12} md={6}>
-            <TextField label="Phone" name="phone" value={editPharmacy.phone} onChange={handleEditChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={fieldSx} />
+            <TextField label="Phone" name="phone" value={editPharmacy.phone} onChange={handleEditChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }} sx={fieldSx} />
           </Grid>
           <Grid item xs={12}>
-            <TextField label="Prescription to Pick Up" name="prescription" value={editPharmacy.prescription} onChange={handleEditChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={fieldSx} inputProps={{ list: 'medicine-options' }} />
+            <TextField label="Prescription to Pick Up" name="prescription" value={editPharmacy.prescription} onChange={handleEditChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }} sx={fieldSx} inputProps={{ list: 'medicine-options' }} />
           </Grid>
         </Grid>
         <datalist id="medicine-options">

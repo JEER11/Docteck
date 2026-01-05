@@ -89,7 +89,7 @@ function PaymentMethodForm({ billingName, setBillingName, setError, saving, setS
 
   return (
     <>
-      <TextField label="Name on Card" value={billingName} onChange={(e)=>setBillingName(e.target.value)} fullWidth InputLabelProps={{ shrink: true, style: { color: "#bfc6e0" } }} sx={{ ...fieldSx, mt: 1, mb: 1 }} />
+      <TextField label="Name on Card" value={billingName} onChange={(e)=>setBillingName(e.target.value)} fullWidth InputLabelProps={{ shrink: true, style: { color: "#6b7199" } }} sx={{ ...fieldSx, mt: 1, mb: 1 }} />
       <div style={{ background: "#181a2f", borderRadius: 12, padding: 12, border: "1px solid #23244a" }}>
         <CardElement options={{ style: { base: { fontSize: '16px', color: '#e7e9f3', '::placeholder': { color: '#8a8fb2' } } } }} />
       </div>
@@ -154,12 +154,22 @@ function PaymentMethodShell({ stripePromise, ensureStripe }) {
   const fieldSx = {
     width: "100%",
     ml: 0,
-    background: "#181a2f",
     borderRadius: 1.5,
-    "& .MuiOutlinedInput-notchedOutline": { border: "1px solid #23244a" },
-    "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "#2f3570" },
-    "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "#6a6afc" },
+    '& .MuiOutlinedInput-root': {
+      background: '#0a0c1a',
+      '&:hover': {
+        background: '#0d0f1f',
+      },
+    },
+    "& .MuiOutlinedInput-notchedOutline": { border: "1px solid rgba(255, 255, 255, 0.06)" },
+    "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "rgba(255, 255, 255, 0.12)" },
+    "& .Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "rgba(106, 106, 252, 0.4)" },
     "& .MuiInputBase-input": { color: "#e7e9f3", fontSize: 14, py: 1, background: "transparent" },
+    "& .MuiSelect-select": { background: "transparent" },
+    "& .MuiInputLabel-root": {
+      color: "#6b7199",
+      "&.Mui-focused": { color: "#6b7199" },
+    },
   };
 
   const handleAddVisualCard = async () => {
@@ -362,9 +372,9 @@ function PaymentMethodShell({ stripePromise, ensureStripe }) {
       <Dialog open={editOpen} onClose={() => setEditOpen(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { background: 'rgba(34, 40, 74, 0.65)', boxShadow: 24, borderRadius: 4, color: 'white', backdropFilter: 'blur(10px)', p: 4 } }}>
         <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 20 }}>Edit Card</DialogTitle>
         <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 1 }}>
-          <TextField label="Name on Card" value={billingName} onChange={(e)=>setBillingName(e.target.value)} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx }} />
-          <TextField label="Bank Name (optional)" value={bankName} onChange={(e)=>setBankName(e.target.value)} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx }} />
-          <TextField label="Network" value={network} onChange={(e)=>setNetwork(e.target.value)} select fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, '& .MuiSelect-select': { color: '#e7e9f3', py: 1 } }}>
+          <TextField label="Name on Card" value={billingName} onChange={(e)=>setBillingName(e.target.value)} fullWidth InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }} sx={{ ...fieldSx }} />
+          <TextField label="Bank Name (optional)" value={bankName} onChange={(e)=>setBankName(e.target.value)} fullWidth InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }} sx={{ ...fieldSx }} />
+          <TextField label="Network" value={network} onChange={(e)=>setNetwork(e.target.value)} select fullWidth InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }} sx={{ ...fieldSx, '& .MuiSelect-select': { color: '#e7e9f3', py: 1 } }}>
             <MenuItem value="visa">Visa</MenuItem>
             <MenuItem value="mastercard">Mastercard</MenuItem>
             <MenuItem value="amex">American Express</MenuItem>
@@ -372,7 +382,7 @@ function PaymentMethodShell({ stripePromise, ensureStripe }) {
           </TextField>
           <Grid container spacing={1}>
             <Grid item xs={6}>
-              <TextField label="Last 4 digits" value={last4} onChange={(e)=>setLast4(e.target.value.replace(/\D/g,'').slice(0,4))} inputProps={{ maxLength: 4 }} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx }} />
+              <TextField label="Last 4 digits" value={last4} onChange={(e)=>setLast4(e.target.value.replace(/\D/g,'').slice(0,4))} inputProps={{ maxLength: 4 }} fullWidth InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }} sx={{ ...fieldSx }} />
             </Grid>
             <Grid item xs={3}>
               <TextField label="MM" value={expMonth} onChange={(e)=>setExpMonth(e.target.value.replace(/\D/g,'').slice(0,2))} inputProps={{ maxLength: 2 }} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx }} />
@@ -456,9 +466,9 @@ function PaymentMethodShell({ stripePromise, ensureStripe }) {
             )
           ) : (
             <>
-              <TextField label="Name on Card" value={billingName} onChange={(e)=>setBillingName(e.target.value)} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mt: 1, mb: 1 }} />
-              <TextField label="Bank Name (optional)" value={bankName} onChange={(e)=>setBankName(e.target.value)} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 1 }} />
-              <TextField label="Network" value={network} onChange={(e)=>setNetwork(e.target.value)} select fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 1, color: 'white', '& .MuiSelect-select': { color: '#e7e9f3', py: 1, background: 'transparent' } }}>
+              <TextField label="Name on Card" value={billingName} onChange={(e)=>setBillingName(e.target.value)} fullWidth InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }} sx={{ ...fieldSx, mt: 1, mb: 1 }} />
+              <TextField label="Bank Name (optional)" value={bankName} onChange={(e)=>setBankName(e.target.value)} fullWidth InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }} sx={{ ...fieldSx, mb: 1 }} />
+              <TextField label="Network" value={network} onChange={(e)=>setNetwork(e.target.value)} select fullWidth InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }} sx={{ ...fieldSx, mb: 1, color: 'white', '& .MuiSelect-select': { color: '#e7e9f3', py: 1, background: 'transparent' } }}>
                 <MenuItem value="visa">Visa</MenuItem>
                 <MenuItem value="mastercard">Mastercard</MenuItem>
                 <MenuItem value="amex">American Express</MenuItem>
@@ -466,13 +476,13 @@ function PaymentMethodShell({ stripePromise, ensureStripe }) {
               </TextField>
               <Grid container spacing={1} sx={{ mt: 0.5 }}>
                 <Grid item xs={6}>
-                  <TextField label="Last 4 digits" value={last4} onChange={(e)=>setLast4(e.target.value.replace(/\D/g,''))} inputProps={{ maxLength: 4 }} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx }} />
+                  <TextField label="Last 4 digits" value={last4} onChange={(e)=>setLast4(e.target.value.replace(/\D/g,''))} inputProps={{ maxLength: 4 }} fullWidth InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }} sx={{ ...fieldSx }} />
                 </Grid>
                 <Grid item xs={3}>
                   <TextField label="MM" value={expMonth} onChange={(e)=>setExpMonth(e.target.value.replace(/\D/g,'').slice(0,2))} inputProps={{ maxLength: 2 }} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx }} />
                 </Grid>
                 <Grid item xs={3}>
-                  <TextField label="YY" value={expYear} onChange={(e)=>setExpYear(e.target.value.replace(/\D/g,'').slice(0,4))} inputProps={{ maxLength: 4 }} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx }} />
+                  <TextField label="YY" value={expYear} onChange={(e)=>setExpYear(e.target.value.replace(/\D/g,'').slice(0,4))} inputProps={{ maxLength: 4 }} fullWidth InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }} sx={{ ...fieldSx }} />
                 </Grid>
               </Grid>
               <DialogActions sx={{ background: 'transparent', px: 0, pb: 0, pt: 2, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
