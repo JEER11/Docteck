@@ -173,12 +173,22 @@ function Tables() {
   const fieldSx = {
     width: '100%',
     ml: 0,
-    background: '#181a2f',
     borderRadius: 1.5,
-    '& .MuiOutlinedInput-notchedOutline': { border: '1px solid #23244a' },
-    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#2f3570' },
-    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#6a6afc' },
+    '& .MuiOutlinedInput-root': {
+      background: '#0a0c1a',
+      '&:hover': {
+        background: '#0d0f1f',
+      },
+    },
+    '& .MuiOutlinedInput-notchedOutline': { border: '1px solid rgba(255, 255, 255, 0.06)' },
+    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255, 255, 255, 0.12)' },
+    '& .Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(106, 106, 252, 0.4)' },
     '& .MuiInputBase-input': { color: '#e7e9f3', fontSize: 14, py: 1, background: 'transparent' },
+    '& .MuiSelect-select': { background: 'transparent' },
+    '& .MuiInputLabel-root': {
+      color: '#6b7199',
+      '&.Mui-focused': { color: '#6b7199' },
+    },
   };
 
   // Open dialog for new appointment
@@ -705,23 +715,23 @@ function Tables() {
     <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 1.5, mt: 1, background: 'transparent', color: 'white', px: 2, minWidth: 400 }}>
           <VuiBox display="flex" flexDirection="column" gap={1}>
             <TextField label="Hospital" name="hospital" value={form.hospital} onChange={handleChange} fullWidth 
-              InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
+              InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }}
               sx={{ ...fieldSx, mt: 2, mb: 0.5, minHeight: 48 }}
             />
             <TextField label="Doctors (comma separated)" name="doctors" value={form.doctors} onChange={handleChange} fullWidth 
-              InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
+              InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }}
               sx={{ ...fieldSx, mb: 0.5 }}
             />
             <TextField label="Bill" name="bill" value={form.bill} onChange={handleChange} fullWidth 
-              InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
+              InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }}
               sx={{ ...fieldSx, mb: 0.5 }}
             />
             <TextField label="Status" name="status" value={form.status || ""} onChange={handleChange} fullWidth 
-              InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
+              InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }}
               sx={{ ...fieldSx, mb: 0.5 }}
             />
             <TextField label="Completion (%)" name="completion" type="number" value={form.completion} onChange={handleChange} fullWidth 
-              InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
+              InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }}
               sx={{ ...fieldSx, mb: 0.5 }}
             />
           </VuiBox>
@@ -976,19 +986,19 @@ function Tables() {
         >
           <VuiBox display="flex" flexDirection="column" gap={1}>
             <TextField label="Doctor Name" name="name" value={apptForm.name} onChange={e => setApptForm(f => ({ ...f, name: e.target.value }))} fullWidth 
-              InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
+              InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }}
               sx={{ ...fieldSx, mt: 2, mb: 0.5, minHeight: 48 }}
             />
             <TextField label="Email" name="email" value={apptForm.email} onChange={e => setApptForm(f => ({ ...f, email: e.target.value }))} fullWidth 
-              InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
+              InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }}
               sx={{ ...fieldSx, mb: 0.5 }}
             />
             <TextField label="Type" name="type" value={apptForm.type} onChange={e => setApptForm(f => ({ ...f, type: e.target.value }))} fullWidth 
-              InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
+              InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }}
               sx={{ ...fieldSx, mb: 0.5 }}
             />
             <TextField label="Hospital" name="hospital" value={apptForm.hospital} onChange={e => setApptForm(f => ({ ...f, hospital: e.target.value }))} fullWidth 
-              InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
+              InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }}
               sx={{ ...fieldSx, mb: 0.5 }}
             />
             <Autocomplete
@@ -1004,7 +1014,7 @@ function Tables() {
                   {...params}
                   label="Status"
                   placeholder="Select status"
-                  InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
+                  InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }}
                   sx={{
                     ...fieldSx,
                     mb: 0.5,
@@ -1052,7 +1062,7 @@ function Tables() {
               }}
             />
             <TextField label="Date" name="date" type="date" value={apptForm.date} onChange={e => setApptForm(f => ({ ...f, date: e.target.value }))} fullWidth 
-              InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
+              InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }}
               sx={{ ...fieldSx, mb: 0.5 }}
             />
           </VuiBox>
@@ -1140,7 +1150,7 @@ function Tables() {
                   value={provQuery}
                   onChange={e=>setProvQuery(e.target.value)}
                   fullWidth
-                  InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
+                  InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }}
                   InputProps={{ startAdornment: (<Box component="span" sx={{ color: '#aeb3d5', mr: 1 }}><SearchIcon fontSize="small" /></Box>) }}
                   sx={fieldSx}
                 />
@@ -1157,7 +1167,7 @@ function Tables() {
                       {...params}
                       label="Insurance"
                       placeholder="Type or choose"
-                      InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
+                      InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }}
                       sx={fieldSx}
                     />
                   )}
@@ -1168,7 +1178,7 @@ function Tables() {
                 />
               </Grid>
               <Grid item xs={6} sm={4} md={2} lg={2}>
-                <TextField size="small" label="ZIP" value={provZip} onChange={e=>setProvZip(e.target.value)} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={fieldSx} />
+                <TextField size="small" label="ZIP" value={provZip} onChange={e=>setProvZip(e.target.value)} fullWidth InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }} sx={fieldSx} />
               </Grid>
               <Grid item xs={12} md={2} lg={2} sx={{ display: 'flex', alignItems: 'stretch' }}>
                 <Button

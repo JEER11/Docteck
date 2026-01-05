@@ -317,7 +317,7 @@ function Dashboard() {
             </Grid>
             <Grid item xs={12} md={6} xl={3}>
               <MiniStatisticsCard
-                title={{ text: "Next Todo" }}
+                title={{ text: "Next To-do" }}
                 count={closestTodo ? nextTodo : "-"}
                 countProps={{ noWrap: true }}
                 percentage={
@@ -339,7 +339,7 @@ function Dashboard() {
               <WeatherBox />
             </Grid>
             <Grid item xs={12} lg={6} xl={4}>
-              <ReferralTracking title="TODO TRACK" />
+              <ReferralTracking title="TO-DO TRACK" />
             </Grid>
           </Grid>
         </VuiBox>

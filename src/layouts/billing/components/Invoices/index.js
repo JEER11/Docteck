@@ -39,12 +39,22 @@ function Invoices() {
   const fieldSx = {
     width: '100%',
     ml: 0,
-    background: '#181a2f',
     borderRadius: 1.5,
-    '& .MuiOutlinedInput-notchedOutline': { border: '1px solid #23244a' },
-    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#2f3570' },
-    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#6a6afc' },
+    '& .MuiOutlinedInput-root': {
+      background: '#0a0c1a',
+      '&:hover': {
+        background: '#0d0f1f',
+      },
+    },
+    '& .MuiOutlinedInput-notchedOutline': { border: '1px solid rgba(255, 255, 255, 0.06)' },
+    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255, 255, 255, 0.12)' },
+    '& .Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(106, 106, 252, 0.4)' },
     '& .MuiInputBase-input': { color: '#e7e9f3', fontSize: 14, py: 1, background: 'transparent' },
+    '& .MuiSelect-select': { background: 'transparent' },
+    '& .MuiInputLabel-root': {
+      color: '#6b7199',
+      '&.Mui-focused': { color: '#6b7199' },
+    },
   };
   // Save changes in the Edit modal
   const handleEditSave = async () => {
@@ -354,16 +364,16 @@ function Invoices() {
               value={newPrescription.medicine}
               onChange={handleChange}
               fullWidth
-              InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
+              InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }}
               inputProps={{ list: 'medicine-options' }}
               sx={{ ...fieldSx, mt: 0.5 }}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
-            <TextField label="Monthly Price ($)" name="price" type="text" value={newPrescription.price} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={fieldSx} />
+            <TextField label="Monthly Price ($)" name="price" type="text" value={newPrescription.price} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }} sx={fieldSx} />
           </Grid>
           <Grid item xs={12} sm={6}>
-            <TextField label="Pick-up Date" name="date" type="date" value={newPrescription.date} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={fieldSx} />
+            <TextField label="Pick-up Date" name="date" type="date" value={newPrescription.date} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }} sx={fieldSx} />
           </Grid>
           <Grid item xs={12}>
             <VuiBox>
@@ -394,13 +404,13 @@ function Invoices() {
       <DialogContent sx={{ px: 3, pt: 0.75, pb: 1.25 }}>
         <Grid container spacing={1.5}>
           <Grid item xs={12}>
-            <TextField label="Medicine Name & mg" name="medicine" value={editPrescription.medicine} onChange={handleEditChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} inputProps={{ list: 'medicine-options' }} sx={fieldSx} />
+            <TextField label="Medicine Name & mg" name="medicine" value={editPrescription.medicine} onChange={handleEditChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }} inputProps={{ list: 'medicine-options' }} sx={fieldSx} />
           </Grid>
           <Grid item xs={12} sm={6}>
-            <TextField label="Monthly Price ($)" name="price" type="text" value={editPrescription.price} onChange={handleEditChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={fieldSx} />
+            <TextField label="Monthly Price ($)" name="price" type="text" value={editPrescription.price} onChange={handleEditChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }} sx={fieldSx} />
           </Grid>
           <Grid item xs={12} sm={6}>
-            <TextField label="Pick-up Date" name="date" type="date" value={editPrescription.date} onChange={handleEditChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={fieldSx} />
+            <TextField label="Pick-up Date" name="date" type="date" value={editPrescription.date} onChange={handleEditChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }} sx={fieldSx} />
           </Grid>
           <Grid item xs={12}>
             <VuiBox>
