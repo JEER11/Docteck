@@ -28,16 +28,16 @@
     function on(id, cb){ const el=document.getElementById(id); if(el) el.addEventListener('click', cb); }
 
     on('btn-google', async ()=>{
-      try { await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); location.href='/app'; } catch(e){ alert('Google sign-in failed'); }
+      try { await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); location.href='/app'; } catch(e){ console.error('Google sign-in failed', e); }
     });
     on('btn-facebook', async ()=>{
-      try { await auth.signInWithPopup(new firebase.auth.FacebookAuthProvider()); location.href='/app'; } catch(e){ alert('Facebook sign-in failed'); }
+      try { await auth.signInWithPopup(new firebase.auth.FacebookAuthProvider()); location.href='/app'; } catch(e){ console.error('Facebook sign-in failed', e); }
     });
     on('btn-yahoo', async ()=>{
-      try { await auth.signInWithPopup(new firebase.auth.OAuthProvider('yahoo.com')); location.href='/app'; } catch(e){ alert('Yahoo sign-in failed'); }
+      try { await auth.signInWithPopup(new firebase.auth.OAuthProvider('yahoo.com')); location.href='/app'; } catch(e){ console.error('Yahoo sign-in failed', e); }
     });
     on('btn-microsoft', async ()=>{
-      try { await auth.signInWithPopup(new firebase.auth.OAuthProvider('microsoft.com')); location.href='/app'; } catch(e){ alert('Microsoft sign-in failed'); }
+      try { await auth.signInWithPopup(new firebase.auth.OAuthProvider('microsoft.com')); location.href='/app'; } catch(e){ console.error('Microsoft sign-in failed', e); }
     });
     on('btn-phone', ()=>{
       const panel = document.getElementById('phone-panel');
@@ -54,19 +54,19 @@
     if (sendBtn) sendBtn.addEventListener('click', async ()=>{
       try {
         const phone = document.getElementById('phone').value.trim();
-        if (!phone) return alert('Enter phone');
+        if (!phone) return console.error('Enter phone');
         confirmation = await auth.signInWithPhoneNumber(phone, recaptchaVerifier);
-        alert('Code sent');
-      } catch(e){ alert(e?.message || 'Failed to send code'); }
+        console.log('Code sent');
+      } catch(e){ console.error(e?.message || 'Failed to send code'); }
     });
     const verifyBtn = document.getElementById('verify-code');
     if (verifyBtn) verifyBtn.addEventListener('click', async ()=>{
       try {
         const code = document.getElementById('otp').value.trim();
-        if (!confirmation) return alert('Send code first');
+        if (!confirmation) return console.error('Send code first');
         await confirmation.confirm(code);
         location.href='/app';
-      } catch(e){ alert(e?.message || 'Verification failed'); }
+      } catch(e){ console.error(e?.message || 'Verification failed'); }
     });
 
     const si = document.getElementById('signin-form');
@@ -75,7 +75,7 @@
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
       try { await auth.signInWithEmailAndPassword(email, password); location.href='/app'; }
-      catch(e){ alert(e?.message || 'Sign in failed'); }
+      catch(e){ console.error(e?.message || 'Sign in failed'); }
     });
 
     const su = document.getElementById('signup-form');
@@ -85,7 +85,7 @@
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
       try { const res = await auth.createUserWithEmailAndPassword(email, password); await res.user.updateProfile({ displayName: name }); location.href='/app'; }
-      catch(e){ alert(e?.message || 'Sign up failed'); }
+      catch(e){ console.error(e?.message || 'Sign up failed'); }
     });
   }
 
