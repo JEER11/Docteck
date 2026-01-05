@@ -342,11 +342,7 @@ function SignUp() {
               Authentication isn’t configured. Set your Firebase keys, then refresh.
             </VuiTypography>
           )}
-          {error && (
-            <VuiTypography color="error" fontWeight="medium" mt={2} mb={1} textAlign="center">
-              {error}
-            </VuiTypography>
-          )}
+          {error && (() => { console.error(error); return null; })()}
           <VuiBox mb={2}>
             <VuiBox mb={1} ml={0.5}>
               <VuiTypography component="label" variant="button" color="white" fontWeight="medium">
