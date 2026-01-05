@@ -44,7 +44,12 @@ body { background: radial-gradient(1200px 800px at 20% 20%, var(--bg2) 0%, var(-
 .cols3 { display:grid; grid-template-columns: repeat(3, 1fr); gap:20px; }
 
 .section-title { font-weight: 800; margin-bottom: 10px; }
-.label { color: var(--muted); font-size: 12px; }
+.label {
+  color: #a6b1e1;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
 .value { font-weight: 700; }
 
 .menu-list { display:flex; flex-direction:column; gap:10px; }
