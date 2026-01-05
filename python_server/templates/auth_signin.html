@@ -30,11 +30,19 @@
         </form>
         <div class="auth-alt">Or sign in with</div>
         <div class="auth-icons">
-          <button id="btn-facebook" title="Facebook">f</button>
-          <button id="btn-microsoft" title="Microsoft">▢</button>
-          <button id="btn-google" title="Google">G</button>
-          <button id="btn-yahoo" title="Yahoo">Y</button>
-          <button id="btn-phone" title="Phone">📱</button>
+          <button id="btn-facebook" title="Facebook" aria-label="Sign in with Facebook">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M17 2.1h3a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-3v3h3a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-3v7a1 1 0 0 1-1 1h-3a1 1 0 0 1-1-1v-7h-2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h2V7a5 5 0 0 1 5-5z" fill="#fff"/></svg>
+          </button>
+          <button id="btn-microsoft" title="Microsoft" aria-label="Sign in with Microsoft">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="9" height="9" fill="#fff"/><rect x="13" y="2" width="9" height="9" fill="#fff"/><rect x="2" y="13" width="9" height="9" fill="#fff"/><rect x="13" y="13" width="9" height="9" fill="#fff"/></svg>
+          </button>
+          <button id="btn-google" title="Google" aria-label="Sign in with Google">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M21.35 11.1h-9.18v2.92h5.27c-.23 1.23-1.4 3.6-5.27 3.6-3.17 0-5.76-2.62-5.76-5.82s2.59-5.82 5.76-5.82c1.8 0 3 .72 3.7 1.34l2.53-2.46C17.1 3.7 15.1 2.7 12.17 2.7 6.97 2.7 2.7 6.97 2.7 12.17s4.27 9.47 9.47 9.47c5.47 0 9.1-3.85 9.1-9.28 0-.62-.07-1.1-.19-1.56z" fill="#fff"/></svg>
+          </button>
+          <button id="btn-yahoo" title="Yahoo" aria-label="Sign in with Yahoo">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm2.5 15h-1v-2.5h-1V17h-1v-4h1v1.5h1V13h1v4zm-5-4v4h-1v-4h1z" fill="#fff"/></svg>
+          </button>
+          <button id="btn-phone" title="Phone" aria-label="Sign in with Phone">📱</button>
         </div>
         <div id="phone-panel" class="phone-panel" hidden>
           <div class="auth-row"><input class="auth-input" id="phone" type="tel" placeholder="Your phone number e.g. +1 555 555 5555"/></div>

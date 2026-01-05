@@ -177,29 +177,153 @@ function SignUp() {
           <Stack mb="25px" justifyContent="center" alignItems="center" direction="row" spacing={2}>
             {enableFacebook && (
               <GradientBorder borderRadius="xl">
-                <IconButton onClick={() => handleSocialSignin(async () => { await signinWithFacebook(); history.push('/profile'); })} disabled={submitting}>
-                  <Icon as={FaFacebook} w="30px" h="30px" sx={({ palette: { white } }) => ({ color: white.focus })} />
+                <IconButton
+                  onClick={() => handleSocialSignin(async () => { await signinWithFacebook(); history.push('/profile'); })}
+                  disabled={submitting}
+                  sx={{
+                    background: '#0b1022',
+                    border: '2px solid #23263a',
+                    color: '#bfc6e0',
+                    width: 48,
+                    height: 48,
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '1.6rem',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.28)',
+                    transition: 'background 0.2s, box-shadow 0.2s, color 0.2s',
+                    '&:hover': {
+                      background: '#181c2f',
+                      color: '#fff',
+                      boxShadow: '0 4px 16px rgba(0,0,0,0.38)'
+                    },
+                    '& svg': {
+                      color: '#bfc6e0',
+                      fill: '#bfc6e0',
+                      transition: 'color 0.2s, fill 0.2s',
+                    },
+                    '&:hover svg': {
+                      color: '#fff',
+                      fill: '#fff',
+                    }
+                  }}
+                >
+                  <Icon as={FaFacebook} w="30px" h="30px" />
                 </IconButton>
               </GradientBorder>
             )}
             {enableMicrosoft && (
               <GradientBorder borderRadius="xl">
-                <IconButton onClick={() => handleSocialSignin(async () => { await signinWithMicrosoft(); history.push('/profile'); })} disabled={submitting}>
-                  <Icon as={FaMicrosoft} w="30px" h="30px" sx={({ palette: { white } }) => ({ color: white.focus })} />
+                <IconButton
+                  onClick={() => handleSocialSignin(async () => { await signinWithMicrosoft(); history.push('/profile'); })}
+                  disabled={submitting}
+                  sx={{
+                    background: '#0b1022',
+                    border: '2px solid #23263a',
+                    color: '#bfc6e0',
+                    width: 48,
+                    height: 48,
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '1.6rem',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.28)',
+                    transition: 'background 0.2s, box-shadow 0.2s, color 0.2s',
+                    '&:hover': {
+                      background: '#181c2f',
+                      color: '#fff',
+                      boxShadow: '0 4px 16px rgba(0,0,0,0.38)'
+                    },
+                    '& svg': {
+                      color: '#bfc6e0',
+                      fill: '#bfc6e0',
+                      transition: 'color 0.2s, fill 0.2s',
+                    },
+                    '&:hover svg': {
+                      color: '#fff',
+                      fill: '#fff',
+                    }
+                  }}
+                >
+                  <Icon as={FaMicrosoft} w="30px" h="30px" />
                 </IconButton>
               </GradientBorder>
             )}
             {enableGoogle && (
               <GradientBorder borderRadius="xl">
-                <IconButton onClick={() => handleSocialSignin(async () => { await signinWithGoogle(); history.push('/profile'); })} disabled={submitting}>
-                  <Icon as={FaGoogle} w="30px" h="30px" sx={({ palette: { white } }) => ({ color: white.focus })} />
+                <IconButton
+                  onClick={() => handleSocialSignin(async () => { await signinWithGoogle(); history.push('/profile'); })}
+                  disabled={submitting}
+                  sx={{
+                    background: '#0b1022',
+                    border: '2px solid #23263a',
+                    color: '#bfc6e0',
+                    width: 48,
+                    height: 48,
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '1.6rem',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.28)',
+                    transition: 'background 0.2s, box-shadow 0.2s, color 0.2s',
+                    '&:hover': {
+                      background: '#181c2f',
+                      color: '#fff',
+                      boxShadow: '0 4px 16px rgba(0,0,0,0.38)'
+                    },
+                    '& svg': {
+                      color: '#bfc6e0',
+                      fill: '#bfc6e0',
+                      transition: 'color 0.2s, fill 0.2s',
+                    },
+                    '&:hover svg': {
+                      color: '#fff',
+                      fill: '#fff',
+                    }
+                  }}
+                >
+                  <Icon as={FaGoogle} w="30px" h="30px" />
                 </IconButton>
               </GradientBorder>
             )}
             {enableYahoo && (
               <GradientBorder borderRadius="xl">
-                <IconButton onClick={() => handleSocialSignin(async () => { await signinWithYahoo(); history.push('/profile'); })} disabled={submitting}>
-                  <Icon as={FaYahoo} w="30px" h="30px" sx={({ palette: { white } }) => ({ color: white.focus })} />
+                <IconButton
+                  onClick={() => handleSocialSignin(async () => { await signinWithYahoo(); history.push('/profile'); })}
+                  disabled={submitting}
+                  sx={{
+                    background: '#0b1022',
+                    border: '2px solid #23263a',
+                    color: '#bfc6e0',
+                    width: 48,
+                    height: 48,
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '1.6rem',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.28)',
+                    transition: 'background 0.2s, box-shadow 0.2s, color 0.2s',
+                    '&:hover': {
+                      background: '#181c2f',
+                      color: '#fff',
+                      boxShadow: '0 4px 16px rgba(0,0,0,0.38)'
+                    },
+                    '& svg': {
+                      color: '#bfc6e0',
+                      fill: '#bfc6e0',
+                      transition: 'color 0.2s, fill 0.2s',
+                    },
+                    '&:hover svg': {
+                      color: '#fff',
+                      fill: '#fff',
+                    }
+                  }}
+                >
+                  <Icon as={FaYahoo} w="30px" h="30px" />
                 </IconButton>
               </GradientBorder>
             )}
