@@ -301,11 +301,7 @@ function SignIn() {
             Authentication isn’t configured. Set your Firebase keys in the backend or .env, then refresh.
           </VuiTypography>
         )}
-        {error && (
-          <VuiTypography color="error" fontWeight="medium" mt={2} mb={1} textAlign="center">
-            {error}
-          </VuiTypography>
-        )}
+        {error && (() => { console.error(error); return null; })()}
         <VuiBox mt={4} mb={1}>
           <VuiButton
             color="info"
