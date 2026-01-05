@@ -905,6 +905,7 @@ function Overview() {
                       variant="outlined"
                       placeholder="Enter your first name"
                       sx={dialogFieldSx}
+                      InputLabelProps={{ shrink: true, sx: { color: '#a6b1e1', fontSize: '0.95rem' } }}
                     />
                     <TextField
                       margin="dense"
@@ -916,6 +917,7 @@ function Overview() {
                       variant="outlined"
                       placeholder="Enter your last name"
                       sx={dialogFieldSx}
+                      InputLabelProps={{ shrink: true, sx: { color: '#a6b1e1', fontSize: '0.95rem' } }}
                     />
                     <TextField
                       margin="dense"
@@ -927,6 +929,7 @@ function Overview() {
                       variant="outlined"
                       placeholder="Enter your mobile number"
                       sx={dialogFieldSx}
+                      InputLabelProps={{ shrink: true, sx: { color: '#a6b1e1', fontSize: '0.95rem' } }}
                     />
                     <TextField
                       margin="dense"
@@ -938,6 +941,7 @@ function Overview() {
                       variant="outlined"
                       placeholder="Enter your email"
                       sx={dialogFieldSx}
+                      InputLabelProps={{ shrink: true, sx: { color: '#a6b1e1', fontSize: '0.95rem' } }}
                     />
                   </Box>
                   <Box mb={2}>
@@ -951,6 +955,7 @@ function Overview() {
                       onChange={handleProfileChange}
                       fullWidth
                       sx={dialogFieldSx}
+                      InputLabelProps={{ shrink: true, sx: { color: '#a6b1e1', fontSize: '0.95rem' } }}
                       SelectProps={{
                         native: false,
                         MenuProps: {
@@ -988,7 +993,7 @@ function Overview() {
                       value={profile.dateOfBirth}
                       onChange={handleProfileChange}
                       fullWidth
-                      InputLabelProps={{ shrink: true }}
+                      InputLabelProps={{ shrink: true, sx: { color: '#a6b1e1', fontSize: '0.95rem' } }}
                       placeholder="yyyy-mm-dd"
                       sx={dialogFieldSx}
                     />
@@ -1001,6 +1006,7 @@ function Overview() {
                       onChange={handleProfileChange}
                       fullWidth
                       sx={dialogFieldSx}
+                      InputLabelProps={{ shrink: true, sx: { color: '#a6b1e1', fontSize: '0.95rem' } }}
                       SelectProps={{
                         native: false,
                         MenuProps: {
@@ -1039,6 +1045,7 @@ function Overview() {
                       onChange={handleProfileChange}
                       fullWidth
                       sx={dialogFieldSx}
+                      InputLabelProps={{ shrink: true, sx: { color: '#a6b1e1', fontSize: '0.95rem' } }}
                       SelectProps={{
                         native: false,
                         MenuProps: {
@@ -1082,6 +1089,7 @@ function Overview() {
                       onChange={handleProfileChange}
                       fullWidth
                       sx={dialogFieldSx}
+                      InputLabelProps={{ shrink: true, sx: { color: '#a6b1e1', fontSize: '0.95rem' } }}
                       SelectProps={{
                         native: false,
                         MenuProps: {
