@@ -19,3 +19,28 @@ input::-ms-reveal {
   width: 0;
   height: 0;
 }
+
+/* Uniform glass dialog styling across the app so all popups match Caring Hub */
+.MuiDialog-paper {
+  background: linear-gradient(145deg, rgba(24,26,48,0.92) 0%, rgba(22,24,45,0.94) 70%) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+  box-shadow: 0 8px 28px -4px rgba(0,0,0,0.55), 0 4px 12px -2px rgba(0,0,0,0.4) !important;
+  border-radius: 12px !important;
+  color: #ffffff !important;
+}
+
+.MuiDialogTitle-root {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}
+
+.MuiDialogContent-root {
+  color: #e7e9f3 !important;
+}
+
+.MuiDialogActions-root {
+  border-top: 1px solid rgba(255,255,255,0.06) !important;
+  background: rgba(255,255,255,0.02) !important;
+}
