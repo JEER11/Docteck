@@ -33,6 +33,25 @@ export default function AddTodoDialog({ open, onClose, onAdd }) {
 
   const reset = () => { setType('Note'); setLabel(''); setDesc(''); setDate(''); setTime(''); setShowTime(false); };
 
+  // Robust helper to open the native time picker even if the input is currently readonly.
+  const openTimePicker = () => {
+    const el = timeRef.current;
+    if (!el) return;
+    try {
+      const wasReadOnly = !!el.readOnly;
+      if (wasReadOnly) el.readOnly = false;
+      if (typeof el.showPicker === 'function') {
+        el.showPicker();
+      } else {
+        el.focus();
+        try { el.click(); } catch (_) { /* ignore */ }
+      }
+      if (wasReadOnly) setTimeout(() => { try { el.readOnly = true; } catch (_) {} }, 50);
+    } catch (err) {
+      try { el.focus(); } catch (_) {}
+    }
+  };
+
   // Keyboard shortcut: Ctrl/Cmd + Enter to submit while dialog open
   useEffect(() => {
     if (!open) return;
@@ -220,18 +239,7 @@ export default function AddTodoDialog({ open, onClose, onAdd }) {
                       <Tooltip title="Pick a time" TransitionComponent={Fade} placement="top" arrow>
                         <IconButton
                           size="small"
-                          onClick={() => {
-                            if (!timeRef.current) return;
-                            try {
-                              if (timeRef.current.showPicker) {
-                                timeRef.current.showPicker();
-                              } else {
-                                try { timeRef.current.focus(); timeRef.current.click(); } catch(e){ timeRef.current.focus(); }
-                              }
-                            } catch (err) {
-                              try { timeRef.current.focus(); } catch (_) {}
-                            }
-                          }}
+                          onClick={openTimePicker}
                           tabIndex={-1}
                           sx={{ color: '#9ea6c4', '&:hover': { color: '#c2cae6' } }}
                         >
@@ -242,7 +250,7 @@ export default function AddTodoDialog({ open, onClose, onAdd }) {
                   )
                 }}
                 sx={{ ...fieldSx, width: 100, minWidth: 92, flex: '0 0 100px', cursor: 'pointer', opacity: date ? 1 : 0.55 }}
-                onClick={() => { if (timeRef.current) { if (timeRef.current.showPicker) timeRef.current.showPicker(); else timeRef.current.focus(); } }}
+                onClick={() => { openTimePicker(); }}
               />
             )}
             {!showTime && (
