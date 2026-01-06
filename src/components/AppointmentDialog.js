@@ -17,6 +17,8 @@ import {
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { useAppointments } from "../context/AppointmentContext";
+import MiniDayCalendar from 'components/MiniDayCalendar';
+import { useState, useEffect } from 'react';
 
 // Smooth open/close animation for the dialog (fade + subtle scale)
 const Transition = React.forwardRef(function Transition(props, ref) {
@@ -47,6 +49,7 @@ export default function AppointmentDialog({ open, onClose, onSubmit }) {
     details: ""
   });
   const [slots, setSlots] = useState([]);
+  const [showCalendar, setShowCalendar] = useState(false);
   // Refs for invoking native pickers programmatically
   const dateRef = useRef(null);
   const fromRef = useRef(null);
@@ -126,6 +129,24 @@ export default function AppointmentDialog({ open, onClose, onSubmit }) {
     '& input[type="time"]::-webkit-calendar-picker-indicator': { display: 'none' },
   };
 
+  const formatDate = (d) => {
+    if (!d) return '';
+    const dt = d instanceof Date ? d : new Date(d);
+    const y = dt.getFullYear();
+    const m = String(dt.getMonth()+1).padStart(2,'0');
+    const day = String(dt.getDate()).padStart(2,'0');
+    return `${y}-${m}-${day}`;
+  };
+
+  const { selectedDate: globalSelectedDate, setSelectedDate } = useAppointments();
+
+  useEffect(() => {
+    if (showCalendar && globalSelectedDate) {
+      setForm(f => ({ ...f, date: formatDate(globalSelectedDate) }));
+      setShowCalendar(false);
+    }
+  }, [globalSelectedDate]);
+
   return (
     <Dialog
       open={open}
@@ -159,20 +180,7 @@ export default function AppointmentDialog({ open, onClose, onSubmit }) {
                   <InputAdornment position="end" sx={{ mr: 0.5 }}>
                     <IconButton
                       size="small"
-                      onClick={() => {
-                        if (dateRef.current) {
-                          try {
-                            if (dateRef.current.showPicker) {
-                              dateRef.current.showPicker();
-                            } else {
-                              dateRef.current.focus();
-                            }
-                          } catch (error) {
-                            // Fallback to focus if showPicker fails (e.g., no user gesture)
-                            dateRef.current.focus();
-                          }
-                        }
-                      }}
+                      onClick={() => { setShowCalendar(true); if (form.date) try { setSelectedDate(new Date(form.date)); } catch(_) {} }}
                       tabIndex={-1}
                       sx={{ color: '#9ea6c4', '&:hover': { color: '#c2cae6' } }}
                     >
@@ -182,20 +190,7 @@ export default function AppointmentDialog({ open, onClose, onSubmit }) {
                 )
               }}
               sx={{ ...fieldSx, mb: 0.5, cursor: 'pointer' }}
-              onClick={() => { 
-                if (dateRef.current) { 
-                  try {
-                    if (dateRef.current.showPicker) {
-                      dateRef.current.showPicker();
-                    } else {
-                      dateRef.current.focus();
-                    }
-                  } catch (error) {
-                    // Fallback to focus if showPicker fails (e.g., no user gesture)
-                    dateRef.current.focus();
-                  }
-                } 
-              }}
+              onClick={() => { setShowCalendar(true); if (form.date) try { setSelectedDate(new Date(form.date)); } catch(_) {} }}
             />
             <Box sx={{ display: 'flex', gap: 2 }}>
               <TextField
@@ -377,6 +372,19 @@ export default function AppointmentDialog({ open, onClose, onSubmit }) {
               sx={{ ...fieldSx, mb: 0.5, cursor: 'pointer' }}
               onClick={() => { if (fromRef.current) { if (fromRef.current.showPicker) fromRef.current.showPicker(); else fromRef.current.focus(); } }}
             />
+            {/* Calendar dialog to match Appointments/HUB style */}
+            <Dialog open={showCalendar} onClose={() => setShowCalendar(false)} maxWidth="sm" fullWidth TransitionComponent={Transition} PaperProps={{ sx: paperSx }} keepMounted>
+              <DialogTitle sx={{ color: 'white', fontWeight: 700 }}>Pick a date</DialogTitle>
+              <DialogContent>
+                <Box sx={{ width: '100%', p: 1 }}>
+                  <MiniDayCalendar />
+                </Box>
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={() => setShowCalendar(false)}>Cancel</Button>
+                <Button onClick={() => { if (globalSelectedDate) setForm(f => ({ ...f, date: formatDate(globalSelectedDate) })); setShowCalendar(false); }} variant="contained" color="info">Select</Button>
+              </DialogActions>
+            </Dialog>
             <Autocomplete
               size="small"
               options={(providers?.length ? providers.map(p => p.name) : doctorsFallback)}
