@@ -18,7 +18,6 @@ import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { useAppointments } from "../context/AppointmentContext";
 import MiniDayCalendar from 'components/MiniDayCalendar';
-import { useState, useEffect } from 'react';
 
 // Smooth open/close animation for the dialog (fade + subtle scale)
 const Transition = React.forwardRef(function Transition(props, ref) {
