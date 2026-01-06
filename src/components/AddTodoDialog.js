@@ -205,15 +205,14 @@ export default function AddTodoDialog({ open, onClose, onAdd }) {
                 } catch (_) { try { dateRef.current.focus(); } catch(e){} }
               }}
             />
-            {showTime && (
+              {showTime && (
               <LineLabelTextField
                 label="Time"
                 type="time"
                 value={time}
                 inputRef={timeRef}
-                inputProps={{ style: { WebkitAppearance: 'none', MozAppearance: 'textfield', appearance: 'none' } }}
+                inputProps={{ style: { WebkitAppearance: 'none', MozAppearance: 'textfield', appearance: 'none' }, readOnly: !date }}
                 onChange={e => setTime(e.target.value)}
-                disabled={!date}
                 InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
                 InputProps={{
                   endAdornment: (
@@ -222,12 +221,11 @@ export default function AddTodoDialog({ open, onClose, onAdd }) {
                         <IconButton
                           size="small"
                           onClick={() => {
-                            if (!timeRef.current || timeRef.current.readOnly || timeRef.current.disabled) return;
+                            if (!timeRef.current) return;
                             try {
                               if (timeRef.current.showPicker) {
                                 timeRef.current.showPicker();
                               } else {
-                                // fallback: focus and try a synthetic click to invoke the UA picker where supported
                                 try { timeRef.current.focus(); timeRef.current.click(); } catch(e){ timeRef.current.focus(); }
                               }
                             } catch (err) {
@@ -243,8 +241,8 @@ export default function AddTodoDialog({ open, onClose, onAdd }) {
                     </InputAdornment>
                   )
                 }}
-                sx={{ ...fieldSx, width: 100, minWidth: 92, flex: '0 0 100px', cursor: date ? 'pointer' : 'not-allowed', opacity: date ? 1 : 0.55 }}
-                onClick={() => { if (!date) return; if (timeRef.current) { if (timeRef.current.showPicker) timeRef.current.showPicker(); else timeRef.current.focus(); } }}
+                sx={{ ...fieldSx, width: 100, minWidth: 92, flex: '0 0 100px', cursor: 'pointer', opacity: date ? 1 : 0.55 }}
+                onClick={() => { if (timeRef.current) { if (timeRef.current.showPicker) timeRef.current.showPicker(); else timeRef.current.focus(); } }}
               />
             )}
             {!showTime && (
