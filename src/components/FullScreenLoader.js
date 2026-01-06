@@ -32,6 +32,7 @@ const Track = styled("div")`
   background: rgba(255, 255, 255, 0.18);
   box-shadow: 0 2px 10px rgba(0,0,0,0.2) inset, 0 4px 10px rgba(0,0,0,0.15);
   overflow: hidden;
+  -webkit-backdrop-filter: blur(2px);
   backdrop-filter: blur(2px);
 `;
 

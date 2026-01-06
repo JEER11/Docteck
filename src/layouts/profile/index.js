@@ -116,19 +116,19 @@ import { AppointmentProvider } from "context/AppointmentContext";
 // Custom TextField with smaller, left-aligned label and compact input bubble
 function LineLabelTextField({ label, ...props }) {
   return (
-    <div style={{ position: 'relative', marginBottom: 12, width: '100%' }}>
+    <div style={{ position: 'relative', marginBottom: 1, width: '100%', paddingTop: 12, overflow: 'visible' }}>
       <span
         style={{
           position: 'absolute',
-          top: -11,
+          top: 2,
           left: 12,
           color: '#a6b1e1',
           fontWeight: 700,
           fontSize: '0.92rem',
-          zIndex: 2,
+          zIndex: 20,
           letterSpacing: 0.2,
-          padding: '0 4px',
-          background: 'none',
+          padding: '0 6px',
+          background: 'transparent',
           boxShadow: 'none',
         }}
       >{label}</span>
