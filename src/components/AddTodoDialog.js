@@ -291,16 +291,34 @@ export default function AddTodoDialog({ open, onClose, onAdd }) {
           </Box>
         </Box>
       </DialogContent>
-      {/* Calendar dialog: uses the project's MiniDayCalendar for a consistent look */}
-      <Dialog open={showCalendar} onClose={() => setShowCalendar(false)} maxWidth="sm" fullWidth TransitionComponent={Transition} PaperProps={{ sx: { ...glassPaper, p: 2, minWidth: 420 } }}>
-        <DialogTitle sx={{ px: 3, py: 2 }}>Pick a date</DialogTitle>
-        <DialogContent>
-          <Box sx={{ width: '100%' }}>
+      {/* Calendar dialog: match Caring Hub / Appointments popup styling */}
+      <Dialog
+        open={showCalendar}
+        onClose={() => setShowCalendar(false)}
+        maxWidth="sm"
+        fullWidth
+        TransitionComponent={Transition}
+        keepMounted
+        PaperProps={{ sx: {
+          background: 'linear-gradient(145deg, rgba(24,26,48,0.92) 0%, rgba(22,24,45,0.94) 70%)',
+          boxShadow: '0 8px 28px -4px rgba(0,0,0,0.55), 0 4px 12px -2px rgba(0,0,0,0.4)',
+          border: '1px solid rgba(255,255,255,0.08)',
+          borderRadius: 5,
+          color: 'white',
+          backdropFilter: 'blur(14px)',
+          WebkitBackdropFilter: 'blur(14px)',
+          p: 3,
+          minWidth: 520
+        } }}
+      >
+        <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 20, pb: 1.5 }}>Pick a date</DialogTitle>
+        <DialogContent sx={{ p: 0, px: 2, pt: 1 }}>
+          <Box sx={{ width: '100%', p: 1 }}>
             <MiniDayCalendar />
           </Box>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setShowCalendar(false)} sx={{ textTransform: 'none' }}>Cancel</Button>
+        <DialogActions sx={{ px: 2, pb: 2 }}>
+          <Button onClick={() => setShowCalendar(false)} sx={{ textTransform: 'none', color: '#bfc6e0' }}>Cancel</Button>
           <Button onClick={() => {
             if (globalSelectedDate) setDate(formatDate(globalSelectedDate));
             setShowCalendar(false);
