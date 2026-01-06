@@ -116,9 +116,9 @@ import { AppointmentProvider } from "context/AppointmentContext";
 // Custom TextField with smaller, left-aligned label and compact input bubble
 function LineLabelTextField({ label, ...props }) {
   return (
-    // Named export for use in other modules
-    export { LineLabelTextField };
     <div style={{ position: 'relative', marginBottom: 12, width: '100%' }}>
+      // Named export for use in other modules
+      export { LineLabelTextField };
       <span
         style={{
           position: 'absolute',
