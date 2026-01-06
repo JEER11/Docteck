@@ -5,6 +5,8 @@ import {
 } from '@mui/material';
 import { LineLabelTextField } from 'layouts/profile';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import MiniDayCalendar from 'components/MiniDayCalendar';
+import { useAppointments } from 'context/AppointmentContext';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import NotesIcon from '@mui/icons-material/Notes';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
@@ -30,6 +32,10 @@ export default function AddTodoDialog({ open, onClose, onAdd }) {
 
   const dateRef = useRef(null);
   const timeRef = useRef(null);
+  const [showCalendar, setShowCalendar] = useState(false);
+
+  // Use global appointment calendar selection to pick a date in the popup
+  const { selectedDate: globalSelectedDate, setSelectedDate } = useAppointments();
 
   const reset = () => { setType('Note'); setLabel(''); setDesc(''); setDate(''); setTime(''); setShowTime(false); };
 
@@ -91,6 +97,23 @@ export default function AddTodoDialog({ open, onClose, onAdd }) {
     p: 0,
     overflow: 'hidden'
   };
+
+  const formatDate = (d) => {
+    if (!d) return '';
+    const dt = d instanceof Date ? d : new Date(d);
+    const y = dt.getFullYear();
+    const m = String(dt.getMonth()+1).padStart(2,'0');
+    const day = String(dt.getDate()).padStart(2,'0');
+    return `${y}-${m}-${day}`;
+  };
+
+  // If user selects a date from the global MiniDayCalendar, update local date and close dialog
+  useEffect(() => {
+    if (showCalendar && globalSelectedDate) {
+      setDate(formatDate(globalSelectedDate));
+      setShowCalendar(false);
+    }
+  }, [globalSelectedDate]);
 
   const fieldSx = {
     width: '100%',
@@ -179,7 +202,7 @@ export default function AddTodoDialog({ open, onClose, onAdd }) {
             sx={{ ...fieldSx, '& .MuiInputBase-input': { py: 1.1 } }}
           />
           <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-            <LineLabelTextField
+              <LineLabelTextField
               label="Date"
               type="date"
               value={date}
@@ -217,12 +240,7 @@ export default function AddTodoDialog({ open, onClose, onAdd }) {
                 )
               }}
               sx={{ ...fieldSx, flex: 1, cursor: 'pointer' }}
-              onClick={() => {
-                if (!dateRef.current || dateRef.current.readOnly || dateRef.current.disabled) return;
-                try {
-                  if (dateRef.current.showPicker) dateRef.current.showPicker(); else dateRef.current.focus();
-                } catch (_) { try { dateRef.current.focus(); } catch(e){} }
-              }}
+              onClick={(e) => { e.preventDefault(); setShowCalendar(true); }}
             />
               {showTime && (
               <LineLabelTextField
@@ -273,6 +291,22 @@ export default function AddTodoDialog({ open, onClose, onAdd }) {
           </Box>
         </Box>
       </DialogContent>
+      {/* Calendar dialog: uses the project's MiniDayCalendar for a consistent look */}
+      <Dialog open={showCalendar} onClose={() => setShowCalendar(false)} maxWidth="sm" fullWidth TransitionComponent={Transition} PaperProps={{ sx: { ...glassPaper, p: 2, minWidth: 420 } }}>
+        <DialogTitle sx={{ px: 3, py: 2 }}>Pick a date</DialogTitle>
+        <DialogContent>
+          <Box sx={{ width: '100%' }}>
+            <MiniDayCalendar />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowCalendar(false)} sx={{ textTransform: 'none' }}>Cancel</Button>
+          <Button onClick={() => {
+            if (globalSelectedDate) setDate(formatDate(globalSelectedDate));
+            setShowCalendar(false);
+          }} variant="contained" color="info">Select</Button>
+        </DialogActions>
+      </Dialog>
       <DialogActions sx={{ px: 3, py: 1.75, borderTop: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
         <Box sx={{ flex: 1 }} />
         <Box>
