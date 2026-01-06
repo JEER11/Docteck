@@ -118,18 +118,26 @@ export default function AddTodoDialog({ open, onClose, onAdd }) {
   const fieldSx = {
     width: '100%',
     ml: 0,
-    background: '#181a2f',
-    borderRadius: 2,
-    '& .MuiOutlinedInput-notchedOutline': { border: '1px solid #272c4c' },
-    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#343d68' },
-    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#6a6afc', boxShadow: '0 0 0 1px #6a6afc40' },
-    '& .MuiInputBase-input': { color: '#e7e9f3', fontSize: 14, py: 1.3, background: 'transparent' },
-    '& .MuiInputBase-root': { alignItems: 'center' },
+    borderRadius: 1.5,
+    '& .MuiOutlinedInput-root': {
+      background: '#0a0c1a',
+      '&:hover': {
+        background: '#0d0f1f',
+      },
+    },
+    '& .MuiOutlinedInput-notchedOutline': { border: '1px solid rgba(255, 255, 255, 0.06)' },
+    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255, 255, 255, 0.12)' },
+    '& .Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(106, 106, 252, 0.4)' },
+    '& .MuiInputBase-input': { color: '#e7e9f3', fontSize: 14, py: 1.35, background: 'transparent' },
+    '& .MuiSelect-select': { background: 'transparent' },
+    '& .MuiInputLabel-root': {
+      color: '#6b7199',
+      '&.Mui-focused': { color: '#6b7199' },
+    },
     minHeight: 54,
+    '& input[type="date"]::-webkit-calendar-picker-indicator': { display: 'none' },
+    '& input[type="time"]::-webkit-calendar-picker-indicator': { display: 'none' },
     transition: 'border-color .18s, box-shadow .18s, background .25s',
-    // Hide native calendar/time indicators across browsers (use !important for stubborn UAs)
-    '&& input[type="date"]::-webkit-calendar-picker-indicator, && input[type="time"]::-webkit-calendar-picker-indicator': { display: 'none !important', WebkitAppearance: 'none', appearance: 'none' },
-    '&& .MuiInputBase-input::-webkit-calendar-picker-indicator, && .MuiInputBase-input::-webkit-clear-button': { display: 'none !important' },
   };
 
   return (

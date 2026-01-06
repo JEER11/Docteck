@@ -6,6 +6,7 @@ import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import TextField from "@mui/material/TextField";
+import { LineLabelTextField } from 'layouts/profile';
 import Button from "@mui/material/Button";
 import Jelly1 from "assets/images/Jelly1.jpg";
 import Jelly2 from "assets/images/Jelly2.jpg";
@@ -19,6 +20,7 @@ import VuiTypography from "components/VuiTypography";
 import PropTypes from "prop-types";
 import { FiEdit2, FiPlus } from "react-icons/fi";
 import React, { useEffect, useState } from "react";
+import { motion } from 'framer-motion';
 import PhotoCamera from "@mui/icons-material/PhotoCamera";
 import UploadIcon from "@mui/icons-material/CloudUpload";
 import { uploadUserFile, deleteUserFile } from "lib/storage";
@@ -274,17 +276,17 @@ function MasterCard({ insuranceName, memberName, memberId, monthlyBill, onAdd, o
         onClose={handleClose}
         maxWidth="sm"
         fullWidth
-        PaperProps={{ sx: { background: 'rgba(34, 40, 74, 0.65)', boxShadow: 24, borderRadius: 4, color: 'white', backdropFilter: 'blur(10px)', p: 4, minWidth: 400, maxWidth: 600 } }}
+        PaperProps={{ sx: { background: 'rgba(34, 40, 74, 0.65)', boxShadow: 24, borderRadius: 4, color: 'white', backdropFilter: 'blur(10px)', p: 4, pt: 6, minWidth: 400, maxWidth: 600, overflow: 'visible', maxHeight: '80vh' } }}
       >
-        <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 22, pb: 2 }}>Add Insurance</DialogTitle>
-        <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 1, background: 'transparent', color: 'white', px: 2, minWidth: 400 }}>
-          <TextField label="Insurance Name" name="insuranceName" value={form.insuranceName} onChange={handleFormChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mt: 1, mb: 1 }} inputProps={{ list: 'insurance-options' }} />
+        <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 22, pb: 3 }}>Add Insurance</DialogTitle>
+        <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 0.9, mt: 0, background: 'transparent', color: 'white', px: 2, minWidth: 400 }}>
+          <LineLabelTextField label="Insurance Name" name="insuranceName" value={form.insuranceName} onChange={handleFormChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mt: 0.5, mb: 1 }} inputProps={{ list: 'insurance-options' }} />
           <datalist id="insurance-options">
             {INSURANCE_OPTIONS.map((name, idx) => (<option key={idx} value={name} />))}
           </datalist>
-          <TextField label="Member Name" name="memberName" value={form.memberName} onChange={handleFormChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 1 }} />
-          <TextField label="Member ID" name="memberId" value={form.memberId} onChange={handleFormChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 1 }} />
-          <TextField label="Monthly Bill ($)" name="monthlyBill" value={form.monthlyBill} onChange={handleFormChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 1 }} />
+          <LineLabelTextField label="Member Name" name="memberName" value={form.memberName} onChange={handleFormChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 1 }} />
+          <LineLabelTextField label="Member ID" name="memberId" value={form.memberId} onChange={handleFormChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 1 }} />
+          <LineLabelTextField label="Monthly Bill ($)" name="monthlyBill" value={form.monthlyBill} onChange={handleFormChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 1 }} />
           {/* Background chooser */}
           <VuiTypography variant="button" color="white" sx={{ opacity: 0.8, mt: 1 }}>Background</VuiTypography>
           <VuiBox sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
@@ -321,7 +323,7 @@ function MasterCard({ insuranceName, memberName, memberId, monthlyBill, onAdd, o
             )}
           </VuiBox>
         </DialogContent>
-        <DialogActions sx={{ background: 'transparent', px: 2, pb: 2, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+        <DialogActions sx={{ background: 'transparent !important', px: 2, pb: 1, pt: 1, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', boxShadow: 'none', borderTop: 'none', minHeight: 40 }}>
           <Button onClick={handleClose} sx={{ color: '#bfc6e0' }}>Cancel</Button>
           <Button onClick={handleAddSubmit} variant="contained" color="info" disabled={!form.insuranceName || !form.memberName || !form.memberId} sx={{ borderRadius: 2, px: 3, fontWeight: 600 }}>Add</Button>
         </DialogActions>
@@ -332,17 +334,17 @@ function MasterCard({ insuranceName, memberName, memberId, monthlyBill, onAdd, o
         onClose={handleClose}
         maxWidth="sm"
         fullWidth
-        PaperProps={{ sx: { background: 'rgba(34, 40, 74, 0.65)', boxShadow: 24, borderRadius: 4, color: 'white', backdropFilter: 'blur(10px)', p: 4, minWidth: 400, maxWidth: 600 } }}
+        PaperProps={{ sx: { background: 'rgba(34, 40, 74, 0.65)', boxShadow: 24, borderRadius: 4, color: 'white', backdropFilter: 'blur(10px)', p: 4, pt: 6, minWidth: 400, maxWidth: 600, overflow: 'visible', maxHeight: '80vh' } }}
       >
-        <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 22, pb: 2 }}>Edit Insurance</DialogTitle>
-        <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 1, background: 'transparent', color: 'white', px: 2, minWidth: 400 }}>
-          <TextField label="Insurance Name" name="insuranceName" value={form.insuranceName} onChange={handleFormChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mt: 1, mb: 1 }} inputProps={{ list: 'insurance-options' }} />
+        <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 22, pb: 3 }}>Edit Insurance</DialogTitle>
+        <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 0.9, mt: 0, background: 'transparent', color: 'white', px: 2, minWidth: 400 }}>
+          <LineLabelTextField label="Insurance Name" name="insuranceName" value={form.insuranceName} onChange={handleFormChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mt: 0.5, mb: 1 }} inputProps={{ list: 'insurance-options' }} />
           <datalist id="insurance-options">
             {INSURANCE_OPTIONS.map((name, idx) => (<option key={idx} value={name} />))}
           </datalist>
-          <TextField label="Member Name" name="memberName" value={form.memberName} onChange={handleFormChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 1 }} />
-          <TextField label="Member ID" name="memberId" value={form.memberId} onChange={handleFormChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 1 }} />
-          <TextField label="Monthly Bill ($)" name="monthlyBill" value={form.monthlyBill} onChange={handleFormChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 1 }} />
+          <LineLabelTextField label="Member Name" name="memberName" value={form.memberName} onChange={handleFormChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 1 }} />
+          <LineLabelTextField label="Member ID" name="memberId" value={form.memberId} onChange={handleFormChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 1 }} />
+          <LineLabelTextField label="Monthly Bill ($)" name="monthlyBill" value={form.monthlyBill} onChange={handleFormChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx, mb: 1 }} />
           {/* Background chooser */}
           <VuiTypography variant="button" color="white" sx={{ opacity: 0.8, mt: 1 }}>Background</VuiTypography>
           <VuiBox sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
@@ -379,7 +381,7 @@ function MasterCard({ insuranceName, memberName, memberId, monthlyBill, onAdd, o
             )}
           </VuiBox>
         </DialogContent>
-        <DialogActions sx={{ background: 'transparent', px: 2, pb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <DialogActions sx={{ background: 'transparent !important', px: 2, pb: 1, pt: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: 'none', borderTop: 'none', minHeight: 40 }}>
           <Button onClick={handleDelete} color="error" variant="outlined" sx={{ borderColor: '#e57373', color: '#e57373', fontWeight: 600 }}>Delete</Button>
           <div>
             <Button onClick={handleClose} sx={{ color: '#bfc6e0', mr: 1 }}>Cancel</Button>
@@ -421,6 +423,10 @@ MasterCard.propTypes = {
 
 function MasterCardStack({ cards, setCards, onAdd, onEdit, onDelete }) {
   const PLACEHOLDER = { id: "placeholder", insuranceName: "Insurance Card", memberName: "Member Name", memberId: "ID123456", monthlyBill: "0.00" };
+  const EXAMPLE_INSURANCE_CARDS = [
+    { id: "ex-ins-1", insuranceName: "Blue Cross Blue Shield", memberName: "Alice Smith", memberId: "BC123456", monthlyBill: "120.00", backgroundSrc: Jelly2 },
+    { id: "ex-ins-2", insuranceName: "UnitedHealthcare", memberName: "Bob Johnson", memberId: "UH987654", monthlyBill: "89.99", backgroundSrc: Watercard },
+  ];
   const [activeIndex, setActiveIndex] = useState(0);
   // If setter not provided, load from Firestore live; start with a placeholder so UI isn't empty
   const [liveCards, setLiveCards] = useState([PLACEHOLDER]);
@@ -431,16 +437,27 @@ function MasterCardStack({ cards, setCards, onAdd, onEdit, onDelete }) {
   const containerRef = React.useRef(null);
   const [fanOut, setFanOut] = useState(false); // temporarily increase peek spacing after add
   const [hoveredIndex, setHoveredIndex] = useState(null); // for slide-down on hover (non-top)
+  const [animatingToTop, setAnimatingToTop] = useState(null);
+  const animTimeoutRef = React.useRef(null);
+
+  // Animation timing for hover / bring-to-top (tweak for a smooth, modern feel)
+  const ANIM_DURATION = 380; // ms
+  const ANIM_EASE = 'cubic-bezier(0.2,0.9,0.2,1)';
+
+  // cleanup on unmount
+  useEffect(() => {
+    return () => { if (animTimeoutRef.current) clearTimeout(animTimeoutRef.current); };
+  }, []);
   const triggerFanOut = () => { setFanOut(true); setTimeout(() => setFanOut(false), 1200); };
   // Maintain local visual order for live cards so stream updates don't reset it
   const [orderIds, setOrderIds] = useState([]);
   useEffect(() => {
     // If Firebase not configured, show placeholder and stop
-  if (!auth) { const cachedAny = getCachedInsuranceCards(undefined); setLiveCards((cachedAny?.length ? cachedAny : [PLACEHOLDER])); return; }
+  if (!auth) { const cachedAny = getCachedInsuranceCards(undefined); setLiveCards((cachedAny?.length ? cachedAny : EXAMPLE_INSURANCE_CARDS)); return; }
     // Wait until auth state is known to avoid missing initial subscription
-  if (!isAuthReady) { const cachedAny = getCachedInsuranceCards(undefined); setLiveCards((cachedAny?.length ? cachedAny : [PLACEHOLDER])); return; }
+  if (!isAuthReady) { const cachedAny = getCachedInsuranceCards(undefined); setLiveCards((cachedAny?.length ? cachedAny : EXAMPLE_INSURANCE_CARDS)); return; }
     // If no user, still show placeholder, but don't subscribe
-  if (!user) { const cachedAny = getCachedInsuranceCards(undefined); setLiveCards((cachedAny?.length ? cachedAny : [PLACEHOLDER])); return; }
+  if (!user) { const cachedAny = getCachedInsuranceCards(undefined); setLiveCards((cachedAny?.length ? cachedAny : EXAMPLE_INSURANCE_CARDS)); return; }
     // Kick off a fast one-time fetch so UI shows quickly, then keep live updates
     // Try cached cards first for instant UI when network is blocked
     const cached = getCachedInsuranceCards(user.uid);
@@ -450,15 +467,15 @@ function MasterCardStack({ cards, setCards, onAdd, onEdit, onDelete }) {
     }).catch(() => { /* keep cached/placeholder */ });
     const unsub = onInsuranceCards({ uid: user.uid, onError: () => {
       const latest = getCachedInsuranceCards(user.uid);
-      setLiveCards((prev) => (prev?.length ? prev : (latest?.length ? latest : [PLACEHOLDER])));
+      setLiveCards((prev) => (prev?.length ? prev : (latest?.length ? latest : EXAMPLE_INSURANCE_CARDS)));
     } }, (rows) => {
-      // If stream returns empty, still show a placeholder so UI doesn't collapse
+      // If stream returns empty, still show example cards so UI doesn't collapse
       const latest = getCachedInsuranceCards(user.uid);
-      setLiveCards(rows?.length ? rows : (latest?.length ? latest : [PLACEHOLDER]));
+      setLiveCards(rows?.length ? rows : (latest?.length ? latest : EXAMPLE_INSURANCE_CARDS));
     });
     return () => { if (typeof unsub === 'function') unsub(); };
   }, [isAuthReady, user?.uid]);
-  const viewCards = usingLive ? liveCards : (cards?.length ? cards : [{ id: "placeholder", insuranceName: "Insurance Card", memberName: "Member Name", memberId: "ID123456", monthlyBill: "0.00" }]);
+  const viewCards = usingLive ? liveCards : (cards?.length ? cards : EXAMPLE_INSURANCE_CARDS);
 
   // Sync orderIds with incoming live cards (keep previous order, add new ids to end)
   useEffect(() => {
@@ -573,6 +590,25 @@ function MasterCardStack({ cards, setCards, onAdd, onEdit, onDelete }) {
     }
   };
 
+  // Start a smooth animation that visually moves the clicked card to top,
+  // then reorder the underlying list after the transition completes to avoid layout jank.
+  const startBringToTopAnimation = (idx) => {
+    const currentDisplay = displayCards || [];
+    const item = currentDisplay[idx];
+    if (!item) return;
+    // If already animating, ignore
+    if (animatingToTop) return;
+    setAnimatingToTop(item.id || idx);
+    // clear any previous timeout
+    if (animTimeoutRef.current) clearTimeout(animTimeoutRef.current);
+    // after transition duration, perform actual reorder
+    animTimeoutRef.current = setTimeout(() => {
+      bringCardToTop(idx);
+      setAnimatingToTop(null);
+      animTimeoutRef.current = null;
+    }, ANIM_DURATION);
+  };
+
   // Handler to edit the active card
   const handleEdit = async (form) => {
     if (usingLive) {
@@ -652,8 +688,10 @@ function MasterCardStack({ cards, setCards, onAdd, onEdit, onDelete }) {
       style={{
         position: 'relative',
         width: '100%',
-        overflow: 'hidden',
-        minHeight: CARD_HEIGHT + STEP * Math.min(Math.max((usingLive ? (displayCards?.length || 0) : viewCards.length) - 1, 0), MAX_PEEKS),
+        // allow cards to move/peek without being clipped
+        overflow: 'visible',
+        // increase minHeight slightly so full card reveals are visible on hover
+        minHeight: CARD_HEIGHT + STEP * Math.min(Math.max((usingLive ? (displayCards?.length || 0) : viewCards.length) - 1, 0), MAX_PEEKS) + 8,
         borderRadius: 18,
       }}
     >
@@ -661,14 +699,23 @@ function MasterCardStack({ cards, setCards, onAdd, onEdit, onDelete }) {
         // Depth is index in array; top card is 0
         const depth = Math.min(idx, MAX_PEEKS);
         const isActive = idx === 0;
+        const isAnimating = animatingToTop === (card.id || idx);
         // Visual scaling/shading for non-top cards
-        const dim = isActive ? 1 : [1, 0.92, 0.84, 0.76][depth] || 0.76;
-        const sat = isActive ? 1 : [1, 0.94, 0.88, 0.82][depth] || 0.82;
+        const dim = (isActive || isAnimating) ? 1 : [1, 0.92, 0.84, 0.76][depth] || 0.76;
+        const sat = (isActive || isAnimating) ? 1 : [1, 0.94, 0.88, 0.82][depth] || 0.82;
         const scale = isActive ? 1 : [1, 0.997, 0.994, 0.991][depth] || 0.991;
         const boxShadow = isActive
           ? '0 10px 24px rgba(15,22,60,0.35)'
           : ['0 8px 18px rgba(5,8,28,0.55)', '0 7px 16px rgba(5,8,28,0.6)', '0 6px 14px rgba(5,8,28,0.62)'][depth - 1] ||
             '0 6px 14px rgba(5,8,28,0.6)';
+        // Ensure animating card is fully opaque so underlying content doesn't show through
+        const computedOpacity = (isActive || isAnimating) ? 1 : 0.96 - depth * 0.05;
+        // Compute stacked offsets (use numbers for motion animate)
+        const base = (isActive || isAnimating) ? 0 : (STEP * depth);
+        const hoverOffset = (hoveredIndex === idx && !isActive && !isAnimating) ? 16 : 0;
+        const targetY = isAnimating ? -8 : base + hoverOffset;
+        const targetScale = isAnimating ? 1.02 : scale;
+        const targetBoxShadow = isAnimating ? '0 20px 44px rgba(15,22,60,0.45)' : boxShadow;
         // Gradient overlays for lower cards
         const overlayTopA = 0.1 + depth * 0.06;
         const overlayBottomA = 0.28 + depth * 0.14;
@@ -678,34 +725,30 @@ function MasterCardStack({ cards, setCards, onAdd, onEdit, onDelete }) {
         const clipTop = Math.max(CARD_HEIGHT - PEEK_OFFSET, 0);
 
         return (
-          <div
+          <motion.div
             key={card.id || idx}
             style={{
               position: 'absolute',
-              top: (isActive ? 0 : STEP * depth) + (hoveredIndex === idx && !isActive ? 8 : 0),
               left: 0,
               width: '100%',
-              zIndex: isActive
-                ? (usingLive ? displayCards.length : viewCards.length) + 3
-                : (usingLive ? displayCards.length : viewCards.length) + 1 - idx,
-              filter: isActive ? undefined : `brightness(${dim}) saturate(${sat})`,
-              opacity: isActive ? 1 : 0.96 - depth * 0.05,
-              cursor: isActive ? 'default' : 'pointer',
-              transform: `scale(${scale})`,
-              transformOrigin: 'top center',
-              boxShadow,
+              zIndex: (isAnimating)
+                ? (usingLive ? displayCards.length : viewCards.length) + 10
+                : (isActive
+                  ? (usingLive ? displayCards.length : viewCards.length) + 3
+                  : (usingLive ? displayCards.length : viewCards.length) + 1 - idx),
+              filter: (isActive || isAnimating) ? undefined : `brightness(${dim}) saturate(${sat})`,
+              opacity: computedOpacity,
+              cursor: isActive ? 'default' : (animatingToTop ? 'default' : 'pointer'),
               borderRadius: 18,
-              transition:
-                'top 260ms cubic-bezier(0.25,0.8,0.25,1), opacity 220ms ease, filter 220ms ease, transform 260ms cubic-bezier(0.25,0.8,0.25,1), box-shadow 260ms ease',
-              willChange: 'transform, filter, top',
-              pointerEvents: 'auto',
-              clipPath: isActive ? undefined : `inset(${clipTop}px 0 0 0)`,
-              WebkitClipPath: isActive ? undefined : `inset(${clipTop}px 0 0 0)`,
+              pointerEvents: (animatingToTop && animatingToTop !== (card.id || idx)) ? 'none' : 'auto',
+              // no clipPath: show the full card so hover and bring-to-top reveal the actual card
             }}
             data-ins-card
-            onMouseEnter={() => setHoveredIndex(idx)}
-            onMouseLeave={() => setHoveredIndex((h) => (h === idx ? null : h))}
-            onClick={() => bringCardToTop(idx)}
+            onMouseEnter={() => { if (!animatingToTop) setHoveredIndex(idx); }}
+            onMouseLeave={() => { if (!animatingToTop) setHoveredIndex((h) => (h === idx ? null : h)); }}
+            onClick={() => { if (!isActive && !animatingToTop) startBringToTopAnimation(idx); }}
+            animate={{ y: targetY, scale: targetScale, boxShadow: targetBoxShadow }}
+            transition={{ duration: ANIM_DURATION / 1000, ease: [0.2, 0.9, 0.2, 1] }}
           >
             <MasterCard
               {...card}
@@ -765,7 +808,7 @@ function MasterCardStack({ cards, setCards, onAdd, onEdit, onDelete }) {
                 }}
               />
             )}
-          </div>
+          </motion.div>
         );
       })}
   {realCount > 0 && (

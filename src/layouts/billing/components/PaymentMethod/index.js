@@ -6,6 +6,7 @@ import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import TextField from "@mui/material/TextField";
+import { LineLabelTextField } from 'layouts/profile';
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import Alert from "@mui/material/Alert";
@@ -89,13 +90,13 @@ function PaymentMethodForm({ billingName, setBillingName, setError, saving, setS
 
   return (
     <>
-      <TextField label="Name on Card" value={billingName} onChange={(e)=>setBillingName(e.target.value)} fullWidth InputLabelProps={{ shrink: true, style: { color: "#6b7199" } }} sx={{ ...fieldSx, mt: 1, mb: 1 }} />
-      <div style={{ background: "#181a2f", borderRadius: 12, padding: 12, border: "1px solid #23244a" }}>
+      <LineLabelTextField label="Name on Card" value={billingName} onChange={(e)=>setBillingName(e.target.value)} fullWidth sx={{ ...fieldSx, mt: 0.5, mb: 1 }} />
+      <div style={{ background: '#181a2f', borderRadius: 8, padding: 10, border: '1px solid #23244a' }}>
         <CardElement options={{ style: { base: { fontSize: '16px', color: '#e7e9f3', '::placeholder': { color: '#8a8fb2' } } } }} />
       </div>
-      <DialogActions sx={{ background: "transparent", px: 0, pb: 0, pt: 2, display: "flex", justifyContent: "flex-end", alignItems: "center" }}>
-        <Button onClick={handleClose} sx={{ color: "#bfc6e0" }}>Cancel</Button>
-        <Button onClick={handleAddCard} variant="contained" color="info" disabled={!stripeReady || saving} sx={{ borderRadius: 2, px: 3, fontWeight: 600 }}>
+      <DialogActions sx={{ background: 'transparent !important', px: 0, pb: 0, pt: 1, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', boxShadow: 'none', borderTop: 'none', minHeight: 40 }}>
+        <Button onClick={handleClose} sx={{ color: '#bfc6e0', mr: 1, textTransform: 'none', fontWeight: 500 }}>Cancel</Button>
+        <Button onClick={handleAddCard} variant="contained" color="info" disabled={!stripeReady || saving} sx={{ borderRadius: 2.5, px: 3.5, fontWeight: 600, boxShadow: '0 4px 14px -2px rgba(76,119,255,0.45)', background: 'rgba(44, 50, 90, 0.85)', textTransform: 'none' }}>
           {saving ? <CircularProgress size={18} sx={{ color: 'white' }} /> : 'Add Card'}
         </Button>
       </DialogActions>
@@ -119,8 +120,16 @@ function PaymentMethodShell({ stripePromise, ensureStripe }) {
     try {
       const raw = localStorage.getItem('visualPaymentMethods') || '[]';
       const arr = JSON.parse(raw);
-      return Array.isArray(arr) ? arr : [];
-    } catch (_) { return []; }
+      if (Array.isArray(arr) && arr.length) return arr;
+      // Seed two example visual cards when none are present
+      return [
+        { id: 'v-ex-1', type: 'visual', brand: 'visa', bankName: 'City Bank', billingName: 'John Doe', last4: '4242', exp_month: 12, exp_year: 2026 },
+        { id: 'v-ex-2', type: 'visual', brand: 'mastercard', bankName: 'First National', billingName: 'Jane Doe', last4: '5555', exp_month: 11, exp_year: 2025 },
+      ];
+    } catch (_) { return [
+      { id: 'v-ex-1', type: 'visual', brand: 'visa', bankName: 'City Bank', billingName: 'John Doe', last4: '4242', exp_month: 12, exp_year: 2026 },
+      { id: 'v-ex-2', type: 'visual', brand: 'mastercard', bankName: 'First National', billingName: 'Jane Doe', last4: '5555', exp_month: 11, exp_year: 2025 },
+    ]; }
   });
   const [mode, setMode] = useState('stripe'); // 'stripe' | 'visual'
   const [hoveredId, setHoveredId] = useState(null);
@@ -141,10 +150,11 @@ function PaymentMethodShell({ stripePromise, ensureStripe }) {
     setNetwork("visa");
     setLast4("");
     setExpMonth("");
-    setExpYear("");
-    setMode('stripe');
+    setError("");
+    setSaving(false);
     setOpen(true);
   };
+
   const handleClose = () => {
     setOpen(false);
     setError("");
@@ -369,41 +379,41 @@ function PaymentMethodShell({ stripePromise, ensureStripe }) {
         </Grid>
       </VuiBox>
       {/* Edit dialog for visual cards or metadata */}
-      <Dialog open={editOpen} onClose={() => setEditOpen(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { background: 'rgba(34, 40, 74, 0.65)', boxShadow: 24, borderRadius: 4, color: 'white', backdropFilter: 'blur(10px)', p: 4 } }}>
+      <Dialog open={editOpen} onClose={() => setEditOpen(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { background: 'rgba(34, 40, 74, 0.65)', boxShadow: 24, borderRadius: 4, color: 'white', backdropFilter: 'blur(10px)', p: 4, maxHeight: '80vh', overflow: 'auto' } }}>
         <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 20 }}>Edit Card</DialogTitle>
-        <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 1 }}>
-          <TextField label="Name on Card" value={billingName} onChange={(e)=>setBillingName(e.target.value)} fullWidth InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }} sx={{ ...fieldSx }} />
-          <TextField label="Bank Name (optional)" value={bankName} onChange={(e)=>setBankName(e.target.value)} fullWidth InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }} sx={{ ...fieldSx }} />
-          <TextField label="Network" value={network} onChange={(e)=>setNetwork(e.target.value)} select fullWidth InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }} sx={{ ...fieldSx, '& .MuiSelect-select': { color: '#e7e9f3', py: 1 } }}>
+        <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 1.0, mt: 0.5 }}>
+          <LineLabelTextField label="Name on Card" value={billingName} onChange={(e)=>setBillingName(e.target.value)} fullWidth sx={{ ...fieldSx }} />
+          <LineLabelTextField label="Bank Name (optional)" value={bankName} onChange={(e)=>setBankName(e.target.value)} fullWidth sx={{ ...fieldSx }} />
+          <LineLabelTextField label="Network" value={network} onChange={(e)=>setNetwork(e.target.value)} select fullWidth sx={{ ...fieldSx, '& .MuiSelect-select': { color: '#e7e9f3', py: 1 } }}>
             <MenuItem value="visa">Visa</MenuItem>
             <MenuItem value="mastercard">Mastercard</MenuItem>
             <MenuItem value="amex">American Express</MenuItem>
             <MenuItem value="discover">Discover</MenuItem>
-          </TextField>
+          </LineLabelTextField>
           <Grid container spacing={1}>
             <Grid item xs={6}>
-              <TextField label="Last 4 digits" value={last4} onChange={(e)=>setLast4(e.target.value.replace(/\D/g,'').slice(0,4))} inputProps={{ maxLength: 4 }} fullWidth InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }} sx={{ ...fieldSx }} />
+              <LineLabelTextField label="Last 4 digits" value={last4} onChange={(e)=>setLast4(e.target.value.replace(/\D/g,'').slice(0,4))} inputProps={{ maxLength: 4 }} fullWidth sx={{ ...fieldSx }} />
             </Grid>
             <Grid item xs={3}>
-              <TextField label="MM" value={expMonth} onChange={(e)=>setExpMonth(e.target.value.replace(/\D/g,'').slice(0,2))} inputProps={{ maxLength: 2 }} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx }} />
+              <LineLabelTextField label="MM" value={expMonth} onChange={(e)=>setExpMonth(e.target.value.replace(/\D/g,'').slice(0,2))} inputProps={{ maxLength: 2 }} fullWidth sx={{ ...fieldSx }} />
             </Grid>
             <Grid item xs={3}>
-              <TextField label="YY" value={expYear} onChange={(e)=>setExpYear(e.target.value.replace(/\D/g,'').slice(0,4))} inputProps={{ maxLength: 4 }} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx }} />
+              <LineLabelTextField label="YY" value={expYear} onChange={(e)=>setExpYear(e.target.value.replace(/\D/g,'').slice(0,4))} inputProps={{ maxLength: 4 }} fullWidth sx={{ ...fieldSx }} />
             </Grid>
           </Grid>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={()=>setEditOpen(false)} sx={{ color: '#bfc6e0' }}>Cancel</Button>
-          <Button onClick={handleSaveEdit} variant="contained" color="info" disabled={saving} sx={{ borderRadius: 2, px: 3, fontWeight: 600 }}>{saving ? <CircularProgress size={18} sx={{ color: 'white' }} /> : 'Save'}</Button>
+        <DialogActions sx={{ background: 'transparent !important', px: 2, pb: 1, pt: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: 'none', borderTop: 'none', minHeight: 40 }}>
+          <Button onClick={()=>setEditOpen(false)} sx={{ color: '#bfc6e0', mr: 1, textTransform: 'none', fontWeight: 500 }}>Cancel</Button>
+          <Button onClick={handleSaveEdit} variant="contained" color="info" disabled={saving} sx={{ borderRadius: 2.5, px: 3.5, fontWeight: 600, boxShadow: '0 4px 14px -2px rgba(76,119,255,0.45)', background: 'rgba(44, 50, 90, 0.85)', textTransform: 'none' }}>{saving ? <CircularProgress size={18} sx={{ color: 'white' }} /> : 'Save'}</Button>
         </DialogActions>
       </Dialog>
 
       {/* Delete confirmation */}
       <Dialog open={Boolean(deleteConfirm)} onClose={() => setDeleteConfirm(null)} maxWidth="xs" fullWidth PaperProps={{ sx: { background: 'rgba(34, 40, 74, 0.9)', color: 'white', p: 2 } }}>
         <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 18 }}>Remove payment method?</DialogTitle>
-        <DialogActions>
-          <Button onClick={()=>setDeleteConfirm(null)} sx={{ color: '#bfc6e0' }}>Cancel</Button>
-          <Button onClick={handleDelete} color="error" variant="contained" disabled={saving}>{saving ? <CircularProgress size={18} sx={{ color: 'white' }} /> : 'Delete'}</Button>
+        <DialogActions sx={{ px: 2, pb: 2, pt: 1, display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+          <Button onClick={()=>setDeleteConfirm(null)} sx={{ color: '#bfc6e0', mr: 1, textTransform: 'none', fontWeight: 500 }}>Cancel</Button>
+          <Button onClick={handleDelete} color="error" variant="contained" disabled={saving} sx={{ borderRadius: 2.5, px: 3.5, fontWeight: 600 }}>{saving ? <CircularProgress size={18} sx={{ color: 'white' }} /> : 'Delete'}</Button>
         </DialogActions>
       </Dialog>
       <Dialog
@@ -419,12 +429,15 @@ function PaymentMethodShell({ stripePromise, ensureStripe }) {
             color: 'white',
             backdropFilter: 'blur(10px)',
             p: 4,
+            pt: 6,
             minWidth: 400,
             maxWidth: 600,
+            overflow: 'visible',
+            maxHeight: '80vh'
           }
         }}
       >
-        <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 22, pb: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 22, pb: 3, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span>Add Payment Method</span>
           <Button
             size="small"
@@ -446,7 +459,7 @@ function PaymentMethodShell({ stripePromise, ensureStripe }) {
             {mode === 'stripe' ? 'Add Visual Card' : 'Add Real Card'}
           </Button>
         </DialogTitle>
-        <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 1, background: 'transparent', color: 'white', px: 2, minWidth: 400 }}>
+        <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 1.0, mt: 0.5, background: 'transparent', color: 'white', px: 2, minWidth: 400 }}>
           {mode === 'stripe' ? (
             stripePromise ? (
               <Elements stripe={stripePromise}>
@@ -466,28 +479,28 @@ function PaymentMethodShell({ stripePromise, ensureStripe }) {
             )
           ) : (
             <>
-              <TextField label="Name on Card" value={billingName} onChange={(e)=>setBillingName(e.target.value)} fullWidth InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }} sx={{ ...fieldSx, mt: 1, mb: 1 }} />
-              <TextField label="Bank Name (optional)" value={bankName} onChange={(e)=>setBankName(e.target.value)} fullWidth InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }} sx={{ ...fieldSx, mb: 1 }} />
-              <TextField label="Network" value={network} onChange={(e)=>setNetwork(e.target.value)} select fullWidth InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }} sx={{ ...fieldSx, mb: 1, color: 'white', '& .MuiSelect-select': { color: '#e7e9f3', py: 1, background: 'transparent' } }}>
+              <LineLabelTextField label="Name on Card" value={billingName} onChange={(e)=>setBillingName(e.target.value)} fullWidth sx={{ ...fieldSx, mt: 0.5, mb: 1 }} />
+              <LineLabelTextField label="Bank Name (optional)" value={bankName} onChange={(e)=>setBankName(e.target.value)} fullWidth sx={{ ...fieldSx, mb: 1 }} />
+              <LineLabelTextField label="Network" value={network} onChange={(e)=>setNetwork(e.target.value)} select fullWidth sx={{ ...fieldSx, mb: 1, color: 'white', '& .MuiSelect-select': { color: '#e7e9f3', py: 1, background: 'transparent' } }}>
                 <MenuItem value="visa">Visa</MenuItem>
                 <MenuItem value="mastercard">Mastercard</MenuItem>
                 <MenuItem value="amex">American Express</MenuItem>
                 <MenuItem value="discover">Discover</MenuItem>
-              </TextField>
+              </LineLabelTextField>
               <Grid container spacing={1} sx={{ mt: 0.5 }}>
                 <Grid item xs={6}>
-                  <TextField label="Last 4 digits" value={last4} onChange={(e)=>setLast4(e.target.value.replace(/\D/g,''))} inputProps={{ maxLength: 4 }} fullWidth InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }} sx={{ ...fieldSx }} />
+                  <LineLabelTextField label="Last 4 digits" value={last4} onChange={(e)=>setLast4(e.target.value.replace(/\D/g,''))} inputProps={{ maxLength: 4 }} fullWidth sx={{ ...fieldSx }} />
                 </Grid>
                 <Grid item xs={3}>
-                  <TextField label="MM" value={expMonth} onChange={(e)=>setExpMonth(e.target.value.replace(/\D/g,'').slice(0,2))} inputProps={{ maxLength: 2 }} fullWidth InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }} sx={{ ...fieldSx }} />
+                  <LineLabelTextField label="MM" value={expMonth} onChange={(e)=>setExpMonth(e.target.value.replace(/\D/g,'').slice(0,2))} inputProps={{ maxLength: 2 }} fullWidth sx={{ ...fieldSx }} />
                 </Grid>
                 <Grid item xs={3}>
-                  <TextField label="YY" value={expYear} onChange={(e)=>setExpYear(e.target.value.replace(/\D/g,'').slice(0,4))} inputProps={{ maxLength: 4 }} fullWidth InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }} sx={{ ...fieldSx }} />
+                  <LineLabelTextField label="YY" value={expYear} onChange={(e)=>setExpYear(e.target.value.replace(/\D/g,'').slice(0,4))} inputProps={{ maxLength: 4 }} fullWidth sx={{ ...fieldSx }} />
                 </Grid>
               </Grid>
-              <DialogActions sx={{ background: 'transparent', px: 0, pb: 0, pt: 2, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
-                <Button onClick={handleClose} sx={{ color: '#bfc6e0' }}>Cancel</Button>
-                <Button onClick={handleAddVisualCard} variant="contained" color="info" disabled={saving || !billingName} sx={{ borderRadius: 2, px: 3, fontWeight: 600 }}>
+              <DialogActions sx={{ background: 'transparent !important', boxShadow: 'none', borderTop: 'none', px: 0, pb: 0, pt: 1, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', minHeight: 40 }}>
+                <Button onClick={handleClose} sx={{ color: '#bfc6e0', mr: 1, textTransform: 'none', fontWeight: 500 }}>Cancel</Button>
+                <Button onClick={handleAddVisualCard} variant="contained" color="info" disabled={saving || !billingName} sx={{ borderRadius: 2.5, px: 3.5, fontWeight: 600, boxShadow: '0 4px 14px -2px rgba(76,119,255,0.45)', background: 'rgba(44, 50, 90, 0.85)', textTransform: 'none' }}>
                   {saving ? <CircularProgress size={18} sx={{ color: 'white' }} /> : 'Save'}
                 </Button>
               </DialogActions>

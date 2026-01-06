@@ -4,7 +4,6 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField,
   Button,
   Tabs,
   Tab,
@@ -14,6 +13,7 @@ import {
   IconButton,
   Grow,
 } from "@mui/material";
+import { LineLabelTextField } from 'layouts/profile';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { useAppointments } from "../context/AppointmentContext";
@@ -91,16 +91,18 @@ export default function AppointmentDialog({ open, onClose, onSubmit }) {
     onClose();
   };
 
-  // Match Caring Hub Appointments dialog UI
+  // Glassy paper style aligned with Caring Hub appointment popup
   const paperSx = {
-    background: 'linear-gradient(145deg, rgba(24,26,48,0.92) 0%, rgba(22,24,45,0.94) 70%)',
-    boxShadow: '0 8px 28px -4px rgba(0,0,0,0.55), 0 4px 12px -2px rgba(0,0,0,0.4)',
+    background: 'linear-gradient(135deg, rgba(26,30,58,0.92) 0%, rgba(20,22,40,0.94) 100%)',
+    backdropFilter: 'blur(14px) saturate(100%)',
+    WebkitBackdropFilter: 'blur(14px) saturate(100%)',
     border: '1px solid rgba(255,255,255,0.08)',
-    borderRadius: 5,
+    boxShadow: '0 8px 28px -6px rgba(0,0,0,0.55), 0 2px 6px rgba(0,0,0,0.3)',
+    borderRadius: 3,
     color: 'white',
-    backdropFilter: 'blur(14px)',
-    p: 4,
-    minWidth: 520,
+    p: 3,
+    overflow: 'hidden',
+    minWidth: 440,
     maxWidth: 720,
   };
 
@@ -156,16 +158,21 @@ export default function AppointmentDialog({ open, onClose, onSubmit }) {
       TransitionComponent={Transition}
       keepMounted
     >
-      <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 22, pb: 2, background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>Edit Event</DialogTitle>
-      <DialogContent sx={{ p: 0, px: 2, pt: 1, pb: 2 }}>
-        <Tabs value={tab} onChange={handleTab} sx={{ mb: 2 }}>
-          <Tab label="Event" sx={{ color: 'white', fontWeight: 600 }} />
-          <Tab label="My To Do" sx={{ color: 'white', fontWeight: 600 }} />
+      <DialogTitle sx={{ px: 3, py: 2.5, m: 0, typography: 'h6', fontWeight: 700 }}>Edit Event</DialogTitle>
+      <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 1.25, px: 3, pt: 0.5, pb: 1.5 }}>
+        <Tabs
+          value={tab}
+          onChange={handleTab}
+          sx={{ mb: 2, background: 'rgba(255,255,255,0.02)', borderRadius: 3, p: 0.5 }}
+          TabIndicatorProps={{ sx: { display: 'none' } }}
+        >
+          <Tab label="Event" sx={{ color: '#e7e9f3', fontWeight: 700, textTransform: 'none', minWidth: 120 }} />
+          <Tab label="My To Do" sx={{ color: '#bfc6e0', fontWeight: 600, textTransform: 'none', minWidth: 120 }} />
         </Tabs>
         {tab === 0 ? (
           <Box component="form" sx={{ display: 'flex', flexDirection: 'column', gap: 1, maxWidth: 560, mx: 'auto', width: '100%' }}>
-            <TextField label="Title" name="title" value={form.title} onChange={handleChange} fullWidth placeholder="Optional – we'll infer one" InputLabelProps={{ shrink: true }} sx={{ ...fieldSx, mt: 2, mb: 0.5 }} />
-            <TextField
+            <LineLabelTextField label="Title" name="title" value={form.title} onChange={handleChange} fullWidth placeholder="Optional – we'll infer one" sx={{ ...fieldSx, mt: 2, mb: 0.5 }} />
+            <LineLabelTextField
               label="Date"
               name="date"
               type="date"
@@ -192,7 +199,7 @@ export default function AppointmentDialog({ open, onClose, onSubmit }) {
               onClick={() => { setShowCalendar(true); if (form.date) try { setSelectedDate(new Date(form.date)); } catch(_) {} }}
             />
             <Box sx={{ display: 'flex', gap: 2 }}>
-              <TextField
+              <LineLabelTextField
                 label="From"
                 name="from"
                 type="time"
@@ -217,7 +224,7 @@ export default function AppointmentDialog({ open, onClose, onSubmit }) {
                 sx={{ ...fieldSx, flex: 1, cursor: 'pointer' }}
                 onClick={() => { if (fromRef.current) { if (fromRef.current.showPicker) fromRef.current.showPicker(); else fromRef.current.focus(); } }}
               />
-              <TextField
+              <LineLabelTextField
                 label="To"
                 name="to"
                 type="time"
@@ -252,7 +259,7 @@ export default function AppointmentDialog({ open, onClose, onSubmit }) {
               clearOnEscape
               disableClearable
               renderInput={(params) => (
-                <TextField
+                <LineLabelTextField
                   {...params}
                   label="Doctor"
                   placeholder="Select Doctor"
@@ -268,7 +275,7 @@ export default function AppointmentDialog({ open, onClose, onSubmit }) {
                 Suggested: {slots.slice(0,4).map(s => new Date(s.start).toLocaleString()).join('  •  ')}
               </Box>
             )}
-            <TextField label="Location" name="location" value={form.location} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true }} sx={{ ...fieldSx, mb: 0.5 }} />
+            <LineLabelTextField label="Location" name="location" value={form.location} onChange={handleChange} fullWidth sx={{ ...fieldSx, mb: 0.5 }} />
             <Autocomplete
               size="small"
               options={reasons}
@@ -278,7 +285,7 @@ export default function AppointmentDialog({ open, onClose, onSubmit }) {
               clearOnEscape
               disableClearable
               renderInput={(params) => (
-                <TextField
+                <LineLabelTextField
                   {...params}
                   label="Reason"
                   placeholder="Select Reason"
@@ -292,8 +299,8 @@ export default function AppointmentDialog({ open, onClose, onSubmit }) {
           </Box>
         ) : (
           <Box component="form" sx={{ display: 'flex', flexDirection: 'column', gap: 1, maxWidth: 560, mx: 'auto', width: '100%' }}>
-            <TextField label="Title" name="title" value={form.title} onChange={handleChange} fullWidth placeholder="Optional – we'll infer one" InputLabelProps={{ shrink: true }} sx={{ ...fieldSx, mt: 2, mb: 0.5 }} />
-            <TextField
+            <LineLabelTextField label="Title" name="title" value={form.title} onChange={handleChange} fullWidth placeholder="Optional – we'll infer one" sx={{ ...fieldSx, mt: 2, mb: 0.5 }} />
+            <LineLabelTextField
               label="Date"
               name="date"
               type="date"
@@ -345,7 +352,7 @@ export default function AppointmentDialog({ open, onClose, onSubmit }) {
                 } 
               }}
             />
-            <TextField
+            <LineLabelTextField
               label="Time"
               name="from"
               type="time"
@@ -372,15 +379,33 @@ export default function AppointmentDialog({ open, onClose, onSubmit }) {
               onClick={() => { if (fromRef.current) { if (fromRef.current.showPicker) fromRef.current.showPicker(); else fromRef.current.focus(); } }}
             />
             {/* Calendar dialog to match Appointments/HUB style */}
-            <Dialog open={showCalendar} onClose={() => setShowCalendar(false)} maxWidth="sm" fullWidth TransitionComponent={Transition} PaperProps={{ sx: paperSx }} keepMounted>
-              <DialogTitle sx={{ color: 'white', fontWeight: 700 }}>Pick a date</DialogTitle>
-              <DialogContent>
+            <Dialog
+              open={showCalendar}
+              onClose={() => setShowCalendar(false)}
+              maxWidth="sm"
+              fullWidth
+              TransitionComponent={Transition}
+              keepMounted
+              PaperProps={{ sx: {
+                background: 'linear-gradient(145deg, rgba(24,26,48,0.92) 0%, rgba(22,24,45,0.94) 70%)',
+                boxShadow: '0 8px 28px -4px rgba(0,0,0,0.55), 0 4px 12px -2px rgba(0,0,0,0.4)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: 5,
+                color: 'white',
+                backdropFilter: 'blur(14px)',
+                WebkitBackdropFilter: 'blur(14px)',
+                p: 3,
+                minWidth: 520
+              } }}
+            >
+              <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 20, pb: 1.5 }}>Pick a date</DialogTitle>
+              <DialogContent sx={{ p: 0, px: 2, pt: 1 }}>
                 <Box sx={{ width: '100%', p: 1 }}>
                   <MiniDayCalendar />
                 </Box>
               </DialogContent>
-              <DialogActions>
-                <Button onClick={() => setShowCalendar(false)}>Cancel</Button>
+              <DialogActions sx={{ px: 2, pb: 2 }}>
+                <Button onClick={() => setShowCalendar(false)} sx={{ textTransform: 'none', color: '#bfc6e0' }}>Cancel</Button>
                 <Button onClick={() => { if (globalSelectedDate) setForm(f => ({ ...f, date: formatDate(globalSelectedDate) })); setShowCalendar(false); }} variant="contained" color="info">Select</Button>
               </DialogActions>
             </Dialog>
@@ -393,7 +418,7 @@ export default function AppointmentDialog({ open, onClose, onSubmit }) {
               clearOnEscape
               disableClearable
               renderInput={(params) => (
-                <TextField
+                <LineLabelTextField
                   {...params}
                   label="Doctor"
                   placeholder="Select Doctor"
@@ -404,13 +429,16 @@ export default function AppointmentDialog({ open, onClose, onSubmit }) {
               sx={{ mb: 0.5, '& .MuiOutlinedInput-root': { p: 0.25, pr: 1 } }}
               ListboxProps={{ style: { maxHeight: 240 } }}
             />
-            <TextField label="Details" name="details" value={form.details} onChange={handleChange} fullWidth multiline minRows={3} InputLabelProps={{ shrink: true }} sx={{ ...fieldSx, mb: 0.5 }} />
+            <LineLabelTextField label="Details" name="details" value={form.details} onChange={handleChange} fullWidth multiline minRows={3} sx={{ ...fieldSx, mb: 0.5, '& .MuiInputBase-input': { py: 1.1 } }} />
           </Box>
         )}
       </DialogContent>
-      <DialogActions sx={{ background: 'transparent', px: 2, pb: 2, display: 'flex', justifyContent: 'flex-end' }}>
-        <Button onClick={onClose} sx={{ color: '#bfc6e0', mr: 1 }}>Cancel</Button>
-        <Button onClick={handleSubmit} variant="contained" color="info" sx={{ borderRadius: 2, px: 3, fontWeight: 600 }}>Submit</Button>
+      <DialogActions sx={{ px: 3, py: 1.75, borderTop: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)', display: 'flex', justifyContent: 'flex-end' }}>
+        <Box sx={{ flex: 1 }} />
+        <Box>
+          <Button onClick={onClose} sx={{ color: '#bfc6e0', mr: 1, textTransform: 'none', fontWeight: 500 }}>Cancel</Button>
+          <Button onClick={handleSubmit} variant="contained" color="info" sx={{ borderRadius: 2.5, px: 3.5, fontWeight: 600, boxShadow: '0 4px 14px -2px rgba(76,119,255,0.45)', background: 'rgba(44, 50, 90, 0.85)' }}>Submit</Button>
+        </Box>
       </DialogActions>
     </Dialog>
   );
