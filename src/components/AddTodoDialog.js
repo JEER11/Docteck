@@ -85,8 +85,9 @@ export default function AddTodoDialog({ open, onClose, onAdd }) {
     '& .MuiInputBase-root': { alignItems: 'center' },
     minHeight: 54,
     transition: 'border-color .18s, box-shadow .18s, background .25s',
-    '& input[type="date"]::-webkit-calendar-picker-indicator': { opacity: 0, display: 'none' },
-    '& input[type="time"]::-webkit-calendar-picker-indicator': { opacity: 0, display: 'none' },
+    // Hide native calendar/time indicators across browsers (use !important for stubborn UAs)
+    '&& input[type="date"]::-webkit-calendar-picker-indicator, && input[type="time"]::-webkit-calendar-picker-indicator': { display: 'none !important', WebkitAppearance: 'none', appearance: 'none' },
+    '&& .MuiInputBase-input::-webkit-calendar-picker-indicator, && .MuiInputBase-input::-webkit-clear-button': { display: 'none !important' },
   };
 
   return (
@@ -226,7 +227,8 @@ export default function AddTodoDialog({ open, onClose, onAdd }) {
                               if (timeRef.current.showPicker) {
                                 timeRef.current.showPicker();
                               } else {
-                                timeRef.current.focus();
+                                // fallback: focus and try a synthetic click to invoke the UA picker where supported
+                                try { timeRef.current.focus(); timeRef.current.click(); } catch(e){ timeRef.current.focus(); }
                               }
                             } catch (err) {
                               try { timeRef.current.focus(); } catch (_) {}
