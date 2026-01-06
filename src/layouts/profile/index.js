@@ -1,9 +1,8 @@
-// @mui material components
-// @mui icons
+
+import React, { useState, useRef, useEffect } from "react";
 import FacebookIcon from "@mui/icons-material/Facebook";
 import InstagramIcon from "@mui/icons-material/Instagram";
 import TwitterIcon from "@mui/icons-material/Twitter";
-// Settings action icons
 import EventNoteOutlinedIcon from "@mui/icons-material/EventNoteOutlined";
 import ScienceOutlinedIcon from "@mui/icons-material/ScienceOutlined";
 import VolunteerActivismOutlinedIcon from "@mui/icons-material/VolunteerActivismOutlined";
@@ -21,22 +20,18 @@ import team1 from "assets/images/avatar1.png";
 import team2 from "assets/images/avatar2.png";
 import team3 from "assets/images/avatar3.png";
 import team4 from "assets/images/avatar4.png";
-// Images
 import profile1 from "assets/images/profile-1.png";
 import profile2 from "assets/images/profile-2.png";
 import profile3 from "assets/images/profile-3.png";
 import teamImage from "assets/images/team-1.jpg";
 import recordImage from "assets/images/billbackground.jpg";
 import communicationImage from "assets/images/avatar-simmmple.png";
-// Vision UI Dashboard React components
 import VuiBox from "components/VuiBox";
 import VuiTypography from "components/VuiTypography";
 import ProfileInfoCard from "examples/Cards/InfoCards/ProfileInfoCard";
 import DefaultProjectCard from "examples/Cards/ProjectCards/DefaultProjectCard";
 import Footer from "examples/Footer";
-// Vision UI Dashboard React example components
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
-// Overview page components
 import Header from "layouts/profile/components/Header";
 import PlatformSettings from "layouts/profile/components/PlatformSettings";
 import Welcome from "../profile/components/Welcome/index";
@@ -72,7 +67,6 @@ import Chip from "@mui/material/Chip";
 import AttachFileOutlinedIcon from "@mui/icons-material/AttachFileOutlined";
 import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
 import SendRoundedIcon from "@mui/icons-material/SendRounded";
-// Icons for Resources section
 import ElderlyIcon from "@mui/icons-material/Elderly";
 import FemaleIcon from "@mui/icons-material/Female";
 import MaleIcon from "@mui/icons-material/Male";
@@ -94,25 +88,18 @@ import MilitaryTechOutlinedIcon from "@mui/icons-material/MilitaryTechOutlined";
 import LinkOutlinedIcon from "@mui/icons-material/LinkOutlined";
 import AddLinkOutlinedIcon from "@mui/icons-material/AddLinkOutlined";
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
-// Icons for Medical & Family library tiles
 import PersonOutlineOutlinedIcon from "@mui/icons-material/PersonOutlineOutlined";
-// Use a broadly available group icon to avoid version issues
-// (fallback for older @mui/icons-material versions)
-// We'll reuse GroupOutlinedIcon already imported above for resources tab
-// so no new dependency is needed.
 import PetsOutlinedIcon from "@mui/icons-material/PetsOutlined";
 import FolderOpenOutlinedIcon from "@mui/icons-material/FolderOpenOutlined";
 import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import SaveOutlinedIcon from "@mui/icons-material/SaveOutlined";
-// Chat status icons
 import DoneOutlinedIcon from "@mui/icons-material/DoneOutlined";
 import DoneAllOutlinedIcon from "@mui/icons-material/DoneAllOutlined";
 import AccessTimeOutlinedIcon from "@mui/icons-material/AccessTimeOutlined";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
-import countries from "./countries.json"; // You will need to add a countries.json file with all country names
-import { useState, useRef, useEffect } from "react";
+import countries from "./countries.json";
 import { useAuth } from "hooks/useAuth";
 import { auth, db } from "lib/firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
@@ -121,6 +108,71 @@ import { searchActionBus } from "lib/searchActions";
 import VuiButton from "components/VuiButton";
 import MiniDayCalendar from "components/MiniDayCalendar";
 import { AppointmentProvider } from "context/AppointmentContext";
+
+
+
+
+
+// Custom TextField with smaller, left-aligned label and compact input bubble
+function LineLabelTextField({ label, ...props }) {
+  // Ensure named export for use in other modules
+  export { LineLabelTextField };
+  return (
+    <div style={{ position: 'relative', marginBottom: 12, width: '100%' }}>
+      <span
+        style={{
+          position: 'absolute',
+          top: -11,
+          left: 12,
+          color: '#a6b1e1',
+          fontWeight: 700,
+          fontSize: '0.92rem',
+          zIndex: 2,
+          letterSpacing: 0.2,
+          padding: '0 4px',
+          background: 'none',
+          boxShadow: 'none',
+        }}
+      >{label}</span>
+      <TextField
+        {...props}
+        variant="outlined"
+        InputProps={{
+          ...props.InputProps,
+          style: {
+            background: '#181a2f',
+            color: '#fff',
+            borderRadius: 8,
+            border: '2px solid #23244a',
+            padding: '8px 12px',
+            fontWeight: 500,
+            fontSize: 15,
+            height: 44,
+            position: 'relative',
+            ...props.InputProps?.style,
+          },
+        }}
+        inputProps={{
+          ...props.inputProps,
+          style: {
+            padding: '0',
+            color: '#fff',
+            background: 'transparent',
+            ...props.inputProps?.style,
+          },
+        }}
+        label=""
+        sx={{
+          width: '100%',
+          '& .MuiOutlinedInput-notchedOutline': {
+            borderColor: '#23244a',
+            borderRadius: '8px',
+          },
+        }}
+      />
+    </div>
+  );
+}
 
 // Simple, modern section card for Settings area
 function SettingsSection({ title, actions, onAction, onViewAll }) {
@@ -575,12 +627,12 @@ function Overview() {
   // all inputs look identical to the Location select appearance
   const dialogFieldSx = {
     '& .MuiFormLabel-root': { color: '#a6b1e1', fontSize: '0.95rem' },
-    '& .MuiOutlinedInput-root': { background: '#181a2f', borderRadius: 2 },
+    '& .MuiOutlinedInput-root': { background: '#181a2f !important', borderRadius: 2, boxShadow: 'none' },
     '& .MuiOutlinedInput-notchedOutline': { border: '2px solid #23244a' },
     '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#2f3570' },
     '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#6a6afc' },
-    '& .MuiInputBase-input': { background: '#181a2f', color: '#fff', borderRadius: 2, fontWeight: 500, padding: '10px 12px' },
-    '& .MuiSelect-select': { background: '#181a2f', color: '#fff', borderRadius: 2, fontWeight: 500, padding: '10px 12px' },
+    '& .MuiInputBase-input': { background: '#181a2f !important', color: '#fff', borderRadius: 2, fontWeight: 500, padding: '10px 12px', boxShadow: 'none' },
+    '& .MuiSelect-select': { background: '#181a2f !important', color: '#fff', borderRadius: 2, fontWeight: 500, padding: '10px 12px', boxShadow: 'none' },
   };
   // Consistent small label props to avoid floating label overlap
   const inputLabelPropsSmall = { shrink: true, sx: { color: '#aeb3d5', fontSize: 12 } };
@@ -895,67 +947,48 @@ function Overview() {
                   )}
                   <Box mb={2}>
                     <Typography sx={{ color: '#a6b1e1', fontWeight: 600, fontSize: '1rem', mb: 1, letterSpacing: 0.5 }}>Contact Information</Typography>
-          <TextField
-                      margin="dense"
+                    <LineLabelTextField
                       label="First Name"
                       name="firstName"
                       value={profile.firstName}
                       onChange={handleProfileChange}
                       fullWidth
-                      variant="outlined"
                       placeholder="Enter your first name"
-                      sx={dialogFieldSx}
-                      InputLabelProps={{ shrink: true, sx: { color: '#a6b1e1', fontSize: '0.95rem' } }}
                     />
-                    <TextField
-                      margin="dense"
+                    <LineLabelTextField
                       label="Last Name"
                       name="lastName"
                       value={profile.lastName}
                       onChange={handleProfileChange}
                       fullWidth
-                      variant="outlined"
                       placeholder="Enter your last name"
-                      sx={dialogFieldSx}
-                      InputLabelProps={{ shrink: true, sx: { color: '#a6b1e1', fontSize: '0.95rem' } }}
                     />
-                    <TextField
-                      margin="dense"
+                    <LineLabelTextField
                       label="Mobile"
                       name="mobile"
                       value={profile.mobile}
                       onChange={handleProfileChange}
                       fullWidth
-                      variant="outlined"
                       placeholder="Enter your mobile number"
-                      sx={dialogFieldSx}
-                      InputLabelProps={{ shrink: true, sx: { color: '#a6b1e1', fontSize: '0.95rem' } }}
                     />
-                    <TextField
-                      margin="dense"
+                    <LineLabelTextField
                       label="Email"
                       name="email"
                       value={profile.email}
                       onChange={handleProfileChange}
                       fullWidth
-                      variant="outlined"
                       placeholder="Enter your email"
-                      sx={dialogFieldSx}
-                      InputLabelProps={{ shrink: true, sx: { color: '#a6b1e1', fontSize: '0.95rem' } }}
                     />
                   </Box>
                   <Box mb={2}>
                     <Typography sx={{ color: '#a6b1e1', fontWeight: 600, fontSize: '1rem', mb: 1, letterSpacing: 0.5 }}>Details</Typography>
-                    <TextField
-                      margin="dense"
+                    <LineLabelTextField
                       label="Location"
                       name="location"
                       select
                       value={profile.location}
                       onChange={handleProfileChange}
                       fullWidth
-                      sx={dialogFieldSx}
-                      InputLabelProps={{ shrink: true, sx: { color: '#a6b1e1', fontSize: '0.95rem' } }}
                       SelectProps={{
                         native: false,
                         MenuProps: {
@@ -984,29 +1017,23 @@ function Overview() {
                       {countries.map((country) => (
                         <MenuItem key={country} value={country} sx={{ background: '#181a2f', color: '#fff' }}>{country}</MenuItem>
                       ))}
-                    </TextField>
-                    <TextField
-                      margin="dense"
+                    </LineLabelTextField>
+                    <LineLabelTextField
                       label="Date of Birth"
                       name="dateOfBirth"
                       type="date"
                       value={profile.dateOfBirth}
                       onChange={handleProfileChange}
                       fullWidth
-                      InputLabelProps={{ shrink: true, sx: { color: '#a6b1e1', fontSize: '0.95rem' } }}
                       placeholder="yyyy-mm-dd"
-                      sx={dialogFieldSx}
                     />
-                    <TextField
-                      margin="dense"
+                    <LineLabelTextField
                       label="Sex"
                       name="sex"
                       select
                       value={profile.sex}
                       onChange={handleProfileChange}
                       fullWidth
-                      sx={dialogFieldSx}
-                      InputLabelProps={{ shrink: true, sx: { color: '#a6b1e1', fontSize: '0.95rem' } }}
                       SelectProps={{
                         native: false,
                         MenuProps: {
@@ -1035,17 +1062,14 @@ function Overview() {
                       <MenuItem value="Male" sx={{ background: '#181a2f', color: '#fff' }}>Male</MenuItem>
                       <MenuItem value="Female" sx={{ background: '#181a2f', color: '#fff' }}>Female</MenuItem>
                       <MenuItem value="Other" sx={{ background: '#181a2f', color: '#fff' }}>Other</MenuItem>
-                    </TextField>
-                    <TextField
-                      margin="dense"
+                    </LineLabelTextField>
+                    <LineLabelTextField
                       label="Blood Type"
                       name="bloodType"
                       select
                       value={profile.bloodType}
                       onChange={handleProfileChange}
                       fullWidth
-                      sx={dialogFieldSx}
-                      InputLabelProps={{ shrink: true, sx: { color: '#a6b1e1', fontSize: '0.95rem' } }}
                       SelectProps={{
                         native: false,
                         MenuProps: {
@@ -1079,17 +1103,14 @@ function Overview() {
                       <MenuItem value="B-" sx={{ background: '#181a2f', color: '#fff' }}>B-</MenuItem>
                       <MenuItem value="AB+" sx={{ background: '#181a2f', color: '#fff' }}>AB+</MenuItem>
                       <MenuItem value="AB-" sx={{ background: '#181a2f', color: '#fff' }}>AB-</MenuItem>
-                    </TextField>
-                    <TextField
-                      margin="dense"
+                    </LineLabelTextField>
+                    <LineLabelTextField
                       label="Wheelchair"
                       name="wheelchair"
                       select
                       value={profile.wheelchair}
                       onChange={handleProfileChange}
                       fullWidth
-                      sx={dialogFieldSx}
-                      InputLabelProps={{ shrink: true, sx: { color: '#a6b1e1', fontSize: '0.95rem' } }}
                       SelectProps={{
                         native: false,
                         MenuProps: {
@@ -1117,7 +1138,7 @@ function Overview() {
                     >
                       <MenuItem value="No" sx={{ background: '#181a2f', color: '#fff' }}>No</MenuItem>
                       <MenuItem value="Yes" sx={{ background: '#181a2f', color: '#fff' }}>Yes</MenuItem>
-                    </TextField>
+                    </LineLabelTextField>
                   </Box>
                   
                 </DialogContent>
@@ -2512,3 +2533,4 @@ function Overview() {
 }
 
 export default Overview;
+
