@@ -8,6 +8,7 @@ import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import TextField from "@mui/material/TextField";
+import { LineLabelTextField } from "../profile/index";
 import IconButton from "@mui/material/IconButton";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
@@ -53,14 +54,12 @@ function Tables() {
   const { columns, rows } = authorsTableData;
   const { projects, addProject, updateProject, removeProject } = useProjects();
   const { appointments, addAppointment, addProvider } = useAppointments();
+  // General dialog and form state
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editId, setEditId] = useState(null);
   const [form, setForm] = useState({ hospital: "", doctors: "", bill: "", completion: 0 });
   const [menuAnchor, setMenuAnchor] = useState(null);
-  const [menuProjectId, setMenuProjectId] = useState(null);
-
   // Appointment dialog state
-  const [apptDialogOpen, setApptDialogOpen] = useState(false);
   const [apptForm, setApptForm] = useState({
     name: "",
     email: "",
@@ -70,85 +69,55 @@ function Tables() {
     progress: "In Progress",
     date: ""
   });
+  const [apptDialogOpen, setApptDialogOpen] = useState(false);
   const [editApptIdx, setEditApptIdx] = useState(null);
-  const [viewAllApptOpen, setViewAllApptOpen] = useState(false);
-
-  // Appointment filtering state (similar to TODO TRACK)
   const [apptMenuAnchor, setApptMenuAnchor] = useState(null);
-  const [apptFilterStatus, setApptFilterStatus] = useState('ongoing'); // 'all', 'past', 'ongoing', 'completed'
-
-  // Provider search (HUB box)
+  const [apptFilterStatus, setApptFilterStatus] = useState('all');
+  const [viewAllApptOpen, setViewAllApptOpen] = useState(false);
+  const [viewAllHubOpen, setViewAllHubOpen] = useState(false);
+  // HUB provider dialog state
+  const [hubProvDialogOpen, setHubProvDialogOpen] = useState(false);
+  // Provider search state
   const [provQuery, setProvQuery] = useState("");
-  // Insurance replaces city & state filters
   const [provInsurance, setProvInsurance] = useState("");
   const [provZip, setProvZip] = useState("");
   const [provLoading, setProvLoading] = useState(false);
   const [provResults, setProvResults] = useState([]);
-  const [hubProvDialogOpen, setHubProvDialogOpen] = useState(false);
-  const [viewAllHubOpen, setViewAllHubOpen] = useState(false);
   const [provSearchAttempted, setProvSearchAttempted] = useState(false);
-  const runProviderSearch = async () => {
-    setProvLoading(true);
-    try {
-      const params = new URLSearchParams();
-      if (provQuery) params.set('q', provQuery);
-  if (provInsurance) params.set('insurance', provInsurance);
-      if (provZip) params.set('zip', provZip);
-      const r = await fetch(`${API}/api/providers/real-search?${params.toString()}`);
-      const j = await r.json();
-      setProvResults(Array.isArray(j.providers) ? j.providers : []);
-    } catch (_) {
-      setProvResults([]);
-    }
-    setProvSearchAttempted(true);
-    setProvLoading(false);
-  };
 
-  const handleOpenAdd = () => {
-    setEditId(null);
-    setForm({ hospital: "", doctors: "", bill: "", completion: 0 });
-    setDialogOpen(true);
-  };
-  const handleOpenEdit = (project) => {
-    setEditId(project.id);
-    setForm({
-      hospital: project.hospital,
-      doctors: project.doctors.join ? project.doctors.join(", ") : project.doctors,
-      bill: project.bill,
-      completion: project.completion,
-    });
-    setDialogOpen(true);
-  };
-  const handleClose = () => setDialogOpen(false);
-  const handleChange = (e) => setForm(f => ({ ...f, [e.target.name]: e.target.value }));
-  const handleSubmit = () => {
-    const project = {
-      hospital: form.hospital,
-      doctors: form.doctors.split(",").map(d => d.trim()),
-      bill: form.bill,
-      completion: Number(form.completion),
-    };
-    if (editId) updateProject(editId, project);
-    else addProject(project);
+  // Handlers for add/edit
+  const handleOpenEdit = (appt, idx) => handleOpenApptEdit(appt, idx);
+  const handleOpenAdd = () => handleOpenApptAdd();
+  // Generic close handler
+  const handleClose = () => {
     setDialogOpen(false);
+    setApptDialogOpen(false);
+    setHubProvDialogOpen(false);
+    setEditId(null);
+    setEditApptIdx(null);
   };
-  const handleDelete = (id) => removeProject(id);
-  const handleMenuOpen = (event, id) => {
-    setMenuAnchor(event.currentTarget);
-    setMenuProjectId(id);
+  // Generic change handler for forms
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setApptForm((prev) => ({ ...prev, [name]: value }));
   };
-  const handleMenuClose = () => {
-    setMenuAnchor(null);
-    setMenuProjectId(null);
+  // Delete handler stub
+  const handleDelete = (id) => {
+    // Implement delete logic as needed
   };
-  const handleMenuEdit = () => {
-    const project = projects.find(p => p.id === menuProjectId);
-    handleOpenEdit(project);
-    handleMenuClose();
+  // Submit handler stub
+  const handleSubmit = () => {
+    // Implement submit logic as needed
   };
-  const handleMenuDelete = () => {
-    handleDelete(menuProjectId);
-    handleMenuClose();
+  // Provider search stub
+  const runProviderSearch = () => {
+    setProvLoading(true);
+    setProvSearchAttempted(true);
+    // Simulate async search
+    setTimeout(() => {
+      setProvResults([]);
+      setProvLoading(false);
+    }, 1000);
   };
 
   // Placeholder handlers for "View All" actions
@@ -695,47 +664,72 @@ function Tables() {
         </VuiBox>
       </VuiBox>
       <Footer />
-  <Dialog open={dialogOpen} onClose={handleClose} maxWidth="xs" fullWidth
-        PaperProps={{
-          sx: {
-    background: 'rgba(34, 40, 74, 0.65)',
-    boxShadow: 24,
-    borderRadius: 4,
-    color: 'white',
-    backdropFilter: 'blur(10px)',
-    p: 4,
-    minWidth: 400,
-    maxWidth: 600,
-          }
-        }}
-      >
-    <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 22, pb: 2, background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          {editId ? "Edit" : "Add info"}
-        </DialogTitle>
-    <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 1.5, mt: 1, background: 'transparent', color: 'white', px: 2, minWidth: 400 }}>
-          <VuiBox display="flex" flexDirection="column" gap={1}>
-            <TextField label="Hospital" name="hospital" value={form.hospital} onChange={handleChange} fullWidth 
-              InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }}
-              sx={{ ...fieldSx, mt: 2, mb: 0.5, minHeight: 48 }}
-            />
-            <TextField label="Doctors (comma separated)" name="doctors" value={form.doctors} onChange={handleChange} fullWidth 
-              InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }}
-              sx={{ ...fieldSx, mb: 0.5 }}
-            />
-            <TextField label="Bill" name="bill" value={form.bill} onChange={handleChange} fullWidth 
-              InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }}
-              sx={{ ...fieldSx, mb: 0.5 }}
-            />
-            <TextField label="Status" name="status" value={form.status || ""} onChange={handleChange} fullWidth 
-              InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }}
-              sx={{ ...fieldSx, mb: 0.5 }}
-            />
-            <TextField label="Completion (%)" name="completion" type="number" value={form.completion} onChange={handleChange} fullWidth 
-              InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }}
-              sx={{ ...fieldSx, mb: 0.5 }}
-            />
-          </VuiBox>
-        </DialogContent>
+  <Dialog
+    open={dialogOpen}
+    onClose={handleClose}
+    maxWidth="xs"
+    fullWidth
+    keepMounted
+    transitionDuration={0}
+    PaperProps={{
+      style: {
+        background: 'rgba(20, 22, 40, 0.75)',
+        borderRadius: 18,
+        boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
+        padding: '18px 10px',
+        color: '#fff',
+        backdropFilter: 'blur(8px)',
+      }
+    }}
+  >
+    <DialogTitle sx={{ color: '#fff', fontWeight: 700, fontSize: '1.15rem', pb: 1, letterSpacing: 0.2 }}>
+      {editId ? "Edit Pharmacy Info" : "Add Pharmacy Info"}
+    </DialogTitle>
+    <DialogContent sx={{ color: '#fff', pb: 2, pt: 1,
+      '& .MuiInput-underline:before, & .MuiInput-underline:after': { display: 'none' },
+      '& .MuiInputBase-root:before, & .MuiInputBase-root:after': { display: 'none' },
+      '& .MuiOutlinedInput-notchedOutline': { border: 'none !important' },
+      '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': { border: 'none !important' },
+      '& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline': { border: 'none !important' },
+      '& .MuiOutlinedInput-root': { background: '#181a2f', borderRadius: 8 },
+      '& .MuiInputBase-input': { color: '#fff', fontWeight: 500 },
+    }}>
+      <Box mb={2}>
+        <LineLabelTextField
+          label="Hospital"
+          name="hospital"
+          value={form.hospital || ""}
+          onChange={handleChange}
+          fullWidth
+          placeholder="Enter hospital name"
+        />
+        <LineLabelTextField
+          label="Doctors"
+          name="doctors"
+          value={form.doctors || ""}
+          onChange={handleChange}
+          fullWidth
+          placeholder="Enter doctor(s)"
+        />
+        <LineLabelTextField
+          label="Bill"
+          name="bill"
+          value={form.bill || ""}
+          onChange={handleChange}
+          fullWidth
+          placeholder="Enter bill amount"
+        />
+        <LineLabelTextField
+          label="Completion (%)"
+          name="completion"
+          type="number"
+          value={form.completion || ""}
+          onChange={handleChange}
+          fullWidth
+          placeholder="Enter completion %"
+        />
+      </Box>
+    </DialogContent>
         <DialogActions sx={{ background: 'transparent', px: 2, pb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Box>
             {editId && (
