@@ -5,10 +5,12 @@ import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import TextField from "@mui/material/TextField";
+import { LineLabelTextField } from "layouts/profile";
 import Button from "@mui/material/Button";
 import Grid from "@mui/material/Grid";
 import IconButton from "@mui/material/IconButton";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import Box from "@mui/material/Box";
 
 // Vision UI Dashboard React components
 import VuiBox from "components/VuiBox";
@@ -203,6 +205,19 @@ function BillingInformation() {
     } catch(_) { /* ignore */ }
   };
 
+  const handleEditDelete = async () => {
+    if (editPharmacy?.id) {
+      try { await deletePharmacy(editPharmacy.id); } catch (_) {}
+      setPharmacies(prev => prev.filter(p => p.id !== editPharmacy.id));
+      try { localStorage.setItem('pharmacies', JSON.stringify(pharmacies.filter(p => p.id !== editPharmacy.id))); } catch(_) {}
+    } else if (typeof editIdx === 'number') {
+      const next = pharmacies.filter((_, i) => i !== editIdx);
+      setPharmacies(next);
+      try { localStorage.setItem('pharmacies', JSON.stringify(next)); } catch(_) {}
+    }
+    handleEditClose();
+  };
+
   const handleViewAllOpen = () => setViewAllOpen(true);
   const handleViewAllClose = () => setViewAllOpen(false);
 
@@ -238,28 +253,37 @@ function BillingInformation() {
       <DialogContent sx={{ px: 3, pt: 2.4, pb: 2.4 }}>
         <Grid container spacing={1.5}>
           <Grid item xs={12}>
-            <TextField placeholder="e.g. Walgreens - Downtown" label="Pharmacy Name" name="name" value={newPharmacy.name} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }} sx={{ ...fieldSx, mt: 1 }} />
+            <VuiBox sx={{ mt: 2 }}>
+              <LineLabelTextField placeholder="e.g. Walgreens - Downtown" label="Pharmacy Name" name="name" value={newPharmacy.name} onChange={handleChange} fullWidth sx={fieldSx} />
+            </VuiBox>
           </Grid>
           <Grid item xs={12}>
-            <TextField placeholder="123 Main St, City, ST" label="Address" name="address" value={newPharmacy.address} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }} sx={fieldSx} />
+            <LineLabelTextField placeholder="123 Main St, City, ST" label="Address" name="address" value={newPharmacy.address} onChange={handleChange} fullWidth sx={fieldSx} />
           </Grid>
           <Grid item xs={12} md={6}>
-            <TextField placeholder="rx@pharmacy.com" label="Email (optional)" name="email" type="email" value={newPharmacy.email} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }} sx={fieldSx} />
+            <LineLabelTextField placeholder="rx@pharmacy.com" label="Email (optional)" name="email" type="email" value={newPharmacy.email} onChange={handleChange} fullWidth sx={fieldSx} />
           </Grid>
             <Grid item xs={12} md={6}>
-            <TextField placeholder="(555) 123-4567" label="Phone (optional)" name="phone" value={newPharmacy.phone} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }} sx={fieldSx} />
+            <LineLabelTextField placeholder="(555) 123-4567" label="Phone (optional)" name="phone" value={newPharmacy.phone} onChange={handleChange} fullWidth sx={fieldSx} />
           </Grid>
           <Grid item xs={12}>
-            <TextField placeholder="Select or type a prescription" label="Prescription to Pick Up (optional)" name="prescription" value={newPharmacy.prescription} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }} sx={fieldSx} inputProps={{ list: 'medicine-options' }} />
+            <LineLabelTextField placeholder="Select or type a prescription" label="Prescription to Pick Up (optional)" name="prescription" value={newPharmacy.prescription} onChange={handleChange} fullWidth sx={fieldSx} inputProps={{ list: 'medicine-options' }} />
           </Grid>
         </Grid>
         <datalist id="medicine-options">
           {medicineOptions.map((name, i) => (<option value={name} key={i} />))}
         </datalist>
       </DialogContent>
-      <DialogActions sx={{ px: 3, py: 1.75, borderTop: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.03)' }}>
-        <Button onClick={handleClose} sx={{ color: '#bfc6e0', textTransform: 'none', fontWeight: 500 }}>Cancel</Button>
-        <Button onClick={handleAdd} variant="contained" color="info" disabled={!newPharmacy.name || !newPharmacy.address} sx={{ borderRadius: 2, px: 3, fontWeight: 600, boxShadow: '0 0 0 1px rgba(255,255,255,0.1) inset' }}>Add</Button>
+      <DialogActions sx={{ px: 3, py: 1.75, borderTop: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
+        <Box>
+          {editIdx !== null && (
+            <Button onClick={handleEditDelete} sx={{ color: '#ff8080' }}>Delete</Button>
+          )}
+        </Box>
+        <Box>
+          <Button onClick={handleEditClose} sx={{ color: '#bfc6e0', mr: 1 }}>Cancel</Button>
+          <Button onClick={handleEditSave} variant="contained" color="primary" disabled={!editPharmacy.name || !editPharmacy.address} sx={{ background: 'rgba(44, 50, 90, 0.85)', boxShadow: 'none', borderRadius: 2, px: 3, fontWeight: 600 }}>Save</Button>
+        </Box>
       </DialogActions>
     </Dialog>
   );
@@ -275,19 +299,21 @@ function BillingInformation() {
       <DialogContent sx={{ px: 3, pt: 0.5, pb: 1.5 }}>
         <Grid container spacing={1.5}>
           <Grid item xs={12}>
-            <TextField label="Pharmacy Name" name="name" value={editPharmacy.name} onChange={handleEditChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }} sx={fieldSx} />
+            <VuiBox sx={{ mt: 2 }}>
+              <LineLabelTextField label="Pharmacy Name" name="name" value={editPharmacy.name} onChange={handleEditChange} fullWidth sx={fieldSx} />
+            </VuiBox>
           </Grid>
           <Grid item xs={12}>
-            <TextField label="Address" name="address" value={editPharmacy.address} onChange={handleEditChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }} sx={fieldSx} />
+            <LineLabelTextField label="Address" name="address" value={editPharmacy.address} onChange={handleEditChange} fullWidth sx={fieldSx} />
           </Grid>
           <Grid item xs={12} md={6}>
-            <TextField label="Email" name="email" type="email" value={editPharmacy.email} onChange={handleEditChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }} sx={fieldSx} />
+            <LineLabelTextField label="Email" name="email" type="email" value={editPharmacy.email} onChange={handleEditChange} fullWidth sx={fieldSx} />
           </Grid>
           <Grid item xs={12} md={6}>
-            <TextField label="Phone" name="phone" value={editPharmacy.phone} onChange={handleEditChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }} sx={fieldSx} />
+            <LineLabelTextField label="Phone" name="phone" value={editPharmacy.phone} onChange={handleEditChange} fullWidth sx={fieldSx} />
           </Grid>
           <Grid item xs={12}>
-            <TextField label="Prescription to Pick Up" name="prescription" value={editPharmacy.prescription} onChange={handleEditChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }} sx={fieldSx} inputProps={{ list: 'medicine-options' }} />
+            <LineLabelTextField label="Prescription to Pick Up" name="prescription" value={editPharmacy.prescription} onChange={handleEditChange} fullWidth sx={fieldSx} inputProps={{ list: 'medicine-options' }} />
           </Grid>
         </Grid>
         <datalist id="medicine-options">
@@ -295,8 +321,15 @@ function BillingInformation() {
         </datalist>
       </DialogContent>
       <DialogActions sx={{ px: 3, py: 1.75, borderTop: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
-        <Button onClick={handleEditClose} sx={{ color: '#bfc6e0', textTransform: 'none', fontWeight: 500 }}>Cancel</Button>
-        <Button onClick={handleEditSave} variant="contained" color="info" disabled={!editPharmacy.name || !editPharmacy.address} sx={{ borderRadius: 2, px: 3, fontWeight: 600, boxShadow: '0 0 0 1px rgba(255,255,255,0.1) inset' }}>Save</Button>
+        <Box sx={{ flex: 1 }}>
+          {editIdx !== null && (
+            <Button onClick={handleEditDelete} sx={{ color: '#ff8080' }}>Delete</Button>
+          )}
+        </Box>
+        <Box>
+          <Button onClick={handleEditClose} sx={{ color: '#bfc6e0', mr: 1 }}>Cancel</Button>
+          <Button onClick={handleEditSave} variant="contained" color="primary" disabled={!editPharmacy.name || !editPharmacy.address} sx={{ background: 'rgba(44, 50, 90, 0.85)', boxShadow: 'none', borderRadius: 2, px: 3, fontWeight: 600 }}>Save</Button>
+        </Box>
       </DialogActions>
     </Dialog>
   );
@@ -318,13 +351,6 @@ function BillingInformation() {
               prescription={ph.prescription}
               noGutter={idx === pharmacies.length - 1}
         onEdit={() => handleEditOpen(idx)}
-        onDelete={() => {
-          const next = pharmacies.filter(p => p.id !== ph.id);
-          setPharmacies(next);
-          try { localStorage.setItem('pharmacies', JSON.stringify(next)); } catch(_){}
-          const uid = auth?.currentUser?.uid;
-          if (uid) return deletePharmacy(ph.id);
-        }}
             />
           ))}
         </div>
@@ -400,13 +426,6 @@ function BillingInformation() {
               prescription={ph.prescription}
               noGutter={idx === visiblePharmacies.length - 1}
         onEdit={() => handleEditOpen(idx)}
-        onDelete={() => {
-          const next = pharmacies.filter(p => p.id !== ph.id);
-          setPharmacies(next);
-          try { localStorage.setItem('pharmacies', JSON.stringify(next)); } catch(_){}
-          const uid = auth?.currentUser?.uid;
-          if (uid) return deletePharmacy(ph.id);
-        }}
             />
           ))}
         </VuiBox>

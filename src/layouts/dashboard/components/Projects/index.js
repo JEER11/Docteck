@@ -9,7 +9,7 @@ import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
-import TextField from "@mui/material/TextField";
+import { LineLabelTextField } from "layouts/profile";
 import Button from "@mui/material/Button";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Tooltip from "@mui/material/Tooltip";
@@ -142,6 +142,35 @@ function Projects() {
       else window.removeEventListener('resize', schedule);
     };
   }, []);
+
+  // Unified TextField styles (match Caring Hub)
+  const fieldSx = {
+    width: '100%',
+    ml: 0,
+    borderRadius: 1.5,
+    '& .MuiOutlinedInput-root': {
+      background: '#0a0c1a',
+      '&:hover': { background: '#0d0f1f' },
+    },
+    '& .MuiOutlinedInput-notchedOutline': { border: '1px solid rgba(255, 255, 255, 0.06)' },
+    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255, 255, 255, 0.12)' },
+    '& .Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(106, 106, 252, 0.4)' },
+    '& .MuiInputBase-input': { color: '#e7e9f3', fontSize: 14, py: 1, background: 'transparent' },
+    '& .MuiSelect-select': { background: 'transparent' },
+    '& .MuiInputLabel-root': { color: '#6b7199', '&.Mui-focused': { color: '#6b7199' } },
+  };
+
+  const glassPaper = {
+    background: 'linear-gradient(135deg, rgba(26,30,58,0.92) 0%, rgba(20,22,40,0.94) 100%)',
+    backdropFilter: 'blur(14px) saturate(100%)',
+    WebkitBackdropFilter: 'blur(14px) saturate(100%)',
+    border: '1px solid rgba(255,255,255,0.08)',
+    boxShadow: '0 8px 28px -6px rgba(0,0,0,0.55), 0 2px 6px rgba(0,0,0,0.3)',
+    borderRadius: 3,
+    color: 'white',
+    p: 0,
+    overflow: 'hidden'
+  };
 
   // Helper to render avatars (doctors)
   const renderAvatars = (doctors) =>
@@ -380,80 +409,19 @@ function Projects() {
         </VuiBox>
       </VuiBox>
       {/* Edit HUB dialog (matches Caring Hub UI) */}
-      <Dialog open={dialogOpen} onClose={handleDialogClose} maxWidth="xs" fullWidth
-        PaperProps={{
-          sx: {
-            background: 'rgba(34, 40, 74, 0.65)',
-            boxShadow: 24,
-            borderRadius: 4,
-            border: '1px solid rgba(111, 126, 201, 0.25)',
-            color: 'white',
-            backdropFilter: 'blur(10px)',
-            p: 4,
-            minWidth: 400,
-            maxWidth: 600,
-          }
-        }}
-      >
+      <Dialog open={dialogOpen} onClose={handleDialogClose} maxWidth="xs" fullWidth PaperProps={{ sx: { ...glassPaper, p: 4, width: { xs: '100%', sm: 560 }, maxWidth: 600 } }}>
         <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 22, pb: 2, background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           Edit
         </DialogTitle>
         <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 1, background: 'transparent', color: 'white', px: 2, minWidth: 400 }}>
           <VuiBox display="flex" flexDirection="column" gap={1}>
-            <TextField label="Hospital" name="hospital" value={form.hospital} onChange={handleChange} fullWidth
-              InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
-              sx={{
-                width: '100%', ml: 0, background: '#181a2f', borderRadius: 1.5,
-                '& .MuiOutlinedInput-notchedOutline': { border: '1px solid #23244a' },
-                '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#2f3570' },
-                '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#6a6afc' },
-                '& .MuiInputBase-input': { color: '#e7e9f3', fontSize: 14, py: 1, background: 'transparent' },
-                mt: 2, mb: 0.5, minHeight: 48
-              }}
-            />
-            <TextField label="Doctors (comma separated)" name="doctors" value={form.doctors} onChange={handleChange} fullWidth
-              InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
-              sx={{
-                width: '100%', ml: 0, background: '#181a2f', borderRadius: 1.5,
-                '& .MuiOutlinedInput-notchedOutline': { border: '1px solid #23244a' },
-                '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#2f3570' },
-                '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#6a6afc' },
-                '& .MuiInputBase-input': { color: '#e7e9f3', fontSize: 14, py: 1, background: 'transparent' },
-                mb: 0.5
-              }}
-            />
-            <TextField label="Bill" name="bill" value={form.bill} onChange={handleChange} fullWidth
-              InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
-              sx={{
-                width: '100%', ml: 0, background: '#181a2f', borderRadius: 1.5,
-                '& .MuiOutlinedInput-notchedOutline': { border: '1px solid #23244a' },
-                '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#2f3570' },
-                '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#6a6afc' },
-                '& .MuiInputBase-input': { color: '#e7e9f3', fontSize: 14, py: 1, background: 'transparent' },
-                mb: 0.5
-              }}
-            />
-            <TextField label="Status" name="status" value={form.status} onChange={handleChange} fullWidth
-              InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
-              sx={{
-                width: '100%', ml: 0, background: '#181a2f', borderRadius: 1.5,
-                '& .MuiOutlinedInput-notchedOutline': { border: '1px solid #23244a' },
-                '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#2f3570' },
-                '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#6a6afc' },
-                '& .MuiInputBase-input': { color: '#e7e9f3', fontSize: 14, py: 1, background: 'transparent' },
-                mb: 0.5
-              }}
-            />
-            <TextField label="Completion" name="completion" value={form.completion} onChange={handleChange} fullWidth type="number"
-              InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
-              sx={{
-                width: '100%', ml: 0, background: '#181a2f', borderRadius: 1.5,
-                '& .MuiOutlinedInput-notchedOutline': { border: '1px solid #23244a' },
-                '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#2f3570' },
-                '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#6a6afc' },
-                '& .MuiInputBase-input': { color: '#e7e9f3', fontSize: 14, py: 1, background: 'transparent' },
-              }}
-            />
+            <VuiBox sx={{ mt: 3 }}>
+              <LineLabelTextField label="Hospital" name="hospital" value={form.hospital} onChange={handleChange} fullWidth sx={{ ...fieldSx, mb: 0.5, minHeight: 48 }} />
+            </VuiBox>
+            <LineLabelTextField label="Doctors (comma separated)" placeholder="Dr. A, Dr. B" name="doctors" value={form.doctors} onChange={handleChange} fullWidth sx={{ ...fieldSx, mb: 0.5 }} />
+            <LineLabelTextField label="Bill" name="bill" value={form.bill} onChange={handleChange} fullWidth sx={{ ...fieldSx, mb: 0.5 }} />
+            <LineLabelTextField label="Status" name="status" value={form.status} onChange={handleChange} fullWidth sx={{ ...fieldSx, mb: 0.5 }} />
+            <LineLabelTextField label="Completion" name="completion" value={form.completion} onChange={handleChange} fullWidth type="number" sx={fieldSx} />
           </VuiBox>
         </DialogContent>
         <DialogActions sx={{ px: 2, pt: 2, pb: 2, display: 'flex', justifyContent: 'space-between' }}>

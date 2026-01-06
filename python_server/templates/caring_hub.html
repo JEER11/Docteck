@@ -11,49 +11,69 @@
       .shell { display:grid; grid-template-columns: 240px 1fr; gap:20px; }
       .side { padding: 20px 12px; }
       .main { padding: 20px; }
-      .card { background: rgba(20, 25, 55, 0.7); border-radius: 16px; padding: 16px; backdrop-filter: blur(6px); }
+      .card { background: rgba(20, 25, 55, 0.7); border-radius: 16px; padding: 16px; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
       .topbar { display:flex; align-items:center; gap:12px; margin-bottom: 16px; }
       .pill { background:#111827; padding:8px 12px; border-radius:12px; color:#9ca3af; }
       table { width:100%; border-collapse: collapse; color:#e5e7eb; }
       th, td { text-align:left; padding:12px 10px; border-bottom: 1px solid rgba(255,255,255,.06); }
       .btn { background:#1a237e; color:#fff; padding:8px 12px; border:none; border-radius:10px; cursor:pointer; }
       .actions a { color:#93c5fd; text-decoration:none; margin-left: 12px; }
+
+      /* Utilities to replace inline styles */
+      .sp-56 { height:56px; }
+      .sp-16 { height:16px; }
+      .sp-10 { height:10px; }
+      .flex-fill { flex:1; }
+      .input-max320 { max-width:320px; }
+      .card-margin { margin-bottom:20px; }
+      .row-center { display:flex; align-items:center; }
+      .title-flex { margin:0; flex:1; }
+      .row-gap0 { display:flex; gap:0; align-items:center; }
+      .small-gap { display:flex; gap:10px; align-items:center; }
+      .btn-rcorners-right { border-top-right-radius:0; border-bottom-right-radius:0; opacity:.7; background:rgba(32,34,64,0.7); }
+      .btn-rcorners-left { border-top-left-radius:0; border-bottom-left-radius:0; opacity:.7; background:rgba(32,34,64,0.7); display:flex; align-items:center; justify-content:center; min-width:36px; padding:6px 10px; }
+      .grid-2-inline { display:grid; grid-template-columns: 1fr 1fr; gap:20px; }
+      .card-overlay { background:rgba(0,0,0,.25); }
+      .actions-row { margin-top:8px; display:flex; gap:12px; }
+      .ul-indent { margin:0 0 0 18px; }
+      .footer-lite { color:#94a3b8; padding: 12px 20px; }
+      .section-label { opacity:.6; padding:6px 12px; }
     </style>
   </head>
   <body>
     <div class="shell">
       <aside class="side">
-        <div style="height:56px"></div>
-        <a class="nav-item" href="/dashboard">Dashboard</a>
-        <a class="nav-item" href="/caring-hub" style="color:#fff;">Caring Hub</a>
-        <a class="nav-item" href="/app/billing">Assistance</a>
-        <a class="nav-item" href="/app/billing">Billing</a>
-        <div style="height:16px"></div>
-        <div style="opacity:.6; padding:6px 12px;">ACCOUNT PAGES</div>
-        <a class="nav-item" href="/app/profile">Profile</a>
-        <a class="nav-item" href="/app">Family</a>
-        <a class="nav-item" href="/app">Pets</a>
-  <a class="nav-item" href="/signin" aria-label="Sign in" title="Sign in">🔑</a>
-        <a class="nav-item" href="/signup">Sign Up</a>
+          <div class="sp-56"></div>
+          <a class="nav-item" href="/dashboard">Dashboard</a>
+          <a class="nav-item active" href="/caring-hub">Caring Hub</a>
+          <a class="nav-item" href="/app/billing">Assistance</a>
+          <a class="nav-item" href="/app/billing">Billing</a>
+          <div class="sp-16"></div>
+          <div class="section-label">ACCOUNT PAGES</div>
+          <a class="nav-item" href="/app/profile">Profile</a>
+          <a class="nav-item" href="/app">Family</a>
+          <a class="nav-item" href="/app">Pets</a>
+        <a class="nav-item" href="/signin" aria-label="Sign in" title="Sign in">🔑</a>
+          <a class="nav-item" href="/signup">Sign Up</a>
       </aside>
       <main class="main">
         <div class="topbar">
           <div class="pill">/ Caring Hub</div>
-          <div style="flex:1"></div>
-          <input class="ai-input" style="max-width:320px" placeholder="Type here..." />
+          <div class="flex-fill"></div>
+          <input class="ai-input input-max320" placeholder="Type here..." />
           <a href="/signin" class="chip" aria-label="Sign in" title="Sign in">🔑</a>
           <button class="chip">⚙</button>
         </div>
 
-        <div class="card" style="margin-bottom:20px;">
-          <div style="display:flex; align-items:center;">
-            <h3 style="margin:0; flex:1;">Appointments</h3>
-            <div style="display:flex; gap:0; align-items:center;">
-              <button class="btn" id="view-all-appointments" style="border-top-right-radius:0;border-bottom-right-radius:0;opacity:.7;background:rgba(32,34,64,0.7);">VIEW ALL</button>
-              <button class="btn" id="add-appointment" style="border-top-left-radius:0;border-bottom-left-radius:0;opacity:.7;background:rgba(32,34,64,0.7);display:flex;align-items:center;justify-content:center;min-width:36px;padding:6px 10px;">+</button>
+        <div class="card card-margin">
+          <div class="row-center">
+            <h3 class="title-flex">Appointments</h3>
+            <div class="row-gap0">
+              <button class="btn btn-rcorners-right" id="view-all-appointments">VIEW ALL</button>
+              <button class="btn btn-rcorners-left" id="add-appointment">+</button>
             </div>
           </div>
-          <div style="height:10px"></div>
+          <div class="sp-10"></div>
           <table>
             <thead>
               <tr><th>Doctor</th><th>Function</th><th>Status</th><th>Date</th><th>Action</th></tr>
@@ -64,18 +84,18 @@
           </table>
         </div>
 
-        <div class="card" style="margin-bottom:20px;">
-          <div style="display:flex; align-items:center;">
-            <h3 style="margin:0; flex:1;">HUB</h3>
-            <div style="display:flex; gap:10px; align-items:center;">
-              <div style="display:flex; gap:0; align-items:center;">
-                <button class="btn" id="view-all-hub" style="border-top-right-radius:0;border-bottom-right-radius:0;opacity:.7;background:rgba(32,34,64,0.7);">VIEW ALL</button>
-                <button class="btn" id="add-info" style="border-top-left-radius:0;border-bottom-left-radius:0;opacity:.7;background:rgba(32,34,64,0.7);display:flex;align-items:center;justify-content:center;min-width:36px;padding:6px 10px;">+</button>
+        <div class="card card-margin">
+          <div class="row-center">
+            <h3 class="title-flex">HUB</h3>
+            <div class="small-gap">
+              <div class="row-gap0">
+                <button class="btn btn-rcorners-right" id="view-all-hub">VIEW ALL</button>
+                <button class="btn btn-rcorners-left" id="add-info">+</button>
               </div>
               <button class="btn" id="search-providers">Search Providers</button>
             </div>
           </div>
-          <div style="height:10px"></div>
+          <div class="sp-10"></div>
           <table>
             <thead>
               <tr><th>Hospital</th><th>Doctors</th><th>Bill</th><th>Status</th><th>Completion</th><th>Actions</th></tr>
@@ -87,39 +107,39 @@
           </table>
         </div>
 
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+        <div class="grid-2-inline">
           <div class="card">
-            <div style="display:flex; align-items:center;">
-              <h3 style="margin:0; flex:1;">Pharmacy Information</h3>
+            <div class="row-center">
+              <h3 class="title-flex">Pharmacy Information</h3>
               <a href="#">View All</a>
             </div>
-            <div style="height:10px"></div>
-            <div class="card" style="background:rgba(0,0,0,.25);">
+            <div class="sp-10"></div>
+            <div class="card card-overlay">
               <strong>CVS Pharmacy</strong>
               <div>Address: 123 Main St., Springfield, IL</div>
               <div>Email: contact@cvs.com</div>
               <div>Phone: (217) 555-1234</div>
               <div>Prescription pick-up: Atorvastatin 20mg</div>
-              <div style="margin-top:8px; display:flex; gap:12px;"><a href="#">DELETE</a> · <a href="#">EDIT</a></div>
+              <div class="actions-row"><a href="#">DELETE</a> · <a href="#">EDIT</a></div>
             </div>
-            <div style="height:10px"></div>
-            <div class="card" style="background:rgba(0,0,0,.25);">
+            <div class="sp-10"></div>
+            <div class="card card-overlay">
               <strong>Walgreens</strong>
               <div>Address: 456 Oak Ave., Springfield, IL</div>
               <div>Email: info@walgreens.com</div>
               <div>Phone: (217) 555-5678</div>
               <div>Prescription pick-up: Lisinopril 10mg</div>
-              <div style="margin-top:8px; display:flex; gap:12px;"><a href="#">DELETE</a> · <a href="#">EDIT</a></div>
+              <div class="actions-row"><a href="#">DELETE</a> · <a href="#">EDIT</a></div>
             </div>
           </div>
 
           <div class="card">
-            <div style="display:flex; align-items:center;">
-              <h3 style="margin:0; flex:1;">Prescriptions</h3>
+            <div class="row-center">
+              <h3 class="title-flex">Prescriptions</h3>
               <a href="#">View All</a>
             </div>
-            <div style="height:10px"></div>
-            <ul style="margin:0 0 0 18px;">
+            <div class="sp-10"></div>
+            <ul class="ul-indent">
               <li>Amlodipine 5mg – $80 · <a href="#">Info</a></li>
               <li>Metformin 500mg – $90 · <a href="#">Info</a></li>
               <li>Atorvastatin 20mg – $70 · <a href="#">Info</a></li>
@@ -129,7 +149,7 @@
           </div>
         </div>
 
-        <div style="color:#94a3b8; padding: 12px 20px;">© 2025, DOCTECK</div>
+        <div class="footer-lite">© 2025, DOCTECK</div>
       </main>
     </div>
 

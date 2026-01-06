@@ -15,6 +15,7 @@ import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import Tooltip from "@mui/material/Tooltip";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import Box from "@mui/material/Box";
 
 // Vision UI Dashboard React components
 import VuiBox from "components/VuiBox";
@@ -249,6 +250,18 @@ function Invoices() {
       });
     }
   };
+  const handleEditDelete = async () => {
+    if (auth && auth.currentUser && editPrescription?.id) {
+      try { await deletePrescription(editPrescription.id); } catch (_) {}
+    } else if (typeof editIdx === 'number') {
+      setPrescriptions(prev => {
+        const next = prev.filter((_, i) => i !== editIdx);
+        try { localStorage.setItem('prescriptions', JSON.stringify(next)); } catch (_) {}
+        return next;
+      });
+    }
+    handleEditClose();
+  };
   const handleViewAllOpen = () => setViewAllOpen(true);
   const handleViewAllClose = () => setViewAllOpen(false);
 
@@ -358,16 +371,18 @@ function Invoices() {
       <DialogContent sx={{ px: 3, pt: 1.5, pb: 1.7 }}>
         <Grid container spacing={1.5}>
           <Grid item xs={12}>
-            <LineLabelTextField
-              label="Medicine Name & mg"
-              placeholder="Start typing..."
-              name="medicine"
-              value={newPrescription.medicine}
-              onChange={handleChange}
-              fullWidth
-              inputProps={{ list: 'medicine-options' }}
-              sx={{ ...fieldSx, mt: 0.5 }}
-            />
+            <VuiBox sx={{ mt: 2 }}>
+              <LineLabelTextField
+                label="Medicine Name & mg"
+                placeholder="Start typing..."
+                name="medicine"
+                value={newPrescription.medicine}
+                onChange={handleChange}
+                fullWidth
+                inputProps={{ list: 'medicine-options' }}
+                sx={fieldSx}
+              />
+            </VuiBox>
           </Grid>
           <Grid item xs={12} sm={6}>
             <LineLabelTextField label="Monthly Price ($)" name="price" type="text" value={newPrescription.price} onChange={handleChange} fullWidth sx={fieldSx} />
@@ -387,8 +402,8 @@ function Invoices() {
         </datalist>
       </DialogContent>
       <DialogActions sx={{ px: 3, py: 1.6, borderTop: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
-        <Button onClick={handleClose} sx={{ color: '#bfc6e0', textTransform: 'none', fontWeight: 500 }}>Cancel</Button>
-        <Button onClick={handleAdd} variant="contained" color="info" disabled={!newPrescription.medicine || !newPrescription.price || !newPrescription.date} sx={{ borderRadius: 2, px: 3, fontWeight: 600, boxShadow: '0 0 0 1px rgba(255,255,255,0.1) inset' }}>Add</Button>
+        <Button onClick={handleClose} sx={{ color: '#bfc6e0', mr: 1 }}>Cancel</Button>
+        <Button onClick={handleAdd} variant="contained" color="primary" disabled={!newPrescription.medicine || !newPrescription.price || !newPrescription.date} sx={{ background: 'rgba(44, 50, 90, 0.85)', boxShadow: 'none', borderRadius: 2, px: 3, fontWeight: 600 }}>Add</Button>
       </DialogActions>
     </Dialog>
   );
@@ -404,7 +419,9 @@ function Invoices() {
       <DialogContent sx={{ px: 3, pt: 0.75, pb: 1.25 }}>
         <Grid container spacing={1.5}>
           <Grid item xs={12}>
-            <LineLabelTextField label="Medicine Name & mg" name="medicine" value={editPrescription.medicine} onChange={handleEditChange} fullWidth inputProps={{ list: 'medicine-options' }} sx={fieldSx} />
+            <VuiBox sx={{ mt: 2 }}>
+              <LineLabelTextField label="Medicine Name & mg" name="medicine" value={editPrescription.medicine} onChange={handleEditChange} fullWidth inputProps={{ list: 'medicine-options' }} sx={fieldSx} />
+            </VuiBox>
           </Grid>
           <Grid item xs={12} sm={6}>
             <LineLabelTextField label="Monthly Price ($)" name="price" type="text" value={editPrescription.price} onChange={handleEditChange} fullWidth sx={fieldSx} />
@@ -424,8 +441,15 @@ function Invoices() {
         </datalist>
       </DialogContent>
       <DialogActions sx={{ px: 3, py: 1.6, borderTop: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
-        <Button onClick={handleEditClose} sx={{ color: '#bfc6e0', textTransform: 'none', fontWeight: 500 }}>Cancel</Button>
-        <Button onClick={handleEditSave} variant="contained" color="info" disabled={!editPrescription.medicine || !editPrescription.price || !editPrescription.date} sx={{ borderRadius: 2, px: 3, fontWeight: 600, boxShadow: '0 0 0 1px rgba(255,255,255,0.1) inset' }}>Save</Button>
+        <Box>
+          {editIdx !== null && (
+            <Button onClick={handleEditDelete} sx={{ color: '#ff8080' }}>Delete</Button>
+          )}
+        </Box>
+        <Box>
+          <Button onClick={handleEditClose} sx={{ color: '#bfc6e0', mr: 1 }}>Cancel</Button>
+          <Button onClick={handleEditSave} variant="contained" color="primary" disabled={!editPrescription.medicine || !editPrescription.price || !editPrescription.date} sx={{ background: 'rgba(44, 50, 90, 0.85)', boxShadow: 'none', borderRadius: 2, px: 3, fontWeight: 600 }}>Save</Button>
+        </Box>
       </DialogActions>
     </Dialog>
   );

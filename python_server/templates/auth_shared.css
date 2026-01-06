@@ -42,3 +42,13 @@
 }
 .small { font-size:12px; color:#94a3b8; text-align:center; margin-top: 16px; }
 .phone-panel { margin-top: 16px; }
+
+/* Header and utility classes to replace inline styles in auth templates */
+.auth-header { position:fixed; left:0; right:0; top:0; padding:12px 16px; display:flex; gap:16px; align-items:center; z-index:10; }
+.brand-pill { background:#3b82f6; color:#fff; padding:6px 12px; border-radius:12px; font-weight:700; }
+.auth-nav { display:flex; gap:16px; }
+.subscribe-btn { margin-left:auto; background:#1f2937; color:#fff; padding:8px 14px; border-radius:12px; }
+.recaptcha-minh { min-height:60px; }
+.auth-row-flex { display:flex; gap:8px; }
+.auth-btn-flex { flex:1; }
+.auth-btn-close { background:#374151; }
