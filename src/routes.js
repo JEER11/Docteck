@@ -21,8 +21,7 @@ import Family from "layouts/profile/Family";
 import Pets from "layouts/profile/Pets";
 
 // Vision UI Dashboard React icons (keep grouped together)
-import { IoRocketSharp } from "react-icons/io5";
-import { IoIosDocument } from "react-icons/io";
+// Use Material Icons names for Sign In / Sign Up sidebar entries
 import { BsFillPersonFill } from "react-icons/bs";
 import { IoBuild } from "react-icons/io5"; // (unused?)
 import { BsCreditCardFill } from "react-icons/bs";
@@ -107,7 +106,7 @@ const routes = [
     name: "Sign In",
     key: "sign-in",
     route: "/authentication/sign-in",
-    icon: <IoIosDocument size="15px" color="inherit" />,
+    icon: "key",
     component: SignIn,
     noCollapse: true,
   },
@@ -116,7 +115,7 @@ const routes = [
     name: "Sign Up",
     key: "sign-up",
     route: "/authentication/sign-up",
-    icon: <IoRocketSharp size="15px" color="inherit" />,
+    icon: "account_circle",
     component: SignUp,
     noCollapse: true,
   },
