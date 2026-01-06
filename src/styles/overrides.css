@@ -1,0 +1,21 @@
+/* Hide native calendar/time picker icons that clash with our custom icons */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+  display: none !important;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* Firefox native datetime controls (best-effort) */
+input[type="date"]::-moz-focus-inner,
+input[type="time"]::-moz-focus-inner {
+  border: 0;
+}
+
+/* Small defensive rule for Edge/IE-like UAs */
+input::-ms-clear,
+input::-ms-reveal {
+  display: none;
+  width: 0;
+  height: 0;
+}
