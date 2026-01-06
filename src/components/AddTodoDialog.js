@@ -164,6 +164,7 @@ export default function AddTodoDialog({ open, onClose, onAdd }) {
               type="date"
               value={date}
               inputRef={dateRef}
+              inputProps={{ style: { WebkitAppearance: 'none', MozAppearance: 'textfield', appearance: 'none' } }}
               onChange={e => { setDate(e.target.value); if (!e.target.value) { setTime(''); setShowTime(false); } }}
               InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
               InputProps={{
@@ -209,6 +210,7 @@ export default function AddTodoDialog({ open, onClose, onAdd }) {
                 type="time"
                 value={time}
                 inputRef={timeRef}
+                inputProps={{ style: { WebkitAppearance: 'none', MozAppearance: 'textfield', appearance: 'none' } }}
                 onChange={e => setTime(e.target.value)}
                 disabled={!date}
                 InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
@@ -218,8 +220,7 @@ export default function AddTodoDialog({ open, onClose, onAdd }) {
                       <Tooltip title="Pick a time" TransitionComponent={Fade} placement="top" arrow>
                         <IconButton
                           size="small"
-                          onClick={(e) => {
-                            e.stopPropagation();
+                          onClick={() => {
                             if (!timeRef.current || timeRef.current.readOnly || timeRef.current.disabled) return;
                             try {
                               if (timeRef.current.showPicker) {
