@@ -55,14 +55,18 @@ function Bill({ name, company, email, vat, prescription, noGutter, onEdit, onDel
               },
             })}
           >
-            <VuiBox mr={1}>
-              <VuiButton variant="text" color="error" onClick={onDelete}>
-                <Icon sx={{ mr: "4px" }}>delete</Icon>&nbsp;DELETE
+            {onDelete && (
+              <VuiBox mr={1}>
+                <VuiButton variant="text" color="error" onClick={onDelete}>
+                  <Icon sx={{ mr: "4px" }}>delete</Icon>&nbsp;DELETE
+                </VuiButton>
+              </VuiBox>
+            )}
+            {onEdit && (
+              <VuiButton variant="text" color="text" onClick={onEdit}>
+                <Icon sx={{ mr: "4px" }}>edit</Icon>&nbsp;EDIT
               </VuiButton>
-            </VuiBox>
-            <VuiButton variant="text" color="text" onClick={onEdit}>
-              <Icon sx={{ mr: "4px" }}>edit</Icon>&nbsp;EDIT
-            </VuiButton>
+            )}
           </VuiBox>
         </VuiBox>
         <VuiBox mb={1} lineHeight={0}>

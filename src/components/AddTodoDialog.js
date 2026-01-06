@@ -3,6 +3,7 @@ import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   TextField, Button, Box, Autocomplete, InputAdornment, IconButton, Grow, Tooltip, Fade
 } from '@mui/material';
+import { LineLabelTextField } from 'layouts/profile';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import NotesIcon from '@mui/icons-material/Notes';
@@ -60,16 +61,16 @@ export default function AddTodoDialog({ open, onClose, onAdd }) {
     onClose();
   };
 
-  const paperSx = {
-    background: 'linear-gradient(145deg, rgba(30,36,66,0.93) 0%, rgba(22,26,48,0.90) 70%)',
-    boxShadow: '0 10px 32px -6px rgba(0,0,0,0.55), 0 4px 18px -4px rgba(0,0,0,0.42)',
-    border: '1px solid rgba(255,255,255,0.09)',
-    borderRadius: 5,
+  const glassPaper = {
+    background: 'linear-gradient(135deg, rgba(26,30,58,0.92) 0%, rgba(20,22,40,0.94) 100%)',
+    backdropFilter: 'blur(14px) saturate(100%)',
+    WebkitBackdropFilter: 'blur(14px) saturate(100%)',
+    border: '1px solid rgba(255,255,255,0.08)',
+    boxShadow: '0 8px 28px -6px rgba(0,0,0,0.55), 0 2px 6px rgba(0,0,0,0.3)',
+    borderRadius: 3,
     color: 'white',
-    backdropFilter: 'blur(16px)',
-    p: 4,
-    minWidth: 500,
-    maxWidth: 660,
+    p: 0,
+    overflow: 'hidden'
   };
 
   const fieldSx = {
@@ -96,13 +97,14 @@ export default function AddTodoDialog({ open, onClose, onAdd }) {
       maxWidth="sm"
       TransitionComponent={Transition}
       keepMounted
-      PaperProps={{ sx: paperSx }}
+      PaperProps={{ sx: { ...glassPaper, p: 3, minWidth: 440, maxWidth: 560, maxHeight: '72vh' } }}
     >
-      <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 22, pb: 1.5 }}>Add To Do</DialogTitle>
-      <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 1.75, px: 1.5, pt: 0.5, pb: 1.5 }}>
+      <DialogTitle sx={{ px: 3, py: 2.5, m: 0, typography: 'h6', fontWeight: 700 }}>Add To Do</DialogTitle>
+      <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 1.75, px: 3, pt: 0.5, pb: 1.5 }}>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.35, maxWidth: 560, mx: 'auto', width: '100%' }}>
           <Autocomplete
             size="small"
+            sx={{ mt: 2 }}
             popupIcon={<KeyboardArrowDownIcon sx={{ color: '#9ea6c4' }} />}
             options={TYPE_OPTIONS}
             value={type || null}
@@ -110,7 +112,7 @@ export default function AddTodoDialog({ open, onClose, onAdd }) {
             autoHighlight
             disableClearable
             renderInput={(params) => (
-              <TextField
+              <LineLabelTextField
                 {...params}
                 label="Type"
                 placeholder="Select type"
@@ -129,7 +131,7 @@ export default function AddTodoDialog({ open, onClose, onAdd }) {
             )}
             ListboxProps={{ style: { maxHeight: 240 } }}
           />
-          <TextField
+          <LineLabelTextField
             label="Title"
             value={label}
             onChange={e => setLabel(e.target.value)}
@@ -137,7 +139,6 @@ export default function AddTodoDialog({ open, onClose, onAdd }) {
             autoFocus
             placeholder="Refill prescription, Call Dr. Lee, Morning walk..."
             onKeyDown={(e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleSubmit(); }}
-            InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
             sx={{ ...fieldSx }}
             InputProps={{
               startAdornment: (
@@ -147,7 +148,7 @@ export default function AddTodoDialog({ open, onClose, onAdd }) {
               )
             }}
           />
-          <TextField
+          <LineLabelTextField
             label="Description (optional)"
             value={desc}
             onChange={e => setDesc(e.target.value)}
@@ -155,11 +156,10 @@ export default function AddTodoDialog({ open, onClose, onAdd }) {
             multiline
             minRows={3}
             placeholder="Extra details, instructions, context..."
-            InputLabelProps={{ shrink: true, style: { color: '#bfc6e0' } }}
             sx={{ ...fieldSx, '& .MuiInputBase-input': { py: 1.1 } }}
           />
           <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-            <TextField
+            <LineLabelTextField
               label="Date"
               type="date"
               value={date}
@@ -172,7 +172,20 @@ export default function AddTodoDialog({ open, onClose, onAdd }) {
                     <Tooltip title="Pick a date" TransitionComponent={Fade} placement="top" arrow>
                       <IconButton
                         size="small"
-                        onClick={() => { if (dateRef.current) { if (dateRef.current.showPicker) dateRef.current.showPicker(); else dateRef.current.focus(); } }}
+                        onClick={() => {
+                          if (!dateRef.current || dateRef.current.readOnly || dateRef.current.disabled) return;
+                          try {
+                            if (dateRef.current.showPicker) {
+                              dateRef.current.showPicker();
+                            } else {
+                              dateRef.current.focus();
+                            }
+                          } catch (err) {
+                            // Some browsers require a direct user gesture for showPicker()
+                            // or may throw for immutable controls — fall back to focusing input.
+                            try { dateRef.current.focus(); } catch (_) {}
+                          }
+                        }}
                         tabIndex={-1}
                         sx={{ color: '#9ea6c4', '&:hover': { color: '#c2cae6' } }}
                       >
@@ -183,10 +196,15 @@ export default function AddTodoDialog({ open, onClose, onAdd }) {
                 )
               }}
               sx={{ ...fieldSx, flex: 1, cursor: 'pointer' }}
-              onClick={() => { if (dateRef.current) { if (dateRef.current.showPicker) dateRef.current.showPicker(); else dateRef.current.focus(); } }}
+              onClick={() => {
+                if (!dateRef.current || dateRef.current.readOnly || dateRef.current.disabled) return;
+                try {
+                  if (dateRef.current.showPicker) dateRef.current.showPicker(); else dateRef.current.focus();
+                } catch (_) { try { dateRef.current.focus(); } catch(e){} }
+              }}
             />
             {showTime && (
-              <TextField
+              <LineLabelTextField
                 label="Time"
                 type="time"
                 value={time}
@@ -200,7 +218,19 @@ export default function AddTodoDialog({ open, onClose, onAdd }) {
                       <Tooltip title="Pick a time" TransitionComponent={Fade} placement="top" arrow>
                         <IconButton
                           size="small"
-                          onClick={(e) => { e.stopPropagation(); if (timeRef.current) { if (timeRef.current.showPicker) timeRef.current.showPicker(); else timeRef.current.focus(); } }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (!timeRef.current || timeRef.current.readOnly || timeRef.current.disabled) return;
+                            try {
+                              if (timeRef.current.showPicker) {
+                                timeRef.current.showPicker();
+                              } else {
+                                timeRef.current.focus();
+                              }
+                            } catch (err) {
+                              try { timeRef.current.focus(); } catch (_) {}
+                            }
+                          }}
                           tabIndex={-1}
                           sx={{ color: '#9ea6c4', '&:hover': { color: '#c2cae6' } }}
                         >
@@ -210,43 +240,36 @@ export default function AddTodoDialog({ open, onClose, onAdd }) {
                     </InputAdornment>
                   )
                 }}
-                sx={{ ...fieldSx, flex: 1, cursor: date ? 'pointer' : 'not-allowed', opacity: date ? 1 : 0.55 }}
+                sx={{ ...fieldSx, width: 100, minWidth: 92, flex: '0 0 100px', cursor: date ? 'pointer' : 'not-allowed', opacity: date ? 1 : 0.55 }}
                 onClick={() => { if (!date) return; if (timeRef.current) { if (timeRef.current.showPicker) timeRef.current.showPicker(); else timeRef.current.focus(); } }}
               />
             )}
             {!showTime && (
-              <Box
-                role="button"
-                tabIndex={0}
+              <LineLabelTextField
+                label=""
+                placeholder="+ Time"
+                value={time}
                 onClick={() => setShowTime(true)}
-                onKeyDown={e => { if (e.key === 'Enter') setShowTime(true); }}
-                style={{
-                  userSelect: 'none',
-                  background: 'rgba(255,255,255,0.06)',
-                  border: '1px solid rgba(255,255,255,0.15)',
-                  color: '#d0d6ea',
-                  padding: '12px 14px',
-                  fontSize: 13,
-                  fontWeight: 600,
-                  borderRadius: 12,
-                  cursor: 'pointer',
-                  minHeight: 54,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  letterSpacing: 0.5
+                onFocus={() => setShowTime(true)}
+                readOnly
+                sx={{ ...fieldSx, width: 100, minWidth: 92, borderRadius: 2, textAlign: 'center', '& .MuiInputBase-input': { textAlign: 'center' } }}
+                InputProps={{
+                  disableUnderline: true,
                 }}
-              >+ Time</Box>
+              />
             )}
           </Box>
           <Box sx={{ fontSize: 12.5, color: '#b7bfd9', mt: -0.5, lineHeight: 1.4 }}>
-            Tip: Use <strong>Ctrl / Cmd + Enter</strong> to save quickly. Date & time are optional.
+            Date & Time are <strong>optional</strong>
           </Box>
         </Box>
       </DialogContent>
-      <DialogActions sx={{ px: 2, pb: 2, display: 'flex', justifyContent: 'flex-end' }}>
-        <Button onClick={() => { reset(); onClose(); }} sx={{ color: '#bfc6e0', mr: 1, textTransform: 'none', fontWeight: 500 }}>Cancel</Button>
-        <Button onClick={handleSubmit} disabled={!label.trim() && !desc.trim()} variant='contained' color='info' sx={{ borderRadius: 2.5, px: 3.5, fontWeight: 600, boxShadow: '0 4px 14px -2px rgba(76,119,255,0.45)' }}>Add</Button>
+      <DialogActions sx={{ px: 3, py: 1.75, borderTop: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
+        <Box sx={{ flex: 1 }} />
+        <Box>
+          <Button onClick={() => { reset(); onClose(); }} sx={{ color: '#bfc6e0', mr: 1, textTransform: 'none', fontWeight: 500 }}>Cancel</Button>
+          <Button onClick={handleSubmit} disabled={!label.trim() && !desc.trim()} variant='contained' color='info' sx={{ borderRadius: 2.5, px: 3.5, fontWeight: 600, boxShadow: '0 4px 14px -2px rgba(76,119,255,0.45)', background: 'rgba(44, 50, 90, 0.85)' }}>Add</Button>
+        </Box>
       </DialogActions>
     </Dialog>
   );

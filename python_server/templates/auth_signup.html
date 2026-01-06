@@ -6,10 +6,10 @@
     <title>Sign Up · Docteck</title>
     <link rel="stylesheet" href="/static/auth_shared.css"/>
   </head>
-  <body class="auth-shell">
-    <header style="position:fixed;left:0;right:0;top:0;padding:12px 16px;display:flex;gap:16px;align-items:center;z-index:10;">
-      <div style="background:#3b82f6;color:#fff;padding:6px 12px;border-radius:12px;font-weight:700;">DOCTECK</div>
-      <nav style="display:flex;gap:16px;">
+    <body class="auth-shell">
+    <header class="auth-header">
+      <div class="brand-pill">DOCTECK</div>
+      <nav class="auth-nav">
         <a href="/app">Dashboard</a>
         <a href="/app/profile">Profile</a>
         <a href="/signup">SignUp</a>
@@ -40,10 +40,10 @@
         </div>
         <div id="phone-panel" class="phone-panel" hidden>
           <div class="auth-row"><input class="auth-input" id="phone" type="tel" placeholder="Your phone number e.g. +1 555 555 5555"/></div>
-          <div id="recaptcha-container" style="min-height:60px;"></div>
-          <div class="auth-row" style="display:flex;gap:8px;">
-            <button id="send-code" class="auth-btn" type="button" style="flex:1;">Send code</button>
-            <button id="close-phone" class="auth-btn" type="button" style="flex:1;background:#374151;">Close</button>
+          <div id="recaptcha-container" class="recaptcha-minh"></div>
+          <div class="auth-row auth-row-flex">
+            <button id="send-code" class="auth-btn auth-btn-flex" type="button">Send code</button>
+            <button id="close-phone" class="auth-btn auth-btn-flex auth-btn-close" type="button">Close</button>
           </div>
           <div class="auth-row"><input class="auth-input" id="otp" inputmode="numeric" placeholder="6-digit code"/></div>
           <div class="auth-row"><button id="verify-code" class="auth-btn" type="button">Verify & Sign in</button></div>

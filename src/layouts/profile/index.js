@@ -117,8 +117,6 @@ import { AppointmentProvider } from "context/AppointmentContext";
 function LineLabelTextField({ label, ...props }) {
   return (
     <div style={{ position: 'relative', marginBottom: 12, width: '100%' }}>
-      // Named export for use in other modules
-      export { LineLabelTextField };
       <span
         style={{
           position: 'absolute',
@@ -173,6 +171,9 @@ function LineLabelTextField({ label, ...props }) {
     </div>
   );
 }
+
+// Named export for use in other modules
+export { LineLabelTextField };
 
 // Simple, modern section card for Settings area
 function SettingsSection({ title, actions, onAction, onViewAll }) {
@@ -302,8 +303,6 @@ function Overview() {
           dateOfBirth: profile.dateOfBirth || '',
           sex: profile.sex || '',
           bloodType: profile.bloodType || '',
-          wheelchair: profile.wheelchair || '',
-          updatedAt: new Date().toISOString(),
         };
         await setDoc(ref, toSave, { merge: true });
       }
@@ -355,11 +354,10 @@ function Overview() {
   // Trigger a prefetch soon after mount so the dialog opens faster
   // eslint-disable-next-line
   }, []);
-
   // Trigger a prefetch soon after mount so the dialog opens faster
   useEffect(() => {
-    const t = setTimeout(prefetchProfileDialog, 300);
-    return () => clearTimeout(t);
+        const t = setTimeout(prefetchProfileDialog, 300);
+        return () => clearTimeout(t);
   }, []);
 
   // removed Care Team dialog since section is no longer displayed

@@ -58,14 +58,15 @@ function Tables() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editId, setEditId] = useState(null);
   const [form, setForm] = useState({ hospital: "", doctors: "", bill: "", completion: 0 });
+  const [dialogMode, setDialogMode] = useState('pharmacy');
   const [menuAnchor, setMenuAnchor] = useState(null);
   // Appointment dialog state
   const [apptForm, setApptForm] = useState({
-    name: "",
-    email: "",
-    type: "",
     hospital: "",
+    doctor: "",
+    bill: "",
     status: "Active",
+    completion: "",
     progress: "In Progress",
     date: ""
   });
@@ -88,6 +89,12 @@ function Tables() {
   // Handlers for add/edit
   const handleOpenEdit = (appt, idx) => handleOpenApptEdit(appt, idx);
   const handleOpenAdd = () => handleOpenApptAdd();
+  const handleOpenHubAdd = () => {
+    setEditId(null);
+    setForm({ hospital: "", doctors: "", bill: "", completion: 0, status: "Active" });
+    setDialogMode('hub');
+    setDialogOpen(true);
+  };
   // Generic close handler
   const handleClose = () => {
     setDialogOpen(false);
@@ -160,21 +167,33 @@ function Tables() {
     },
   };
 
+  const glassPaper = {
+    background: 'linear-gradient(135deg, rgba(26,30,58,0.92) 0%, rgba(20,22,40,0.94) 100%)',
+    backdropFilter: 'blur(14px) saturate(100%)',
+    WebkitBackdropFilter: 'blur(14px) saturate(100%)',
+    border: '1px solid rgba(255,255,255,0.08)',
+    boxShadow: '0 8px 28px -6px rgba(0,0,0,0.55), 0 2px 6px rgba(0,0,0,0.3)',
+    borderRadius: 3,
+    color: 'white',
+    p: 0,
+    overflow: 'hidden'
+  };
+
   // Open dialog for new appointment
   const handleOpenApptAdd = () => {
     setEditApptIdx(null);
-    setApptForm({ name: "", email: "", type: "", hospital: "", status: "Active", progress: "In Progress", date: "" });
+    setApptForm({ hospital: "", doctor: "", bill: "", status: "Active", completion: "", progress: "In Progress", date: "" });
     setApptDialogOpen(true);
   };
   // Open dialog for edit
   const handleOpenApptEdit = (appt, idx) => {
     setEditApptIdx(idx);
     setApptForm({
-      name: appt.doctor?.name || appt.title || "",
-      email: appt.doctor?.email || appt.email || "",
-      type: appt.doctor?.type || appt.type || "",
+      doctor: appt.doctor?.name || appt.title || "",
+      bill: appt.bill || appt.type || "",
       hospital: appt.doctor?.hospital || appt.hospital || "",
       status: appt.doctor?.status || appt.status || "Active",
+      completion: appt.doctor?.completion || appt.completion || "",
       progress: appt.doctor?.progress || appt.progress || "In Progress",
       date: appt.start ? new Date(appt.start).toISOString().slice(0,10) : ""
     });
@@ -183,20 +202,19 @@ function Tables() {
   // Save appointment (add or edit)
   const handleApptSave = () => {
     const newAppt = {
-      title: apptForm.name,
-      email: apptForm.email,
-      type: apptForm.type,
+      title: apptForm.doctor,
+      bill: apptForm.bill,
+      type: apptForm.bill,
       hospital: apptForm.hospital,
-      status: apptForm.status, // keep status
-      progress: apptForm.status, // set progress to match status
-      start: apptForm.date ? new Date(apptForm.date) : new Date(),
+      status: apptForm.status,
+      progress: apptForm.status,
+      start: new Date(),
+      completion: apptForm.completion,
       doctor: {
-        name: apptForm.name,
-        email: apptForm.email,
-        type: apptForm.type,
-        hospital: apptForm.hospital,
+        name: apptForm.doctor,
         status: apptForm.status,
-        progress: apptForm.status // set progress to match status
+        progress: apptForm.status,
+        completion: apptForm.completion,
       }
     };
     addAppointment(newAppt);
@@ -683,7 +701,7 @@ function Tables() {
     }}
   >
     <DialogTitle sx={{ color: '#fff', fontWeight: 700, fontSize: '1.15rem', pb: 1, letterSpacing: 0.2 }}>
-      {editId ? "Edit Pharmacy Info" : "Add Pharmacy Info"}
+      {dialogMode === 'hub' ? (editId ? 'Edit Healthcare Info' : 'Add Healthcare Info') : (editId ? "Edit Pharmacy Info" : "Add Pharmacy Info")}
     </DialogTitle>
     <DialogContent sx={{ color: '#fff', pb: 2, pt: 1,
       '& .MuiInput-underline:before, & .MuiInput-underline:after': { display: 'none' },
@@ -704,7 +722,7 @@ function Tables() {
           placeholder="Enter hospital name"
         />
         <LineLabelTextField
-          label="Doctors"
+          label="Doctor"
           name="doctors"
           value={form.doctors || ""}
           onChange={handleChange}
@@ -719,6 +737,27 @@ function Tables() {
           fullWidth
           placeholder="Enter bill amount"
         />
+        {dialogMode === 'hub' && (
+          <Autocomplete
+            size="small"
+            options={["In Progress", "Inactive", "Active", "Coming Soon", "Completed"]}
+            value={form.status || null}
+            onChange={(_, val) => setForm(f => ({ ...f, status: val || 'Active' }))}
+            autoHighlight
+            clearOnEscape
+            disableClearable
+            renderInput={(params) => (
+              <LineLabelTextField
+                {...params}
+                label="Status"
+                placeholder="Select status"
+                fullWidth
+                sx={{ ...fieldSx, mb: 0.5 }}
+              />
+            )}
+            sx={{ '& .MuiOutlinedInput-root': { p: 0.25, pr: 1 } }}
+          />
+        )}
         <LineLabelTextField
           label="Completion (%)"
           name="completion"
@@ -733,14 +772,14 @@ function Tables() {
         <DialogActions sx={{ background: 'transparent', px: 2, pb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Box>
             {editId && (
-              <Button onClick={() => handleDelete(editId)} color="error" variant="outlined" sx={{ borderColor: '#e57373', color: '#e57373', fontWeight: 600, fontSize: 14, px: 2, py: 0.5, minWidth: 0 }}>
+              <Button onClick={() => handleDelete(editId)} color="error" sx={{ color: '#ff8080' }}>
                 Delete
               </Button>
             )}
           </Box>
           <Box>
             <Button onClick={handleClose} sx={{ color: '#bfc6e0', mr: 1 }}>Cancel</Button>
-            <Button onClick={handleSubmit} variant="contained" color="info" sx={{ borderRadius: 2, px: 3, fontWeight: 600 }}>{editId ? "Save" : "Add"}</Button>
+            <Button onClick={handleSubmit} variant="contained" color="primary" sx={{ background: 'rgba(44, 50, 90, 0.85)', boxShadow: 'none', borderRadius: 2, px: 3, fontWeight: 600 }}>{editId ? "Save" : "Add"}</Button>
           </Box>
         </DialogActions>
       </Dialog>
@@ -950,18 +989,7 @@ function Tables() {
         onClose={() => setApptDialogOpen(false)} 
         maxWidth="sm" 
         fullWidth
-        PaperProps={{
-          sx: {
-            background: 'rgba(34, 40, 74, 0.65)', // even more transparent
-            boxShadow: 24,
-            borderRadius: 4,
-            color: 'white',
-            backdropFilter: 'blur(10px)',
-            p: 4,
-            minWidth: 400,
-            maxWidth: 600,
-          }
-        }}
+        PaperProps={{ sx: { ...glassPaper, width: { xs: '100%', sm: 600 }, maxWidth: 640 } }}
       >
         <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 22, pb: 2, background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span>{editApptIdx !== null ? "Edit Appointment" : "Add Appointment"}</span>
@@ -978,23 +1006,12 @@ function Tables() {
             minWidth: 400,
           }}
         >
-          <VuiBox display="flex" flexDirection="column" gap={1}>
-            <TextField label="Doctor Name" name="name" value={apptForm.name} onChange={e => setApptForm(f => ({ ...f, name: e.target.value }))} fullWidth 
-              InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }}
-              sx={{ ...fieldSx, mt: 2, mb: 0.5, minHeight: 48 }}
-            />
-            <TextField label="Email" name="email" value={apptForm.email} onChange={e => setApptForm(f => ({ ...f, email: e.target.value }))} fullWidth 
-              InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }}
-              sx={{ ...fieldSx, mb: 0.5 }}
-            />
-            <TextField label="Type" name="type" value={apptForm.type} onChange={e => setApptForm(f => ({ ...f, type: e.target.value }))} fullWidth 
-              InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }}
-              sx={{ ...fieldSx, mb: 0.5 }}
-            />
-            <TextField label="Hospital" name="hospital" value={apptForm.hospital} onChange={e => setApptForm(f => ({ ...f, hospital: e.target.value }))} fullWidth 
-              InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }}
-              sx={{ ...fieldSx, mb: 0.5 }}
-            />
+            <VuiBox display="flex" flexDirection="column" gap={1}>
+            <VuiBox sx={{ mt: 2 }}>
+              <LineLabelTextField label="Hospital" name="hospital" value={apptForm.hospital} onChange={e => setApptForm(f => ({ ...f, hospital: e.target.value }))} fullWidth sx={fieldSx} />
+            </VuiBox>
+            <LineLabelTextField label="Doctor" name="doctor" value={apptForm.doctor} onChange={e => setApptForm(f => ({ ...f, doctor: e.target.value }))} fullWidth sx={{ ...fieldSx, mb: 0.5 }} />
+            <LineLabelTextField label="Bill" name="bill" value={apptForm.bill} onChange={e => setApptForm(f => ({ ...f, bill: e.target.value }))} fullWidth sx={{ ...fieldSx, mb: 0.5 }} />
             <Autocomplete
               size="small"
               options={["In Progress", "Inactive", "Active", "Coming Soon", "Completed"]}
@@ -1004,16 +1021,12 @@ function Tables() {
               clearOnEscape
               disableClearable
               renderInput={(params) => (
-                <TextField
+                <LineLabelTextField
                   {...params}
                   label="Status"
                   placeholder="Select status"
-                  InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }}
-                  sx={{
-                    ...fieldSx,
-                    mb: 0.5,
-                    '& .MuiOutlinedInput-input': { py: 1 },
-                  }}
+                  fullWidth
+                  sx={{ ...fieldSx, mb: 0.5 }}
                 />
               )}
               sx={{
@@ -1055,33 +1068,35 @@ function Tables() {
                 },
               }}
             />
-            <TextField label="Date" name="date" type="date" value={apptForm.date} onChange={e => setApptForm(f => ({ ...f, date: e.target.value }))} fullWidth 
-              InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }}
+            <LineLabelTextField
+              label="Completion (%)"
+              name="completion"
+              type="number"
+              value={apptForm.completion}
+              onChange={e => setApptForm(f => ({ ...f, completion: e.target.value }))}
+              fullWidth
               sx={{ ...fieldSx, mb: 0.5 }}
             />
           </VuiBox>
         </DialogContent>
         <DialogActions sx={{ background: 'transparent', px: 2, pb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           {editApptIdx !== null ? (
-            <Button 
-              color="error" 
-              variant="outlined" 
+            <Button
+              color="error"
               onClick={() => {
-                // Remove the appointment at editApptIdx
                 const updated = appointments.filter((_, idx) => idx !== editApptIdx);
-                // You may need to update context directly or expose a removeAppointment function
                 if (typeof window !== 'undefined' && window.dispatchEvent) {
                   window.location.reload();
                 }
               }}
-              sx={{ borderColor: '#e57373', color: '#e57373', fontWeight: 600, fontSize: 14, px: 2, py: 0.5, minWidth: 0 }}
+              sx={{ color: '#ff8080' }}
             >
               Delete
             </Button>
           ) : <span />}
           <Box>
             <Button onClick={() => setApptDialogOpen(false)} sx={{ color: '#bfc6e0', mr: 1 }}>Cancel</Button>
-            <Button onClick={handleApptSave} variant="contained" color="info" sx={{ borderRadius: 2, px: 3, fontWeight: 600 }}>{editApptIdx !== null ? "Save" : "Add"}</Button>
+            <Button onClick={handleApptSave} variant="contained" color="primary" sx={{ background: 'rgba(44, 50, 90, 0.85)', boxShadow: 'none', borderRadius: 2, px: 3, fontWeight: 600 }}>{editApptIdx !== null ? "Save" : "Add"}</Button>
           </Box>
         </DialogActions>
       </Dialog>
@@ -1092,20 +1107,7 @@ function Tables() {
         onClose={() => setHubProvDialogOpen(false)}
         maxWidth="lg"
         fullWidth
-        PaperProps={{
-          sx: {
-            background: 'rgba(34, 40, 74, 0.70)',
-            boxShadow: 24,
-            borderRadius: 4,
-            color: 'white',
-            backdropFilter: 'blur(12px)',
-            height: '80vh',
-            maxHeight: '80vh',
-            mt: '5vh',
-            display: 'flex',
-            flexDirection: 'column'
-          }
-        }}
+        PaperProps={{ sx: { ...glassPaper, height: '80vh', maxHeight: '80vh', mt: '5vh', display: 'flex', flexDirection: 'column', p: 3 } }}
       >
         <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 24, pb: 1, pr: 6 }}>
           Search Providers
@@ -1136,10 +1138,9 @@ function Tables() {
               gap: 1.5
             }}
           >
-            <Grid container spacing={1.5} alignItems="center">
+              <Grid container spacing={1.5} alignItems="center">
               <Grid item xs={12} md={6} lg={5}>
-                <TextField
-                  size="small"
+                <LineLabelTextField
                   label="Doctor or Specialty"
                   value={provQuery}
                   onChange={e=>setProvQuery(e.target.value)}
@@ -1172,7 +1173,7 @@ function Tables() {
                 />
               </Grid>
               <Grid item xs={6} sm={4} md={2} lg={2}>
-                <TextField size="small" label="ZIP" value={provZip} onChange={e=>setProvZip(e.target.value)} fullWidth InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }} sx={fieldSx} />
+                <LineLabelTextField size="small" label="ZIP" value={provZip} onChange={e=>setProvZip(e.target.value)} fullWidth InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }} sx={fieldSx} />
               </Grid>
               <Grid item xs={12} md={2} lg={2} sx={{ display: 'flex', alignItems: 'stretch' }}>
                 <Button
