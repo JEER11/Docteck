@@ -9,6 +9,7 @@ import DialogActions from "@mui/material/DialogActions";
 import Grid from "@mui/material/Grid";
 import IconButton from '@mui/material/IconButton';
 import TextField from "@mui/material/TextField";
+import { LineLabelTextField } from "layouts/profile";
 import Button from "@mui/material/Button";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import Tooltip from "@mui/material/Tooltip";
@@ -357,23 +358,22 @@ function Invoices() {
       <DialogContent sx={{ px: 3, pt: 1.5, pb: 1.7 }}>
         <Grid container spacing={1.5}>
           <Grid item xs={12}>
-            <TextField
+            <LineLabelTextField
               label="Medicine Name & mg"
               placeholder="Start typing..."
               name="medicine"
               value={newPrescription.medicine}
               onChange={handleChange}
               fullWidth
-              InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }}
               inputProps={{ list: 'medicine-options' }}
               sx={{ ...fieldSx, mt: 0.5 }}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
-            <TextField label="Monthly Price ($)" name="price" type="text" value={newPrescription.price} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }} sx={fieldSx} />
+            <LineLabelTextField label="Monthly Price ($)" name="price" type="text" value={newPrescription.price} onChange={handleChange} fullWidth sx={fieldSx} />
           </Grid>
           <Grid item xs={12} sm={6}>
-            <TextField label="Pick-up Date" name="date" type="date" value={newPrescription.date} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }} sx={fieldSx} />
+            <LineLabelTextField label="Pick-up Date" name="date" type="date" value={newPrescription.date} onChange={handleChange} fullWidth sx={fieldSx} />
           </Grid>
           <Grid item xs={12}>
             <VuiBox>
@@ -404,13 +404,13 @@ function Invoices() {
       <DialogContent sx={{ px: 3, pt: 0.75, pb: 1.25 }}>
         <Grid container spacing={1.5}>
           <Grid item xs={12}>
-            <TextField label="Medicine Name & mg" name="medicine" value={editPrescription.medicine} onChange={handleEditChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }} inputProps={{ list: 'medicine-options' }} sx={fieldSx} />
+            <LineLabelTextField label="Medicine Name & mg" name="medicine" value={editPrescription.medicine} onChange={handleEditChange} fullWidth inputProps={{ list: 'medicine-options' }} sx={fieldSx} />
           </Grid>
           <Grid item xs={12} sm={6}>
-            <TextField label="Monthly Price ($)" name="price" type="text" value={editPrescription.price} onChange={handleEditChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }} sx={fieldSx} />
+            <LineLabelTextField label="Monthly Price ($)" name="price" type="text" value={editPrescription.price} onChange={handleEditChange} fullWidth sx={fieldSx} />
           </Grid>
           <Grid item xs={12} sm={6}>
-            <TextField label="Pick-up Date" name="date" type="date" value={editPrescription.date} onChange={handleEditChange} fullWidth InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }} sx={fieldSx} />
+            <LineLabelTextField label="Pick-up Date" name="date" type="date" value={editPrescription.date} onChange={handleEditChange} fullWidth sx={fieldSx} />
           </Grid>
           <Grid item xs={12}>
             <VuiBox>
