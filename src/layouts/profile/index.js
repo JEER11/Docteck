@@ -61,6 +61,7 @@ import LocationOnRoundedIcon from "@mui/icons-material/LocationOnRounded";
 import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
 import InputAdornment from "@mui/material/InputAdornment";
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Switch from "@mui/material/Switch";
 import Chip from "@mui/material/Chip";
@@ -115,8 +116,73 @@ import { AppointmentProvider } from "context/AppointmentContext";
 
 // Custom TextField with smaller, left-aligned label and compact input bubble
 function LineLabelTextField({ label, ...props }) {
+  const containerRef = useRef(null);
+
+  const handleContainerClick = (e) => {
+    const root = containerRef.current;
+    if (!root) return;
+    // Search for date input first
+    const triggerMouseSequence = (el) => {
+      try {
+        ['mousedown', 'mouseup', 'click'].forEach((t) => el.dispatchEvent(new MouseEvent(t, { bubbles: true, cancelable: true, view: window })));
+      } catch (_) {
+        try { el.click(); } catch(_){}
+      }
+    };
+
+    const isVisible = (el) => !!(el && el.offsetWidth && el.offsetHeight);
+
+    const dateInput = root.querySelector('input[type="date"]');
+    if (dateInput) {
+      dateInput.focus();
+      try { dateInput.showPicker?.(); } catch(_){}
+      return;
+    }
+
+    const nativeSelect = root.querySelector('select');
+    if (nativeSelect && isVisible(nativeSelect)) { nativeSelect.focus(); triggerMouseSequence(nativeSelect); return; }
+
+    // Try several possible MUI select/display selectors in order
+    const muiSelectors = ['.MuiSelect-select', '.MuiOutlinedInput-root .MuiSelect-select', '[aria-haspopup="listbox"]', '[role="button"][aria-haspopup]', '.MuiSelect-root [role="button"]', '[data-testid="select-display"]'];
+    for (const sel of muiSelectors) {
+      const cand = root.querySelector(sel);
+      if (cand && isVisible(cand)) {
+        // If a listbox is already open, close it instead of reopening
+        const openListbox = document.querySelector('[role="listbox"]');
+        if (openListbox && isVisible(openListbox)) {
+          // send Escape to close
+          try { document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })); } catch(_) { triggerMouseSequence(cand); }
+          return;
+        }
+        triggerMouseSequence(cand); return;
+      }
+    }
+
+    // Fallback to any input/textarea
+    const input = root.querySelector('input, textarea');
+    if (input) { input.focus(); try { input.click(); } catch(_){} }
+  };
+
+  // Close listbox after selecting an option (works around cases where synthetic clicks
+  // or focus handling prevent MUI from auto-closing). We listen for clicks on options
+  // and dispatch Escape shortly after to ensure the menu closes.
+  useEffect(() => {
+    const handler = (ev) => {
+      const target = ev.target;
+      const opt = target.closest && target.closest('[role="option"], [role="listbox"]');
+      if (!opt) return;
+      // If the click occurred inside this field's container, ignore (it's handled elsewhere)
+      if (containerRef.current && containerRef.current.contains(target)) return;
+      setTimeout(() => {
+        try { document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })); } catch(_) {}
+      }, 50);
+    };
+    document.addEventListener('click', handler, true);
+    return () => document.removeEventListener('click', handler, true);
+  }, []);
+
   return (
-    <div style={{ position: 'relative', marginBottom: 1, width: '100%', paddingTop: 12, overflow: 'visible' }}>
+    <div ref={containerRef} onClick={handleContainerClick} style={{ position: 'relative', marginBottom: 1, width: '100%', paddingTop: 12, overflow: 'visible' }}>
       <span
         style={{
           position: 'absolute',
@@ -129,6 +195,7 @@ function LineLabelTextField({ label, ...props }) {
           letterSpacing: 0.2,
           padding: '0 6px',
           background: 'transparent',
+          pointerEvents: 'none',
           boxShadow: 'none',
         }}
       >{label}</span>
@@ -168,6 +235,16 @@ function LineLabelTextField({ label, ...props }) {
           },
         }}
       />
+      {/* Overlay to capture clicks for selects/date inputs so entire field is clickable */}
+      {(props.select || props.type === 'date') && (
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={(e) => { e.stopPropagation(); handleContainerClick(e); }}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleContainerClick(e); } }}
+          style={{ position: 'absolute', top: 12, left: 0, right: 0, height: 44, zIndex: 15, cursor: 'pointer', background: 'transparent' }}
+        />
+      )}
     </div>
   );
 }
@@ -346,9 +423,14 @@ function Overview() {
           bloodType: fsDoc?.bloodType || '',
           wheelchair: fsDoc?.wheelchair || '',
         }));
-        // If required fields missing, open edit dialog
-  const missing = !(firstName && lastName && email && (fsDoc?.dateOfBirth || ''));
-  if (missing && !onboardingSkipped) setEditOpen(true);
+          // If required fields missing, open edit dialog once on first signup only
+        const missing = !(firstName && lastName && email && (fsDoc?.dateOfBirth || ''));
+        let alreadyShown = false;
+        try { alreadyShown = localStorage.getItem('onboardingShownV1') === '1'; } catch (_) { alreadyShown = false; }
+        if (missing && !onboardingSkipped && !alreadyShown) {
+          setEditOpen(true);
+          try { localStorage.setItem('onboardingShownV1', '1'); } catch (_) {}
+        }
       } catch (e) { console.error(e); }
     })();
   // Trigger a prefetch soon after mount so the dialog opens faster
@@ -1031,6 +1113,7 @@ function Overview() {
                       select
                       value={profile.sex}
                       onChange={handleProfileChange}
+                      InputProps={{ endAdornment: <InputAdornment position="end" sx={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}><ArrowDropDownIcon sx={{ color: '#aeb3d5' }} /></InputAdornment> }}
                       fullWidth
                       SelectProps={{
                         native: false,
@@ -1067,6 +1150,7 @@ function Overview() {
                       select
                       value={profile.bloodType}
                       onChange={handleProfileChange}
+                      InputProps={{ endAdornment: <InputAdornment position="end" sx={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}><ArrowDropDownIcon sx={{ color: '#aeb3d5' }} /></InputAdornment> }}
                       fullWidth
                       SelectProps={{
                         native: false,
@@ -1108,6 +1192,7 @@ function Overview() {
                       select
                       value={profile.wheelchair}
                       onChange={handleProfileChange}
+                      InputProps={{ endAdornment: <InputAdornment position="end" sx={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}><ArrowDropDownIcon sx={{ color: '#aeb3d5' }} /></InputAdornment> }}
                       fullWidth
                       SelectProps={{
                         native: false,
@@ -1140,11 +1225,11 @@ function Overview() {
                   </Box>
                   
                 </DialogContent>
-                <DialogActions sx={{ justifyContent: 'space-between', pb: 1, px: 2 }}>
+                <DialogActions sx={{ justifyContent: 'space-between', pb: 1, px: 2, background: 'transparent !important', boxShadow: 'none', borderTop: 'none !important' }}>
                   <Button onClick={handleSkipForNow} sx={{ color: '#a6b1e1', background: 'transparent', borderRadius: 2, px: 2, fontWeight: 500, textTransform: 'none' }}>
                     Skip for now
                   </Button>
-                  <Box>
+                  <Box sx={{ background: 'transparent', boxShadow: 'none', p: 0 }}>
                     <Button onClick={handleEditClose} sx={{ color: '#a259ec', background: 'transparent', borderRadius: 2, px: 2, mr: 1, fontWeight: 500, textTransform: 'none' }}>
                       Close
                     </Button>
