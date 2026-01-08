@@ -101,7 +101,8 @@ function Header() {
   return (
     <VuiBox position="relative">
       <DashboardNavbar light />
-      <Card
+        <Card
+        className="profile-header-card"
         sx={{
           px: 3,
           mt: 2,

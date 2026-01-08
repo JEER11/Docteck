@@ -44,3 +44,11 @@ input::-ms-reveal {
   border-top: 1px solid rgba(255,255,255,0.06) !important;
   background: rgba(255,255,255,0.02) !important;
 }
+
+/* Universal dark popup/modal override for all dialogs/popups */
+
+/* Ensure profile header card uses theme default background (reset accidental overrides) */
+.profile-header-card, .profile-header-card .MuiCard-root {
+  background: unset !important;
+  color: unset !important;
+}
