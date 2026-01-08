@@ -22,6 +22,71 @@
       .toggle span { position:absolute; top:2px; left:2px; width:16px; height:16px; background:#334155; border-radius:50%; transition: all .2s ease; }
       .toggle input:checked + span { left:16px; background:#1a237e; }
   .ai-btn { background:#1a237e; border:none; color:#fff; padding:10px 12px; border-radius:10px; cursor:pointer; }
+  /* Popup/modal dark theme fix */
+  .modal, .popup, .dialog, .MuiDialog-paper, .MuiPaper-root, .MuiPopover-paper, .MuiModal-root, .MuiDialogContent-root {
+    background: #181f2a !important;
+    color: #cbd5e1 !important;
+    border: 1px solid rgba(255,255,255,0.06) !important;
+    box-shadow: 0 4px 32px 0 rgba(0,0,0,0.45) !important;
+  }
+  /* For popups using .card as container */
+  .card[role="dialog"], .card.popup, .card.modal {
+    background: #181f2a !important;
+    color: #cbd5e1 !important;
+    border: 1px solid rgba(255,255,255,0.06) !important;
+    box-shadow: 0 4px 32px 0 rgba(0,0,0,0.45) !important;
+  }
+  /* Ensure tab/segment backgrounds are also dark */
+  .MuiTabs-root, .MuiTab-root, .tab-bar, .tab, .segment, .Mui-selected {
+    background: #101624 !important;
+    color: #cbd5e1 !important;
+  }
+  /* Button and input tweaks for contrast */
+  .popup button, .modal button, .dialog button, .card[role="dialog"] button {
+    background: #232b3b !important;
+    color: #cbd5e1 !important;
+    border-radius: 8px;
+  }
+  .popup input, .modal input, .dialog input, .card[role="dialog"] input {
+    background: #232b3b !important;
+    color: #cbd5e1 !important;
+    border: 1px solid #334155;
+  }
+  /* Force all modal/popup/dialog backgrounds and form fields to dark */
+  .card[role="dialog"], .card.popup, .card.modal, .modal, .popup, .dialog, .MuiDialog-paper, .MuiPaper-root, .MuiPopover-paper, .MuiModal-root, .MuiDialogContent-root, .MuiDialog-container, .MuiDialogContent-root, .MuiDialogTitle-root, .MuiDialogActions-root {
+    background: #181f2a !important;
+    color: #cbd5e1 !important;
+    border: 1px solid rgba(255,255,255,0.06) !important;
+    box-shadow: 0 4px 32px 0 rgba(0,0,0,0.45) !important;
+  }
+  /* Form fields inside popups */
+  .card[role="dialog"] input, .card[role="dialog"] textarea, .card[role="dialog"] select,
+  .popup input, .popup textarea, .popup select,
+  .modal input, .modal textarea, .modal select,
+  .dialog input, .dialog textarea, .dialog select {
+    background: #232b3b !important;
+    color: #cbd5e1 !important;
+    border: 1px solid #334155 !important;
+  }
+  /* Tab/segment backgrounds in popups */
+  .card[role="dialog"] .tab-bar, .card[role="dialog"] .tab, .card[role="dialog"] .segment,
+  .popup .tab-bar, .popup .tab, .popup .segment,
+  .modal .tab-bar, .modal .tab, .modal .segment,
+  .dialog .tab-bar, .dialog .tab, .dialog .segment {
+    background: #101624 !important;
+    color: #cbd5e1 !important;
+  }
+  /* Label and border tweaks for contrast */
+  .card[role="dialog"] label, .popup label, .modal label, .dialog label {
+    color: #cbd5e1 !important;
+  }
+  .card[role="dialog"] fieldset, .popup fieldset, .modal fieldset, .dialog fieldset {
+    border-color: #334155 !important;
+  }
+  /* Remove white backgrounds from nested divs */
+  .card[role="dialog"] div, .popup div, .modal div, .dialog div {
+    background: transparent !important;
+  }
     </style>
   </head>
   <body>

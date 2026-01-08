@@ -1330,7 +1330,10 @@ function Overview() {
               allowScrollButtonsMobile
               sx={{
                 minHeight: 40,
-                '& .MuiTab-root': { color: '#aeb3d5', textTransform: 'none', minHeight: 40, fontWeight: 600 },
+                background: '#101624',
+                borderRadius: 2,
+                p: '6px',
+                '& .MuiTab-root': { color: '#aeb3d5', textTransform: 'none', minHeight: 40, fontWeight: 600, background: 'transparent' },
                 '& .Mui-selected': { color: '#ffffff' },
                 '& .MuiTabs-indicator': { backgroundColor: '#6a6afc', height: 2 }
               }}
@@ -1951,7 +1954,10 @@ function Overview() {
               allowScrollButtonsMobile
               sx={{
                 minHeight: 40,
-                '& .MuiTab-root': { color: '#aeb3d5', textTransform: 'none', minHeight: 40, fontWeight: 600 },
+                background: '#101624',
+                borderRadius: 2,
+                p: '6px',
+                '& .MuiTab-root': { color: '#aeb3d5', textTransform: 'none', minHeight: 40, fontWeight: 600, background: 'transparent' },
                 '& .Mui-selected': { color: '#ffffff' },
                 '& .MuiTabs-indicator': { backgroundColor: '#6a6afc', height: 2 }
               }}
