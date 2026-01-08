@@ -12,6 +12,7 @@ import {
   InputAdornment,
   IconButton,
   Grow,
+  Slide,
 } from "@mui/material";
 import { LineLabelTextField } from 'layouts/profile';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
@@ -169,8 +170,8 @@ export default function AppointmentDialog({ open, onClose, onSubmit }) {
           <Tab label="Event" sx={{ color: '#e7e9f3', fontWeight: 700, textTransform: 'none', minWidth: 120 }} />
           <Tab label="My To Do" sx={{ color: '#bfc6e0', fontWeight: 600, textTransform: 'none', minWidth: 120 }} />
         </Tabs>
-        {tab === 0 ? (
-          <Box component="form" sx={{ display: 'flex', flexDirection: 'column', gap: 1, maxWidth: 560, mx: 'auto', width: '100%' }}>
+        <Box sx={{ position: 'relative', width: '100%', minHeight: 360 }}>
+          <Box component="form" sx={{ display: 'flex', flexDirection: 'column', gap: 1, maxWidth: 560, mx: 'auto', width: '100%', transition: 'transform .16s cubic-bezier(0.34,1.61,0.7,1.3), opacity .12s ease', transform: tab === 0 ? 'translateY(0)' : 'translateY(-8px)', opacity: tab === 0 ? 1 : 0, pointerEvents: tab === 0 ? 'auto' : 'none', position: tab === 0 ? 'relative' : 'absolute', left: 0, right: 0, top: 0 }}>
             <LineLabelTextField label="Title" name="title" value={form.title} onChange={handleChange} fullWidth placeholder="Optional – we'll infer one" sx={{ ...fieldSx, mt: 2, mb: 0.5 }} />
             <LineLabelTextField
               label="Date"
@@ -297,8 +298,7 @@ export default function AppointmentDialog({ open, onClose, onSubmit }) {
               ListboxProps={{ style: { maxHeight: 240 } }}
             />
           </Box>
-        ) : (
-          <Box component="form" sx={{ display: 'flex', flexDirection: 'column', gap: 1, maxWidth: 560, mx: 'auto', width: '100%' }}>
+          <Box component="form" sx={{ display: 'flex', flexDirection: 'column', gap: 1, maxWidth: 560, mx: 'auto', width: '100%', transition: 'transform .16s cubic-bezier(0.34,1.61,0.7,1.3), opacity .12s ease', transform: tab === 1 ? 'translateY(0)' : 'translateY(8px)', opacity: tab === 1 ? 1 : 0, pointerEvents: tab === 1 ? 'auto' : 'none', position: tab === 1 ? 'relative' : 'absolute', left: 0, right: 0, top: 0 }}>
             <LineLabelTextField label="Title" name="title" value={form.title} onChange={handleChange} fullWidth placeholder="Optional – we'll infer one" sx={{ ...fieldSx, mt: 2, mb: 0.5 }} />
             <LineLabelTextField
               label="Date"
@@ -431,7 +431,7 @@ export default function AppointmentDialog({ open, onClose, onSubmit }) {
             />
             <LineLabelTextField label="Details" name="details" value={form.details} onChange={handleChange} fullWidth multiline minRows={3} sx={{ ...fieldSx, mb: 0.5, '& .MuiInputBase-input': { py: 1.1 } }} />
           </Box>
-        )}
+        </Box>
       </DialogContent>
       <DialogActions sx={{ px: 3, py: 1.75, borderTop: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)', display: 'flex', justifyContent: 'flex-end' }}>
         <Box sx={{ flex: 1 }} />
