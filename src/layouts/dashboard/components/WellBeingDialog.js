@@ -7,6 +7,7 @@ import MoodIcon from '@mui/icons-material/Mood';
 import LeaderboardIcon from '@mui/icons-material/Leaderboard';
 import VuiBox from 'components/VuiBox';
 import VuiTypography from 'components/VuiTypography';
+import { LineLabelTextField } from 'layouts/profile';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Grow ref={ref} {...props} style={{ transformOrigin: 'center top', ...props.style }} timeout={{ appear: 300, enter: 300, exit: 180 }} />;
@@ -31,6 +32,20 @@ export default function WellBeingDialog({ open, onClose, onSubmit }) {
   };
 
   // Match Caring Hub Appointments dialog UI
+  const paperSx = {
+    background: 'linear-gradient(135deg, rgba(26,30,58,0.92) 0%, rgba(20,22,40,0.94) 100%)',
+    backdropFilter: 'blur(14px) saturate(100%)',
+    WebkitBackdropFilter: 'blur(14px) saturate(100%)',
+    border: '1px solid rgba(255,255,255,0.08)',
+    boxShadow: '0 8px 28px -6px rgba(0,0,0,0.55), 0 2px 6px rgba(0,0,0,0.3)',
+    borderRadius: 3,
+    color: 'white',
+    p: 3,
+    overflow: 'hidden',
+    minWidth: 440,
+    maxWidth: 720,
+  };
+
   const fieldSx = {
     width: '100%',
     ml: 0,
@@ -44,7 +59,7 @@ export default function WellBeingDialog({ open, onClose, onSubmit }) {
     '& .MuiOutlinedInput-notchedOutline': { border: '1px solid rgba(255, 255, 255, 0.06)' },
     '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255, 255, 255, 0.12)' },
     '& .Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(106, 106, 252, 0.4)' },
-    '& .MuiInputBase-input': { color: '#e7e9f3', fontSize: 14, py: 1.25, background: 'transparent' },
+    '& .MuiInputBase-input': { color: '#e7e9f3', fontSize: 14, py: 1.35, background: 'transparent' },
     '& .MuiSelect-select': { background: 'transparent' },
     '& .MuiInputLabel-root': {
       color: '#6b7199',
@@ -57,25 +72,14 @@ export default function WellBeingDialog({ open, onClose, onSubmit }) {
     <Dialog
       open={open}
       onClose={onClose}
+      maxWidth="md"
       fullWidth
-      maxWidth="sm"
+      PaperProps={{ sx: paperSx }}
       TransitionComponent={Transition}
       keepMounted
-      PaperProps={{
-        sx: {
-          background: 'linear-gradient(145deg, rgba(30,36,66,0.92) 0%, rgba(22,26,48,0.88) 70%)',
-            boxShadow: '0 8px 28px -4px rgba(0,0,0,0.55), 0 4px 12px -2px rgba(0,0,0,0.4)',
-            border: '1px solid rgba(255,255,255,0.08)',
-            borderRadius: 5,
-            color: 'white',
-            backdropFilter: 'blur(14px)',
-            p: 4,
-            minWidth: 480,
-        }
-      }}
     >
-      <DialogTitle sx={{ color: 'white', fontWeight: 700, fontSize: 22, pb: 2 }}>Log Your Well Being</DialogTitle>
-      <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, px: 2, pt: 1, pb: 1.5 }}>
+      <DialogTitle sx={{ px: 3, py: 2.5, m: 0, typography: 'h6', fontWeight: 700 }}>Log Your Well Being</DialogTitle>
+      <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 1.25, px: 3, pt: 0.5, pb: 1.5 }}>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, maxWidth: 520, mx: 'auto', width: '100%' }}>
           <Autocomplete
             options={EMOTION_OPTIONS}
@@ -84,13 +88,13 @@ export default function WellBeingDialog({ open, onClose, onSubmit }) {
             autoHighlight
             clearOnEscape
             renderInput={(params) => (
-              <TextField
+              <LineLabelTextField
                 {...params}
                 label="Emotion"
                 placeholder="Choose or type"
                 autoFocus
-                InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }}
-                sx={{ ...fieldSx, mt: 1 }}
+                InputLabelProps={{ shrink: true }}
+                sx={{ ...fieldSx, mt: 2, mb: 0.25 }}
                 InputProps={{
                   ...params.InputProps,
                   endAdornment: (
@@ -105,13 +109,14 @@ export default function WellBeingDialog({ open, onClose, onSubmit }) {
             ListboxProps={{ style: { maxHeight: 240 } }}
           />
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-            <TextField
+            <LineLabelTextField
               label="Intensity (1-10)"
               type="number"
               value={intensity}
+              name="intensity"
               onChange={e => setIntensity(Math.max(1, Math.min(10, Number(e.target.value))))}
               inputProps={{ min: 1, max: 10 }}
-              InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }}
+              InputLabelProps={{ shrink: true }}
               sx={{ ...fieldSx }}
               InputProps={{
                 endAdornment: (
@@ -133,7 +138,7 @@ export default function WellBeingDialog({ open, onClose, onSubmit }) {
               sx={{ mt: -0.5, mx: 0.5, color: '#4b8dfc' }}
             />
           </Box>
-          <TextField
+          <LineLabelTextField
             label="Notes (optional)"
             value={note}
             onChange={e => setNote(e.target.value)}
@@ -141,14 +146,17 @@ export default function WellBeingDialog({ open, onClose, onSubmit }) {
             multiline
             minRows={3}
             placeholder="Context, triggers, actions…"
-            InputLabelProps={{ shrink: true, style: { color: '#6b7199' } }}
+            InputLabelProps={{ shrink: true }}
             sx={{ ...fieldSx }}
           />
         </Box>
       </DialogContent>
-      <DialogActions sx={{ px: 2, pb: 2, display: 'flex', justifyContent: 'flex-end' }}>
-        <Button onClick={onClose} sx={{ color: '#bfc6e0', mr: 1 }}>Cancel</Button>
-        <Button onClick={handleSubmit} variant='contained' color='info' sx={{ borderRadius: 2, px: 3, fontWeight: 600 }}>Add</Button>
+      <DialogActions sx={{ px: 3, py: 1.75, borderTop: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)', display: 'flex', justifyContent: 'flex-end' }}>
+        <VuiBox sx={{ flex: 1 }} />
+        <VuiBox>
+          <Button onClick={onClose} sx={{ color: '#bfc6e0', mr: 1, textTransform: 'none', fontWeight: 500 }}>Cancel</Button>
+          <Button onClick={handleSubmit} variant="contained" color="info" sx={{ borderRadius: 2.5, px: 3.5, fontWeight: 600, boxShadow: '0 4px 14px -2px rgba(76,119,255,0.45)', background: 'rgba(44, 50, 90, 0.85)' }}>Add</Button>
+        </VuiBox>
       </DialogActions>
     </Dialog>
   );
