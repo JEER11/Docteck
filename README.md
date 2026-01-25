@@ -203,6 +203,9 @@ MIT
 
 ## Demo 
 
+
+![DocAssistBill](https://github.com/user-attachments/assets/9ad56d47-9235-42a7-ac70-1310380f6407)
+
 <img width="897" height="920" alt="image" src="https://github.com/user-attachments/assets/f1d739c0-4837-4601-9df1-c19280736080" />
 <img width="895" height="909" alt="image2" src="https://github.com/user-attachments/assets/23a23ac0-b6c2-4ea9-9a4d-36999f67c3e5" />
 <img width="896" height="918" alt="image3" src="https://github.com/user-attachments/assets/6d76144e-0a42-48ed-bf3e-0f06616f131d" />
